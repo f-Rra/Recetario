@@ -18,23 +18,38 @@ INSERT INTO Unidades (Nombre, Abreviatura) VALUES
 ('Unidad',    'u');
 GO
 
-INSERT INTO Usuarios (Nombre, Apellido, Email, Password, Rol, IdClasificacion) VALUES
-('Facundo', 'Herrera',  'facundo.herrera@recetario.com', '$2b$10$abc123hashed000001', 'lider', 2),
-('Ana',     'Martínez', 'ana.martinez@recetario.com',    '$2b$10$abc123hashed000002', 'admin', NULL);
+INSERT INTO TiposMovimiento (Nombre) VALUES
+('entrada'),
+('salida'),
+('ajuste');
+GO
+
+INSERT INTO TiposModificacion (Nombre) VALUES
+('sustitucion'),
+('adicion'),
+('eliminacion');
+GO
+
+-- Personas: IDs 1-5 son el personal de cocina (ex-Equipo), IDs 6-7 son los usuarios del sistema
+INSERT INTO Personas (Nombre, Apellido, Email, Telefono, IdClasificacion) VALUES
+('Carlos',  'Gómez',    NULL,                            NULL, 1),
+('María',   'López',    NULL,                            NULL, 2),
+('Pedro',   'Fernández',NULL,                            NULL, 3),
+('Laura',   'Sánchez',  NULL,                            NULL, 5),
+('Jorge',   'Torres',   NULL,                            NULL, 6),
+('Facundo', 'Herrera',  'facundo.herrera@recetario.com', NULL, 2),
+('Ana',     'Martínez', 'ana.martinez@recetario.com',    NULL, NULL);
+GO
+
+INSERT INTO Usuarios (IdPersona, Password, Rol) VALUES
+(6, 'd000001', 'lider'),
+(7, 'd000002', 'admin');
 GO
 
 INSERT INTO Proveedores (Nombre, Contacto, Telefono, Email, Direccion) VALUES
-('Distribuidor Central', 'Roberto Díaz',   '011-4567-8901', 'ventas@distcentral.com',    'Av. Belgrano 1200, CABA'),
-('Verduras del Sur',     'Graciela Pérez', '011-3456-7890', 'info@verdurasdelsur.com',   'Mercado Central, Puesto 45'),
-('Lácteos Frescos',      'Miguel Torres',  '011-5678-9012', 'pedidos@lacteosfrescos.com','Ruta 8 km 32, GBA');
-GO
-
-INSERT INTO Equipo (Nombre, Apellido, IdClasificacion) VALUES
-('Carlos', 'Gómez',     1),
-('María',  'López',     2),
-('Pedro',  'Fernández', 3),
-('Laura',  'Sánchez',   5),
-('Jorge',  'Torres',    6);
+('Distribuidor Central', 'Roberto Díaz',   '011-4567-8901', 'ventas@distcentral.com',     'Av. Belgrano 1200, CABA'),
+('Verduras del Sur',     'Graciela Pérez', '011-3456-7890', 'info@verdurasdelsur.com',    'Mercado Central, Puesto 45'),
+('Lácteos Frescos',      'Miguel Torres',  '011-5678-9012', 'pedidos@lacteosfrescos.com', 'Ruta 8 km 32, GBA');
 GO
 
 INSERT INTO Ingredientes (Codigo, Descripcion, IdUnidad, StockActual, StockMinimo) VALUES
@@ -187,15 +202,17 @@ INSERT INTO Procedimientos (IdReceta, NroPaso, Descripcion) VALUES
 (6, 3, 'Rectificar con sal y pimienta.');
 GO
 
-INSERT INTO Comandas (IdReceta, Fecha, Porciones, IdUsuario, IdIntegrante) VALUES
+-- IdPersona referencia Personas (IDs 1-5 = personal de cocina)
+INSERT INTO Comandas (IdReceta, Fecha, Porciones, IdUsuario, IdPersona) VALUES
 (1, '2026-05-20', 10, 1, 4),
 (4, '2026-05-20', 10, 1, 2),
 (2, '2026-05-21',  5, 2, 1);
 GO
 
-INSERT INTO Modificaciones (IdComanda, Tipo, IdIngredienteOriginal, IdIngredienteReemplazo, Cantidad, IdUnidad) VALUES
-(1, 'eliminacion', 1,    NULL, 0.3200, 1),
-(1, 'sustitucion', 3,      25, 0.0500, 1);
+-- IdTipoModificacion: 1=sustitucion, 2=adicion, 3=eliminacion
+INSERT INTO Modificaciones (IdComanda, IdTipoModificacion, IdIngredienteOriginal, IdIngredienteReemplazo, Cantidad, IdUnidad) VALUES
+(1, 3, 1, NULL, 0.3200, 1),
+(1, 1, 3,   25, 0.0500, 1);
 GO
 
 INSERT INTO Costos (IdReceta, Fecha, Porciones, CostoTotal, CostoUnitario, IdUsuario) VALUES
@@ -203,13 +220,14 @@ INSERT INTO Costos (IdReceta, Fecha, Porciones, CostoTotal, CostoUnitario, IdUsu
 (4, '2026-05-19', 10, 10991.8600, 1099.1860, 2);
 GO
 
-INSERT INTO MovimientosStock (IdIngrediente, Tipo, Cantidad, IdUnidad, Fecha, IdUsuario, Observaciones) VALUES
-( 1, 'entrada',  5.0000, 1, '2026-05-19 08:00:00', 2, 'Compra semanal'),
-( 3, 'entrada', 20.0000, 1, '2026-05-19 08:30:00', 2, 'Compra semanal'),
-(10, 'entrada', 15.0000, 1, '2026-05-19 09:00:00', 2, 'Compra semanal'),
-(11, 'entrada',  5.0000, 1, '2026-05-19 09:30:00', 2, 'Compra semanal'),
-(21, 'entrada', 10.0000, 1, '2026-05-19 10:00:00', 2, 'Compra semanal'),
-( 3, 'salida',   2.0000, 1, '2026-05-20 12:00:00', 1, 'Elaboración comanda 2'),
-( 1, 'salida',   0.4000, 1, '2026-05-20 11:30:00', 1, 'Elaboración comanda 1'),
-(12, 'ajuste',   3.0000, 1, '2026-05-20 07:00:00', 2, 'Corrección de inventario');
+-- IdTipoMovimiento: 1=entrada, 2=salida, 3=ajuste
+INSERT INTO MovimientosStock (IdIngrediente, IdTipoMovimiento, Cantidad, IdUnidad, Fecha, IdUsuario, Observaciones) VALUES
+( 1, 1,  5.0000, 1, '2026-05-19 08:00:00', 2, 'Compra semanal'),
+( 3, 1, 20.0000, 1, '2026-05-19 08:30:00', 2, 'Compra semanal'),
+(10, 1, 15.0000, 1, '2026-05-19 09:00:00', 2, 'Compra semanal'),
+(11, 1,  5.0000, 1, '2026-05-19 09:30:00', 2, 'Compra semanal'),
+(21, 1, 10.0000, 1, '2026-05-19 10:00:00', 2, 'Compra semanal'),
+( 3, 2,  2.0000, 1, '2026-05-20 12:00:00', 1, 'Elaboración comanda 2'),
+( 1, 2,  0.4000, 1, '2026-05-20 11:30:00', 1, 'Elaboración comanda 1'),
+(12, 3,  3.0000, 1, '2026-05-20 07:00:00', 2, 'Corrección de inventario');
 GO
