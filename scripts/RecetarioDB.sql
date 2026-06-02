@@ -4,10 +4,12 @@ GO
 USE RecetarioDB;
 GO
 
+-- Tablas auxiliares de catálogo (sin dependencias)
+
 CREATE TABLE Clasificaciones (
     IdClasificacion INT          IDENTITY(1,1) NOT NULL,
     Nombre          VARCHAR(100) NOT NULL,
-    CONSTRAINT PK_Clasificaciones       PRIMARY KEY (IdClasificacion),
+    CONSTRAINT PK_Clasificaciones        PRIMARY KEY (IdClasificacion),
     CONSTRAINT UQ_Clasificaciones_Nombre UNIQUE (Nombre)
 );
 GO
@@ -22,18 +24,49 @@ CREATE TABLE Unidades (
 );
 GO
 
-CREATE TABLE Usuarios (
-    IdUsuario       INT          IDENTITY(1,1) NOT NULL,
+-- Tablas auxiliares para campos que antes eran texto libre (feedback Abel Faure)
+
+CREATE TABLE TiposMovimiento (
+    IdTipoMovimiento INT         IDENTITY(1,1) NOT NULL,
+    Nombre           VARCHAR(30) NOT NULL,
+    CONSTRAINT PK_TiposMovimiento        PRIMARY KEY (IdTipoMovimiento),
+    CONSTRAINT UQ_TiposMovimiento_Nombre UNIQUE (Nombre)
+);
+GO
+
+CREATE TABLE TiposModificacion (
+    IdTipoModificacion INT         IDENTITY(1,1) NOT NULL,
+    Nombre             VARCHAR(30) NOT NULL,
+    CONSTRAINT PK_TiposModificacion        PRIMARY KEY (IdTipoModificacion),
+    CONSTRAINT UQ_TiposModificacion_Nombre UNIQUE (Nombre)
+);
+GO
+
+-- Entidad Personas: reemplaza a Equipo y normaliza Usuarios (feedback Abel Faure)
+-- Agrupa a toda persona real del sistema: integrantes de cocina y usuarios con acceso.
+
+CREATE TABLE Personas (
+    IdPersona       INT          IDENTITY(1,1) NOT NULL,
     Nombre          VARCHAR(100) NOT NULL,
     Apellido        VARCHAR(100) NOT NULL,
-    Email           VARCHAR(150) NOT NULL,
-    Password        VARCHAR(255) NOT NULL,
-    Rol             VARCHAR(30)  NOT NULL,
+    Email           VARCHAR(150) NULL,
+    Telefono        VARCHAR(20)  NULL,
     IdClasificacion INT          NULL,
-    CONSTRAINT PK_Usuarios                 PRIMARY KEY (IdUsuario),
-    CONSTRAINT FK_Usuarios_Clasificaciones FOREIGN KEY (IdClasificacion) REFERENCES Clasificaciones(IdClasificacion),
-    CONSTRAINT UQ_Usuarios_Email           UNIQUE (Email),
-    CONSTRAINT CK_Usuarios_Rol             CHECK (Rol IN ('lider', 'admin'))
+    CONSTRAINT PK_Personas                 PRIMARY KEY (IdPersona),
+    CONSTRAINT FK_Personas_Clasificaciones FOREIGN KEY (IdClasificacion) REFERENCES Clasificaciones(IdClasificacion)
+);
+GO
+
+-- Usuarios: solo datos de acceso al sistema, vinculado a la persona real por FK
+
+CREATE TABLE Usuarios (
+    IdUsuario INT          IDENTITY(1,1) NOT NULL,
+    IdPersona INT          NOT NULL,
+    Password  VARCHAR(255) NOT NULL,
+    Rol       VARCHAR(30)  NOT NULL,
+    CONSTRAINT PK_Usuarios          PRIMARY KEY (IdUsuario),
+    CONSTRAINT FK_Usuarios_Personas FOREIGN KEY (IdPersona) REFERENCES Personas(IdPersona),
+    CONSTRAINT CK_Usuarios_Rol      CHECK (Rol IN ('lider', 'admin'))
 );
 GO
 
@@ -45,16 +78,6 @@ CREATE TABLE Proveedores (
     Email       VARCHAR(150) NULL,
     Direccion   VARCHAR(255) NULL,
     CONSTRAINT PK_Proveedores PRIMARY KEY (IdProveedor)
-);
-GO
-
-CREATE TABLE Equipo (
-    IdIntegrante    INT          IDENTITY(1,1) NOT NULL,
-    Nombre          VARCHAR(100) NOT NULL,
-    Apellido        VARCHAR(100) NOT NULL,
-    IdClasificacion INT          NOT NULL,
-    CONSTRAINT PK_Equipo                 PRIMARY KEY (IdIntegrante),
-    CONSTRAINT FK_Equipo_Clasificaciones FOREIGN KEY (IdClasificacion) REFERENCES Clasificaciones(IdClasificacion)
 );
 GO
 
@@ -87,6 +110,9 @@ CREATE TABLE Recetas (
 );
 GO
 
+-- PK compuesta: un precio por combinación ingrediente+proveedor
+-- sp_CalcularCostoReceta obtiene el precio vigente con MAX(FechaVigencia)
+
 CREATE TABLE PrecioxIngrediente (
     IdIngrediente INT           NOT NULL,
     IdProveedor   INT           NOT NULL,
@@ -99,6 +125,8 @@ CREATE TABLE PrecioxIngrediente (
 );
 GO
 
+-- CantBruta = CantNeta / (Rendimiento / 100): se almacena calculada para evitar recalcular en cada consulta
+
 CREATE TABLE IngredientesxRecetas (
     IdReceta      INT           NOT NULL,
     IdIngrediente INT           NOT NULL,
@@ -106,7 +134,7 @@ CREATE TABLE IngredientesxRecetas (
     Rendimiento   DECIMAL(5,2)  NOT NULL DEFAULT 100,
     CantBruta     DECIMAL(10,4) NOT NULL,
     IdUnidad      INT           NOT NULL,
-    CONSTRAINT PK_IngredientesxRecetas             PRIMARY KEY (IdReceta, IdIngrediente),
+    CONSTRAINT PK_IngredientesxRecetas              PRIMARY KEY (IdReceta, IdIngrediente),
     CONSTRAINT FK_IngredientesxRecetas_Recetas      FOREIGN KEY (IdReceta)      REFERENCES Recetas(IdReceta),
     CONSTRAINT FK_IngredientesxRecetas_Ingredientes FOREIGN KEY (IdIngrediente) REFERENCES Ingredientes(IdIngrediente),
     CONSTRAINT FK_IngredientesxRecetas_Unidades     FOREIGN KEY (IdUnidad)      REFERENCES Unidades(IdUnidad),
@@ -126,17 +154,20 @@ CREATE TABLE Procedimientos (
 );
 GO
 
+-- IdPersona: integrante de cocina asignado automáticamente por sp_RegistrarComanda
+-- según coincidencia de IdClasificacion entre la receta y la persona
+
 CREATE TABLE Comandas (
-    IdComanda    INT  IDENTITY(1,1) NOT NULL,
-    IdReceta     INT  NOT NULL,
-    Fecha        DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE),
-    Porciones    INT  NOT NULL,
-    IdUsuario    INT  NOT NULL,
-    IdIntegrante INT  NOT NULL,
+    IdComanda INT  IDENTITY(1,1) NOT NULL,
+    IdReceta  INT  NOT NULL,
+    Fecha     DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE),
+    Porciones INT  NOT NULL,
+    IdUsuario INT  NOT NULL,
+    IdPersona INT  NOT NULL,
     CONSTRAINT PK_Comandas          PRIMARY KEY (IdComanda),
-    CONSTRAINT FK_Comandas_Recetas  FOREIGN KEY (IdReceta)     REFERENCES Recetas(IdReceta),
-    CONSTRAINT FK_Comandas_Usuarios FOREIGN KEY (IdUsuario)    REFERENCES Usuarios(IdUsuario),
-    CONSTRAINT FK_Comandas_Equipo   FOREIGN KEY (IdIntegrante) REFERENCES Equipo(IdIntegrante),
+    CONSTRAINT FK_Comandas_Recetas  FOREIGN KEY (IdReceta)  REFERENCES Recetas(IdReceta),
+    CONSTRAINT FK_Comandas_Usuarios FOREIGN KEY (IdUsuario) REFERENCES Usuarios(IdUsuario),
+    CONSTRAINT FK_Comandas_Personas FOREIGN KEY (IdPersona) REFERENCES Personas(IdPersona),
     CONSTRAINT CK_Comandas_Porciones CHECK (Porciones > 0)
 );
 GO
@@ -144,18 +175,18 @@ GO
 CREATE TABLE Modificaciones (
     IdModificacion         INT           IDENTITY(1,1) NOT NULL,
     IdComanda              INT           NOT NULL,
-    Tipo                   VARCHAR(20)   NOT NULL,
+    IdTipoModificacion     INT           NOT NULL,
     IdIngredienteOriginal  INT           NULL,
     IdIngredienteReemplazo INT           NULL,
     Cantidad               DECIMAL(10,4) NOT NULL,
     IdUnidad               INT           NOT NULL,
-    CONSTRAINT PK_Modificaciones                       PRIMARY KEY (IdModificacion),
-    CONSTRAINT FK_Modificaciones_Comandas              FOREIGN KEY (IdComanda)              REFERENCES Comandas(IdComanda),
-    CONSTRAINT FK_Modificaciones_IngredienteOriginal   FOREIGN KEY (IdIngredienteOriginal)  REFERENCES Ingredientes(IdIngrediente),
-    CONSTRAINT FK_Modificaciones_IngredienteReemplazo  FOREIGN KEY (IdIngredienteReemplazo) REFERENCES Ingredientes(IdIngrediente),
-    CONSTRAINT FK_Modificaciones_Unidades              FOREIGN KEY (IdUnidad)               REFERENCES Unidades(IdUnidad),
-    CONSTRAINT CK_Modificaciones_Tipo                  CHECK (Tipo IN ('sustitucion', 'adicion', 'eliminacion')),
-    CONSTRAINT CK_Modificaciones_Cantidad              CHECK (Cantidad > 0)
+    CONSTRAINT PK_Modificaciones                      PRIMARY KEY (IdModificacion),
+    CONSTRAINT FK_Modificaciones_Comandas             FOREIGN KEY (IdComanda)              REFERENCES Comandas(IdComanda),
+    CONSTRAINT FK_Modificaciones_TiposModificacion    FOREIGN KEY (IdTipoModificacion)     REFERENCES TiposModificacion(IdTipoModificacion),
+    CONSTRAINT FK_Modificaciones_IngredienteOriginal  FOREIGN KEY (IdIngredienteOriginal)  REFERENCES Ingredientes(IdIngrediente),
+    CONSTRAINT FK_Modificaciones_IngredienteReemplazo FOREIGN KEY (IdIngredienteReemplazo) REFERENCES Ingredientes(IdIngrediente),
+    CONSTRAINT FK_Modificaciones_Unidades             FOREIGN KEY (IdUnidad)               REFERENCES Unidades(IdUnidad),
+    CONSTRAINT CK_Modificaciones_Cantidad             CHECK (Cantidad > 0)
 );
 GO
 
@@ -167,27 +198,27 @@ CREATE TABLE Costos (
     CostoTotal    DECIMAL(12,4) NOT NULL,
     CostoUnitario DECIMAL(12,4) NOT NULL,
     IdUsuario     INT           NOT NULL,
-    CONSTRAINT PK_Costos          PRIMARY KEY (IdCosto),
-    CONSTRAINT FK_Costos_Recetas  FOREIGN KEY (IdReceta)  REFERENCES Recetas(IdReceta),
-    CONSTRAINT FK_Costos_Usuarios FOREIGN KEY (IdUsuario) REFERENCES Usuarios(IdUsuario),
+    CONSTRAINT PK_Costos           PRIMARY KEY (IdCosto),
+    CONSTRAINT FK_Costos_Recetas   FOREIGN KEY (IdReceta)  REFERENCES Recetas(IdReceta),
+    CONSTRAINT FK_Costos_Usuarios  FOREIGN KEY (IdUsuario) REFERENCES Usuarios(IdUsuario),
     CONSTRAINT CK_Costos_Porciones CHECK (Porciones > 0)
 );
 GO
 
 CREATE TABLE MovimientosStock (
-    IdMovimiento  INT           IDENTITY(1,1) NOT NULL,
-    IdIngrediente INT           NOT NULL,
-    Tipo          VARCHAR(20)   NOT NULL,
-    Cantidad      DECIMAL(10,4) NOT NULL,
-    IdUnidad      INT           NOT NULL,
-    Fecha         DATETIME      NOT NULL DEFAULT GETDATE(),
-    IdUsuario     INT           NOT NULL,
-    Observaciones VARCHAR(255)  NULL,
-    CONSTRAINT PK_MovimientosStock              PRIMARY KEY (IdMovimiento),
-    CONSTRAINT FK_MovimientosStock_Ingredientes FOREIGN KEY (IdIngrediente) REFERENCES Ingredientes(IdIngrediente),
-    CONSTRAINT FK_MovimientosStock_Unidades     FOREIGN KEY (IdUnidad)      REFERENCES Unidades(IdUnidad),
-    CONSTRAINT FK_MovimientosStock_Usuarios     FOREIGN KEY (IdUsuario)     REFERENCES Usuarios(IdUsuario),
-    CONSTRAINT CK_MovimientosStock_Tipo         CHECK (Tipo IN ('entrada', 'salida', 'ajuste')),
-    CONSTRAINT CK_MovimientosStock_Cantidad     CHECK (Cantidad > 0)
+    IdMovimiento     INT           IDENTITY(1,1) NOT NULL,
+    IdIngrediente    INT           NOT NULL,
+    IdTipoMovimiento INT           NOT NULL,
+    Cantidad         DECIMAL(10,4) NOT NULL,
+    IdUnidad         INT           NOT NULL,
+    Fecha            DATETIME      NOT NULL DEFAULT GETDATE(),
+    IdUsuario        INT           NOT NULL,
+    Observaciones    VARCHAR(255)  NULL,
+    CONSTRAINT PK_MovimientosStock                 PRIMARY KEY (IdMovimiento),
+    CONSTRAINT FK_MovimientosStock_Ingredientes    FOREIGN KEY (IdIngrediente)    REFERENCES Ingredientes(IdIngrediente),
+    CONSTRAINT FK_MovimientosStock_TiposMovimiento FOREIGN KEY (IdTipoMovimiento) REFERENCES TiposMovimiento(IdTipoMovimiento),
+    CONSTRAINT FK_MovimientosStock_Unidades        FOREIGN KEY (IdUnidad)         REFERENCES Unidades(IdUnidad),
+    CONSTRAINT FK_MovimientosStock_Usuarios        FOREIGN KEY (IdUsuario)        REFERENCES Usuarios(IdUsuario),
+    CONSTRAINT CK_MovimientosStock_Cantidad        CHECK (Cantidad > 0)
 );
 GO
