@@ -45,6 +45,14 @@
     <Compile Include="AccesoDatos.cs" />
     <Compile Include="NegocioException.cs" />
     <Compile Include="UsuarioNegocio.cs" />
+    <Compile Include="RecetaNegocio.cs" />
+    <Compile Include="ComandaNegocio.cs" />
+    <Compile Include="IngredienteNegocio.cs" />
+    <Compile Include="ProveedorNegocio.cs" />
+    <Compile Include="StockNegocio.cs" />
+    <Compile Include="CostoNegocio.cs" />
+    <Compile Include="ClasificacionNegocio.cs" />
+    <Compile Include="UnidadNegocio.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
