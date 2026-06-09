@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Biblioteca de contexto personal (no se entrega)
+/bd2/
+/CLAUDE.md
+
 # User-specific files
 *.rsuser
 *.suo
