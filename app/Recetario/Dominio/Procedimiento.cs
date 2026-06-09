@@ -2,7 +2,6 @@ using System.ComponentModel;
 
 namespace Dominio
 {
-    // Paso del procedimiento de preparación de una receta.
     public class Procedimiento
     {
         public int IdProcedimiento { get; set; }

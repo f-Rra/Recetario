@@ -14,7 +14,6 @@ namespace Dominio
 
         public int IdClasificacion { get; set; }
 
-        // Dato denormalizado que trae el Mapper para mostrar la clasificación en grillas.
         [DisplayName("Clasificación")]
         public string NombreClasificacion { get; set; }
 
@@ -24,7 +23,6 @@ namespace Dominio
         [DisplayName("Activo")]
         public bool Activo { get; set; }
 
-        // Ruta del archivo de imagen de la receta (puede ser nula).
         public string Imagen { get; set; }
     }
 }

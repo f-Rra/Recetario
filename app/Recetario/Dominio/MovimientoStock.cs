@@ -3,8 +3,6 @@ using System.ComponentModel;
 
 namespace Dominio
 {
-    // Entrada, salida o ajuste de stock de un ingrediente.
-    // El trigger trg_ActualizarStockMovimiento actualiza el StockActual al insertarse.
     public class MovimientoStock
     {
         public int IdMovimiento { get; set; }
@@ -16,7 +14,6 @@ namespace Dominio
 
         public int IdTipoMovimiento { get; set; }
 
-        // Dato denormalizado que trae el Mapper (nombre del tipo de movimiento).
         [DisplayName("Tipo")]
         public string TipoMovimiento { get; set; }
 

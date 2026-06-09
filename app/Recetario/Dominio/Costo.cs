@@ -3,8 +3,6 @@ using System.ComponentModel;
 
 namespace Dominio
 {
-    // Cálculo de costo de una receta en un momento dado.
-    // Lo genera sp_CalcularCostoReceta con los precios vigentes.
     public class Costo
     {
         public int IdCosto { get; set; }
