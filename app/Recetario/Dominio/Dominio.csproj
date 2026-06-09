@@ -47,7 +47,22 @@
     <Reference Include="System.Xml"/>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Clasificacion.cs" />
+    <Compile Include="Unidad.cs" />
+    <Compile Include="TipoMovimiento.cs" />
+    <Compile Include="TipoModificacion.cs" />
+    <Compile Include="Persona.cs" />
+    <Compile Include="Usuario.cs" />
+    <Compile Include="Proveedor.cs" />
+    <Compile Include="Ingrediente.cs" />
+    <Compile Include="Receta.cs" />
+    <Compile Include="PrecioIngrediente.cs" />
+    <Compile Include="IngredienteReceta.cs" />
+    <Compile Include="Procedimiento.cs" />
+    <Compile Include="Comanda.cs" />
+    <Compile Include="Modificacion.cs" />
+    <Compile Include="Costo.cs" />
+    <Compile Include="MovimientoStock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
