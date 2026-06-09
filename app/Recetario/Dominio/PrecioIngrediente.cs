@@ -3,8 +3,6 @@ using System.ComponentModel;
 
 namespace Dominio
 {
-    // Precio de un ingrediente para un proveedor, con fecha de vigencia.
-    // sp_CalcularCostoReceta usa el de mayor FechaVigencia (precio vigente).
     public class PrecioIngrediente
     {
         public int IdIngrediente { get; set; }

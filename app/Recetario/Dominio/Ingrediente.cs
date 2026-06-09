@@ -14,7 +14,6 @@ namespace Dominio
 
         public int IdUnidad { get; set; }
 
-        // Dato denormalizado que trae el Mapper para mostrar la unidad en grillas.
         [DisplayName("Unidad")]
         public string Abreviatura { get; set; }
 
@@ -24,7 +23,6 @@ namespace Dominio
         [DisplayName("Stock Mínimo")]
         public decimal StockMinimo { get; set; }
 
-        // Marca visual para el dashboard de stock crítico.
         [DisplayName("Bajo Mínimo")]
         public bool BajoMinimo
         {
