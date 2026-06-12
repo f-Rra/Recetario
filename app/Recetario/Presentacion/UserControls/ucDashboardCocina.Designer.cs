@@ -21,6 +21,7 @@ namespace Presentacion.UserControls
             this.lblComensales = new System.Windows.Forms.Label();
             this.nudComensales = new System.Windows.Forms.NumericUpDown();
             this.btnImprimir = new System.Windows.Forms.Button();
+            this.btnRegistrar = new System.Windows.Forms.Button();
             this.dgvRecetas = new System.Windows.Forms.DataGridView();
             this.colSeleccion = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colCodigo = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -82,11 +83,21 @@ namespace Presentacion.UserControls
             //
             this.btnImprimir.Location = new System.Drawing.Point(560, 57);
             this.btnImprimir.Name = "btnImprimir";
-            this.btnImprimir.Size = new System.Drawing.Size(180, 27);
+            this.btnImprimir.Size = new System.Drawing.Size(155, 27);
             this.btnImprimir.TabIndex = 6;
-            this.btnImprimir.Text = "Imprimir comanda (PDF)";
+            this.btnImprimir.Text = "Imprimir PDF";
             this.btnImprimir.UseVisualStyleBackColor = true;
             this.btnImprimir.Click += new System.EventHandler(this.btnImprimir_Click);
+            //
+            // btnRegistrar
+            //
+            this.btnRegistrar.Location = new System.Drawing.Point(725, 57);
+            this.btnRegistrar.Name = "btnRegistrar";
+            this.btnRegistrar.Size = new System.Drawing.Size(155, 27);
+            this.btnRegistrar.TabIndex = 7;
+            this.btnRegistrar.Text = "Registrar comanda";
+            this.btnRegistrar.UseVisualStyleBackColor = true;
+            this.btnRegistrar.Click += new System.EventHandler(this.btnRegistrar_Click);
             //
             // dgvRecetas
             //
@@ -153,6 +164,7 @@ namespace Presentacion.UserControls
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dgvRecetas);
+            this.Controls.Add(this.btnRegistrar);
             this.Controls.Add(this.btnImprimir);
             this.Controls.Add(this.nudComensales);
             this.Controls.Add(this.lblComensales);
@@ -173,6 +185,7 @@ namespace Presentacion.UserControls
         private System.Windows.Forms.Label lblComensales;
         private System.Windows.Forms.NumericUpDown nudComensales;
         private System.Windows.Forms.Button btnImprimir;
+        private System.Windows.Forms.Button btnRegistrar;
         private System.Windows.Forms.DataGridView dgvRecetas;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colSeleccion;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCodigo;

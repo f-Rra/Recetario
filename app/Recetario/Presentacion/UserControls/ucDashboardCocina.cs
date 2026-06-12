@@ -87,6 +87,38 @@ namespace Presentacion.UserControls
             return responsable != null ? responsable.NombreCompleto : "Sin asignar";
         }
 
+        private void btnRegistrar_Click(object sender, EventArgs e)
+        {
+            List<Receta> seleccionadas = ObtenerRecetasSeleccionadas();
+
+            if (seleccionadas.Count == 0)
+            {
+                MensajesUI.MostrarAdvertencia("Seleccioná al menos una receta.");
+                return;
+            }
+
+            int comensales = (int)nudComensales.Value;
+
+            if (!MensajesUI.MostrarConfirmacion($"¿Registrar {seleccionadas.Count} comanda(s) para {comensales} comensales?"))
+            {
+                return;
+            }
+
+            try
+            {
+                foreach (Receta receta in seleccionadas)
+                {
+                    _comandaNegocio.RegistrarComanda(receta.IdReceta, comensales, _usuario.IdUsuario);
+                }
+
+                MensajesUI.MostrarExito("Comanda(s) registrada(s) correctamente.");
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+        }
+
         private void btnImprimir_Click(object sender, EventArgs e)
         {
             List<Receta> seleccionadas = ObtenerRecetasSeleccionadas();
