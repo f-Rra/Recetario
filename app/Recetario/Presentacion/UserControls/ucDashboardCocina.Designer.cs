@@ -20,6 +20,7 @@ namespace Presentacion.UserControls
             this.cboClasificacion = new System.Windows.Forms.ComboBox();
             this.lblComensales = new System.Windows.Forms.Label();
             this.nudComensales = new System.Windows.Forms.NumericUpDown();
+            this.btnImprimir = new System.Windows.Forms.Button();
             this.dgvRecetas = new System.Windows.Forms.DataGridView();
             this.colSeleccion = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colCodigo = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -76,6 +77,16 @@ namespace Presentacion.UserControls
             this.nudComensales.Size = new System.Drawing.Size(80, 23);
             this.nudComensales.TabIndex = 4;
             this.nudComensales.Value = new decimal(new int[] { 4, 0, 0, 0 });
+            //
+            // btnImprimir
+            //
+            this.btnImprimir.Location = new System.Drawing.Point(560, 57);
+            this.btnImprimir.Name = "btnImprimir";
+            this.btnImprimir.Size = new System.Drawing.Size(180, 27);
+            this.btnImprimir.TabIndex = 6;
+            this.btnImprimir.Text = "Imprimir comanda (PDF)";
+            this.btnImprimir.UseVisualStyleBackColor = true;
+            this.btnImprimir.Click += new System.EventHandler(this.btnImprimir_Click);
             //
             // dgvRecetas
             //
@@ -142,6 +153,7 @@ namespace Presentacion.UserControls
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dgvRecetas);
+            this.Controls.Add(this.btnImprimir);
             this.Controls.Add(this.nudComensales);
             this.Controls.Add(this.lblComensales);
             this.Controls.Add(this.cboClasificacion);
@@ -160,6 +172,7 @@ namespace Presentacion.UserControls
         private System.Windows.Forms.ComboBox cboClasificacion;
         private System.Windows.Forms.Label lblComensales;
         private System.Windows.Forms.NumericUpDown nudComensales;
+        private System.Windows.Forms.Button btnImprimir;
         private System.Windows.Forms.DataGridView dgvRecetas;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colSeleccion;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCodigo;
