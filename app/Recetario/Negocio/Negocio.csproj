@@ -47,6 +47,8 @@
     <Compile Include="UsuarioNegocio.cs" />
     <Compile Include="RecetaNegocio.cs" />
     <Compile Include="ComandaNegocio.cs" />
+    <Compile Include="PersonaNegocio.cs" />
+    <Compile Include="ProcedimientoNegocio.cs" />
     <Compile Include="IngredienteNegocio.cs" />
     <Compile Include="ProveedorNegocio.cs" />
     <Compile Include="StockNegocio.cs" />
