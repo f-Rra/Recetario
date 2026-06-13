@@ -6,7 +6,7 @@ namespace Negocio
 {
     public class ComandaNegocio
     {
-        public int RegistrarComanda(int idReceta, int porciones, int idUsuario)
+        public int RegistrarComanda(int idReceta, int porciones, int idUsuario, int? idPersona = null)
         {
             try
             {
@@ -16,6 +16,7 @@ namespace Negocio
                     datos.setearParametro("@IdReceta", idReceta);
                     datos.setearParametro("@Porciones", porciones);
                     datos.setearParametro("@IdUsuario", idUsuario);
+                    datos.setearParametro("@IdPersona", idPersona);
 
                     return datos.ejecutarAccionReturn();
                 }
@@ -43,6 +44,7 @@ namespace Negocio
                         ingredientes.Add(new IngredienteReceta
                         {
                             IdReceta = idReceta,
+                            IdIngrediente = (int)datos.Lector["IdIngrediente"],
                             NombreIngrediente = (string)datos.Lector["NombreIngrediente"],
                             CantNeta = (decimal)datos.Lector["CantidadAjustada"],
                             Abreviatura = (string)datos.Lector["Unidad"]

@@ -15,10 +15,9 @@ BEGIN
         RETURN;
     END
 
-    -- Devuelve las cantidades ajustadas al numero de comensales pedido.
-    -- Formula: (CantNeta / PorcionesBase) * @Comensales
     SELECT
         r.Nombre                                                              AS NombreReceta,
+        i.IdIngrediente                                                       AS IdIngrediente,
         i.Descripcion                                                         AS NombreIngrediente,
         CAST((ir.CantNeta / r.PorcionesBase) * @Comensales AS DECIMAL(10,4)) AS CantidadAjustada,
         u.Abreviatura                                                         AS Unidad
