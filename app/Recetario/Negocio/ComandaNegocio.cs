@@ -57,6 +57,33 @@ namespace Negocio
             }
         }
 
+        public List<TipoModificacion> ListarTiposModificacion()
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta("SELECT IdTipoModificacion, Nombre FROM TiposModificacion ORDER BY IdTipoModificacion");
+                    datos.ejecutarLectura();
+
+                    List<TipoModificacion> tipos = new List<TipoModificacion>();
+                    while (datos.Lector.Read())
+                    {
+                        tipos.Add(new TipoModificacion
+                        {
+                            IdTipoModificacion = (int)datos.Lector["IdTipoModificacion"],
+                            Nombre = (string)datos.Lector["Nombre"]
+                        });
+                    }
+                    return tipos;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "listar tipos de modificación");
+            }
+        }
+
         public void RegistrarModificacion(Modificacion modificacion)
         {
             try
