@@ -32,6 +32,7 @@ namespace Presentacion.UserControls
             this.colItemReceta = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colItemClasificacion = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colItemMods = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnModificar = new System.Windows.Forms.Button();
             this.btnQuitar = new System.Windows.Forms.Button();
             this.btnGenerar = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nudComensales)).BeginInit();
@@ -206,12 +207,22 @@ namespace Presentacion.UserControls
             this.colItemMods.ReadOnly = true;
             this.colItemMods.Width = 55;
             //
+            // btnModificar
+            //
+            this.btnModificar.Location = new System.Drawing.Point(460, 432);
+            this.btnModificar.Name = "btnModificar";
+            this.btnModificar.Size = new System.Drawing.Size(205, 30);
+            this.btnModificar.TabIndex = 10;
+            this.btnModificar.Text = "Modificar";
+            this.btnModificar.UseVisualStyleBackColor = true;
+            this.btnModificar.Click += new System.EventHandler(this.btnModificar_Click);
+            //
             // btnQuitar
             //
-            this.btnQuitar.Location = new System.Drawing.Point(460, 432);
+            this.btnQuitar.Location = new System.Drawing.Point(675, 432);
             this.btnQuitar.Name = "btnQuitar";
-            this.btnQuitar.Size = new System.Drawing.Size(420, 30);
-            this.btnQuitar.TabIndex = 10;
+            this.btnQuitar.Size = new System.Drawing.Size(205, 30);
+            this.btnQuitar.TabIndex = 11;
             this.btnQuitar.Text = "Quitar de la comanda";
             this.btnQuitar.UseVisualStyleBackColor = true;
             this.btnQuitar.Click += new System.EventHandler(this.btnQuitar_Click);
@@ -221,7 +232,7 @@ namespace Presentacion.UserControls
             this.btnGenerar.Location = new System.Drawing.Point(460, 472);
             this.btnGenerar.Name = "btnGenerar";
             this.btnGenerar.Size = new System.Drawing.Size(420, 30);
-            this.btnGenerar.TabIndex = 11;
+            this.btnGenerar.TabIndex = 12;
             this.btnGenerar.Text = "Generar comanda";
             this.btnGenerar.UseVisualStyleBackColor = true;
             this.btnGenerar.Click += new System.EventHandler(this.btnGenerar_Click);
@@ -232,6 +243,7 @@ namespace Presentacion.UserControls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.btnGenerar);
             this.Controls.Add(this.btnQuitar);
+            this.Controls.Add(this.btnModificar);
             this.Controls.Add(this.dgvComanda);
             this.Controls.Add(this.lblComanda);
             this.Controls.Add(this.btnAgregar);
@@ -268,6 +280,7 @@ namespace Presentacion.UserControls
         private System.Windows.Forms.DataGridViewTextBoxColumn colItemReceta;
         private System.Windows.Forms.DataGridViewTextBoxColumn colItemClasificacion;
         private System.Windows.Forms.DataGridViewTextBoxColumn colItemMods;
+        private System.Windows.Forms.Button btnModificar;
         private System.Windows.Forms.Button btnQuitar;
         private System.Windows.Forms.Button btnGenerar;
     }

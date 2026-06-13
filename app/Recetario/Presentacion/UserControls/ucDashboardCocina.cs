@@ -121,6 +121,24 @@ namespace Presentacion.UserControls
             return false;
         }
 
+        private void btnModificar_Click(object sender, EventArgs e)
+        {
+            if (dgvComanda.CurrentRow == null || !(dgvComanda.CurrentRow.DataBoundItem is ItemComanda item))
+            {
+                MensajesUI.MostrarAdvertencia("Seleccioná un ítem de la comanda.");
+                return;
+            }
+
+            using (frmModificacion frm = new frmModificacion(item.Receta, item.Modificaciones))
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    item.Modificaciones = frm.Modificaciones;
+                    _comanda.ResetBindings();
+                }
+            }
+        }
+
         private void btnQuitar_Click(object sender, EventArgs e)
         {
             if (dgvComanda.CurrentRow != null && dgvComanda.CurrentRow.DataBoundItem is ItemComanda item)
@@ -143,34 +161,70 @@ namespace Presentacion.UserControls
 
             int comensales = (int)nudComensales.Value;
 
-            if (!MensajesUI.MostrarConfirmacion($"¿Generar la comanda con {_comanda.Count} receta(s) para {comensales} comensales?"))
+            try
             {
-                return;
-            }
+                // Cocinero propio de cada receta; las decoraciones quedan en null.
+                Dictionary<ItemComanda, Persona> cocineros = new Dictionary<ItemComanda, Persona>();
+                Persona principal = null;
+                foreach (ItemComanda item in _comanda)
+                {
+                    Persona propio = _personaNegocio.ObtenerResponsablePorClasificacion(item.Receta.IdClasificacion);
+                    cocineros[item] = propio;
+                    if (principal == null && propio != null)
+                    {
+                        principal = propio;
+                    }
+                }
 
-            using (SaveFileDialog dialogo = new SaveFileDialog())
-            {
-                dialogo.Filter = "Archivos PDF (*.pdf)|*.pdf";
-                dialogo.FileName = $"Comanda_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+                // Una decoración (sin cocinero propio) hereda el de la receta principal.
+                foreach (ItemComanda item in _comanda)
+                {
+                    if (cocineros[item] == null && principal == null)
+                    {
+                        MensajesUI.MostrarAdvertencia("La comanda tiene una receta sin cocinero (ej. una decoración) pero ninguna receta principal con cocinero. Agregá una receta principal.");
+                        return;
+                    }
+                }
 
-                if (dialogo.ShowDialog() != DialogResult.OK)
+                if (!MensajesUI.MostrarConfirmacion($"¿Generar la comanda con {_comanda.Count} receta(s) para {comensales} comensales?"))
                 {
                     return;
                 }
 
-                try
+                using (SaveFileDialog dialogo = new SaveFileDialog())
                 {
+                    dialogo.Filter = "Archivos PDF (*.pdf)|*.pdf";
+                    dialogo.FileName = $"Comanda_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+                    if (dialogo.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
+
                     List<SeccionComanda> secciones = new List<SeccionComanda>();
                     foreach (ItemComanda item in _comanda)
                     {
-                        _comandaNegocio.RegistrarComanda(item.Receta.IdReceta, comensales, _usuario.IdUsuario);
+                        Persona propio = cocineros[item];
+                        Persona responsable = propio ?? principal;
+                        int? idPersona = propio == null ? (int?)responsable.IdPersona : null;
+
+                        int idComanda = _comandaNegocio.RegistrarComanda(item.Receta.IdReceta, comensales, _usuario.IdUsuario, idPersona);
+
+                        foreach (Modificacion modificacion in item.Modificaciones)
+                        {
+                            modificacion.IdComanda = idComanda;
+                            _comandaNegocio.RegistrarModificacion(modificacion);
+                        }
 
                         secciones.Add(new SeccionComanda
                         {
                             NombreReceta = item.Receta.Nombre,
                             Sector = item.Receta.NombreClasificacion,
-                            Responsable = ObtenerNombreResponsable(item.Receta.IdClasificacion),
-                            Ingredientes = _comandaNegocio.AjustarReceta(item.Receta.IdReceta, comensales),
+                            Responsable = responsable.NombreCompleto,
+                            Ingredientes = AplicarModificaciones(
+                                _comandaNegocio.AjustarReceta(item.Receta.IdReceta, comensales),
+                                item.Modificaciones, item.Receta.PorcionesBase, comensales),
+                            Modificaciones = item.Modificaciones,
                             Procedimientos = _procedimientoNegocio.ListarPorReceta(item.Receta.IdReceta)
                         });
                     }
@@ -181,21 +235,68 @@ namespace Presentacion.UserControls
 
                     _comanda.Clear();
                 }
-                catch (NegocioException ex)
-                {
-                    MensajesUI.ManejarExcepcion(ex);
-                }
-                catch (Exception ex)
-                {
-                    MensajesUI.ManejarExcepcion(ex, "generar la comanda");
-                }
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+            catch (Exception ex)
+            {
+                MensajesUI.ManejarExcepcion(ex, "generar la comanda");
             }
         }
 
-        private string ObtenerNombreResponsable(int idClasificacion)
+        private List<IngredienteReceta> AplicarModificaciones(List<IngredienteReceta> baseIngredientes, List<Modificacion> modificaciones, int porcionesBase, int comensales)
         {
-            Persona responsable = _personaNegocio.ObtenerResponsablePorClasificacion(idClasificacion);
-            return responsable != null ? responsable.NombreCompleto : "Sin asignar";
+            List<IngredienteReceta> resultado = new List<IngredienteReceta>(baseIngredientes);
+
+            foreach (Modificacion mod in modificaciones)
+            {
+                // La cantidad de la modificación se carga sobre porciones base: se escala igual que el resto.
+                decimal cantidadAjustada = porcionesBase > 0
+                    ? mod.Cantidad / porcionesBase * comensales
+                    : mod.Cantidad;
+
+                if (mod.IdIngredienteOriginal.HasValue && mod.IdIngredienteReemplazo.HasValue)
+                {
+                    // Sustitución: el reemplazo ocupa el lugar del original.
+                    IngredienteReceta nuevo = new IngredienteReceta
+                    {
+                        IdIngrediente = mod.IdIngredienteReemplazo.Value,
+                        NombreIngrediente = mod.IngredienteReemplazo,
+                        CantNeta = cantidadAjustada,
+                        Abreviatura = mod.Abreviatura
+                    };
+
+                    int indice = resultado.FindIndex(i => i.IdIngrediente == mod.IdIngredienteOriginal.Value);
+                    if (indice >= 0)
+                    {
+                        resultado[indice] = nuevo;
+                    }
+                    else
+                    {
+                        resultado.Add(nuevo);
+                    }
+                }
+                else if (mod.IdIngredienteOriginal.HasValue)
+                {
+                    // Eliminación.
+                    resultado.RemoveAll(i => i.IdIngrediente == mod.IdIngredienteOriginal.Value);
+                }
+                else if (mod.IdIngredienteReemplazo.HasValue)
+                {
+                    // Adición.
+                    resultado.Add(new IngredienteReceta
+                    {
+                        IdIngrediente = mod.IdIngredienteReemplazo.Value,
+                        NombreIngrediente = mod.IngredienteReemplazo,
+                        CantNeta = cantidadAjustada,
+                        Abreviatura = mod.Abreviatura
+                    });
+                }
+            }
+
+            return resultado;
         }
     }
 }

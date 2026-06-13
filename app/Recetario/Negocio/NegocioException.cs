@@ -1,4 +1,5 @@
 using System;
+using System.Data.SqlClient;
 
 namespace Negocio
 {
@@ -37,6 +38,11 @@ namespace Negocio
 
         private static string ObtenerMensajeAmigable(Exception ex)
         {
+            if (ex is SqlException sql && sql.Number == 50000)
+            {
+                return ex.Message;
+            }
+
             string mensaje = ex.Message.ToLower();
 
             if (mensaje.Contains("timeout"))

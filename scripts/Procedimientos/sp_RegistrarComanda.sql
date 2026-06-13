@@ -1,11 +1,11 @@
 CREATE OR ALTER PROCEDURE sp_RegistrarComanda
     @IdReceta  INT,
     @Porciones INT,
-    @IdUsuario INT
+    @IdUsuario INT,
+    @IdPersona INT = NULL
 AS
 BEGIN
     DECLARE @IdClasificacion INT;
-    DECLARE @IdPersona       INT;
     DECLARE @IdComanda       INT;
 
     SELECT @IdClasificacion = IdClasificacion
@@ -18,17 +18,20 @@ BEGIN
         RETURN;
     END
 
-    SELECT TOP 1 @IdPersona = p.IdPersona
-    FROM Personas p
-    WHERE p.IdClasificacion = @IdClasificacion
-      AND NOT EXISTS (
-          SELECT 1 FROM Usuarios u WHERE u.IdPersona = p.IdPersona
-      );
-
     IF @IdPersona IS NULL
     BEGIN
-        RAISERROR('No hay integrante de cocina disponible para la clasificacion de esta receta', 16, 1);
-        RETURN;
+        SELECT TOP 1 @IdPersona = p.IdPersona
+        FROM Personas p
+        WHERE p.IdClasificacion = @IdClasificacion
+          AND NOT EXISTS (
+              SELECT 1 FROM Usuarios u WHERE u.IdPersona = p.IdPersona
+          );
+
+        IF @IdPersona IS NULL
+        BEGIN
+            RAISERROR('No hay integrante de cocina disponible para la clasificacion de esta receta', 16, 1);
+            RETURN;
+        END
     END
 
     INSERT INTO Comandas (IdReceta, Fecha, Porciones, IdUsuario, IdPersona)

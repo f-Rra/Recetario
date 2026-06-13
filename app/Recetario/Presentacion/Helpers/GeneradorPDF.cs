@@ -14,6 +14,7 @@ namespace Presentacion.Helpers
         public string Responsable { get; set; }
         public List<IngredienteReceta> Ingredientes { get; set; }
         public List<Procedimiento> Procedimientos { get; set; }
+        public List<Modificacion> Modificaciones { get; set; }
     }
 
     public static class GeneradorPDF
@@ -63,6 +64,19 @@ namespace Presentacion.Helpers
                     doc.Add(tabla);
                     doc.Add(new Paragraph(" "));
 
+                    if (seccion.Modificaciones != null && seccion.Modificaciones.Count > 0)
+                    {
+                        doc.Add(new Paragraph("Modificaciones:", fontSeccion));
+
+                        iTextSharp.text.List cambios = new iTextSharp.text.List(iTextSharp.text.List.UNORDERED);
+                        foreach (Modificacion mod in seccion.Modificaciones)
+                        {
+                            cambios.Add(new ListItem(DescribirModificacion(mod), fontCelda));
+                        }
+                        doc.Add(cambios);
+                        doc.Add(new Paragraph(" "));
+                    }
+
                     if (seccion.Procedimientos != null && seccion.Procedimientos.Count > 0)
                     {
                         doc.Add(new Paragraph("Procedimiento:", fontSeccion));
@@ -78,6 +92,21 @@ namespace Presentacion.Helpers
                 }
 
                 doc.Close();
+            }
+        }
+
+        private static string DescribirModificacion(Modificacion m)
+        {
+            switch (m.Tipo)
+            {
+                case "sustitucion":
+                    return $"Sustituir {m.IngredienteOriginal} por {m.IngredienteReemplazo}";
+                case "adicion":
+                    return $"Agregar {m.IngredienteReemplazo}";
+                case "eliminacion":
+                    return $"Quitar {m.IngredienteOriginal}";
+                default:
+                    return m.Tipo;
             }
         }
 

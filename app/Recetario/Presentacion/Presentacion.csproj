@@ -67,6 +67,12 @@
     <Compile Include="frmPrincipal.Designer.cs">
       <DependentUpon>frmPrincipal.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmModificacion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmModificacion.Designer.cs">
+      <DependentUpon>frmModificacion.cs</DependentUpon>
+    </Compile>
     <Compile Include="Gestores\GestorNavegacion.cs" />
     <Compile Include="UserControls\ItemComanda.cs" />
     <Compile Include="UserControls\ucDashboardCocina.cs">
