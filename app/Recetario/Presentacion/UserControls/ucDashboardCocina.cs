@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Forms;
 using Dominio;
 using Negocio;
@@ -15,12 +16,15 @@ namespace Presentacion.UserControls
         private readonly ComandaNegocio _comandaNegocio = new ComandaNegocio();
         private readonly PersonaNegocio _personaNegocio = new PersonaNegocio();
         private readonly ProcedimientoNegocio _procedimientoNegocio = new ProcedimientoNegocio();
+        private readonly BindingList<ItemComanda> _comanda = new BindingList<ItemComanda>();
 
         public ucDashboardCocina(Usuario usuario)
         {
             InitializeComponent();
             _usuario = usuario;
             dgvRecetas.AutoGenerateColumns = false;
+            dgvComanda.AutoGenerateColumns = false;
+            dgvComanda.DataSource = _comanda;
             CargarClasificaciones();
         }
 
@@ -81,94 +85,117 @@ namespace Presentacion.UserControls
             return seleccionadas;
         }
 
-        private string ObtenerNombreResponsable(int idClasificacion)
-        {
-            Persona responsable = _personaNegocio.ObtenerResponsablePorClasificacion(idClasificacion);
-            return responsable != null ? responsable.NombreCompleto : "Sin asignar";
-        }
-
-        private void btnRegistrar_Click(object sender, EventArgs e)
+        private void btnAgregar_Click(object sender, EventArgs e)
         {
             List<Receta> seleccionadas = ObtenerRecetasSeleccionadas();
 
             if (seleccionadas.Count == 0)
             {
-                MensajesUI.MostrarAdvertencia("Seleccioná al menos una receta.");
+                MensajesUI.MostrarAdvertencia("Tildá al menos una receta del catálogo.");
                 return;
             }
 
-            int comensales = (int)nudComensales.Value;
-
-            if (!MensajesUI.MostrarConfirmacion($"¿Registrar {seleccionadas.Count} comanda(s) para {comensales} comensales?"))
+            foreach (Receta receta in seleccionadas)
             {
-                return;
-            }
-
-            try
-            {
-                foreach (Receta receta in seleccionadas)
+                if (!EstaEnComanda(receta.IdReceta))
                 {
-                    _comandaNegocio.RegistrarComanda(receta.IdReceta, comensales, _usuario.IdUsuario);
+                    _comanda.Add(new ItemComanda { Receta = receta });
                 }
-
-                MensajesUI.MostrarExito("Comanda(s) registrada(s) correctamente.");
             }
-            catch (NegocioException ex)
+
+            foreach (DataGridViewRow fila in dgvRecetas.Rows)
             {
-                MensajesUI.ManejarExcepcion(ex);
+                fila.Cells["colSeleccion"].Value = false;
             }
         }
 
-        private void btnImprimir_Click(object sender, EventArgs e)
+        private bool EstaEnComanda(int idReceta)
         {
-            List<Receta> seleccionadas = ObtenerRecetasSeleccionadas();
-
-            if (seleccionadas.Count == 0)
+            foreach (ItemComanda item in _comanda)
             {
-                MensajesUI.MostrarAdvertencia("Seleccioná al menos una receta.");
+                if (item.Receta.IdReceta == idReceta)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void btnQuitar_Click(object sender, EventArgs e)
+        {
+            if (dgvComanda.CurrentRow != null && dgvComanda.CurrentRow.DataBoundItem is ItemComanda item)
+            {
+                _comanda.Remove(item);
+            }
+            else
+            {
+                MensajesUI.MostrarAdvertencia("Seleccioná un ítem de la comanda.");
+            }
+        }
+
+        private void btnGenerar_Click(object sender, EventArgs e)
+        {
+            if (_comanda.Count == 0)
+            {
+                MensajesUI.MostrarAdvertencia("La comanda está vacía.");
                 return;
             }
 
             int comensales = (int)nudComensales.Value;
 
-            try
+            if (!MensajesUI.MostrarConfirmacion($"¿Generar la comanda con {_comanda.Count} receta(s) para {comensales} comensales?"))
             {
-                List<SeccionComanda> secciones = new List<SeccionComanda>();
-                foreach (Receta receta in seleccionadas)
+                return;
+            }
+
+            using (SaveFileDialog dialogo = new SaveFileDialog())
+            {
+                dialogo.Filter = "Archivos PDF (*.pdf)|*.pdf";
+                dialogo.FileName = $"Comanda_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+                if (dialogo.ShowDialog() != DialogResult.OK)
                 {
-                    secciones.Add(new SeccionComanda
-                    {
-                        NombreReceta = receta.Nombre,
-                        Sector = receta.NombreClasificacion,
-                        Responsable = ObtenerNombreResponsable(receta.IdClasificacion),
-                        Ingredientes = _comandaNegocio.AjustarReceta(receta.IdReceta, comensales),
-                        Procedimientos = _procedimientoNegocio.ListarPorReceta(receta.IdReceta)
-                    });
+                    return;
                 }
 
-                using (SaveFileDialog dialogo = new SaveFileDialog())
+                try
                 {
-                    dialogo.Filter = "Archivos PDF (*.pdf)|*.pdf";
-                    dialogo.FileName = $"Comanda_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
-
-                    if (dialogo.ShowDialog() != DialogResult.OK)
+                    List<SeccionComanda> secciones = new List<SeccionComanda>();
+                    foreach (ItemComanda item in _comanda)
                     {
-                        return;
+                        _comandaNegocio.RegistrarComanda(item.Receta.IdReceta, comensales, _usuario.IdUsuario);
+
+                        secciones.Add(new SeccionComanda
+                        {
+                            NombreReceta = item.Receta.Nombre,
+                            Sector = item.Receta.NombreClasificacion,
+                            Responsable = ObtenerNombreResponsable(item.Receta.IdClasificacion),
+                            Ingredientes = _comandaNegocio.AjustarReceta(item.Receta.IdReceta, comensales),
+                            Procedimientos = _procedimientoNegocio.ListarPorReceta(item.Receta.IdReceta)
+                        });
                     }
 
                     GeneradorPDF.GenerarComanda(dialogo.FileName, comensales, secciones);
                     MensajesUI.MostrarExito("Comanda generada correctamente.");
                     System.Diagnostics.Process.Start(dialogo.FileName);
+
+                    _comanda.Clear();
+                }
+                catch (NegocioException ex)
+                {
+                    MensajesUI.ManejarExcepcion(ex);
+                }
+                catch (Exception ex)
+                {
+                    MensajesUI.ManejarExcepcion(ex, "generar la comanda");
                 }
             }
-            catch (NegocioException ex)
-            {
-                MensajesUI.ManejarExcepcion(ex);
-            }
-            catch (Exception ex)
-            {
-                MensajesUI.ManejarExcepcion(ex, "generar el PDF de la comanda");
-            }
+        }
+
+        private string ObtenerNombreResponsable(int idClasificacion)
+        {
+            Persona responsable = _personaNegocio.ObtenerResponsablePorClasificacion(idClasificacion);
+            return responsable != null ? responsable.NombreCompleto : "Sin asignar";
         }
     }
 }
