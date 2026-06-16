@@ -87,6 +87,12 @@
     <Compile Include="UserControls\ucDashboardAdmin.Designer.cs">
       <DependentUpon>ucDashboardAdmin.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\ucIngredientes.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControls\ucIngredientes.Designer.cs">
+      <DependentUpon>ucIngredientes.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

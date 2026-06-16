@@ -1,6 +1,8 @@
+using System;
 using System.Windows.Forms;
 using Dominio;
 using Presentacion.Gestores;
+using Presentacion.Helpers;
 using Presentacion.UserControls;
 
 namespace Presentacion
@@ -16,7 +18,16 @@ namespace Presentacion
             _usuario = usuario;
             _navegacion = new GestorNavegacion(pnlContenido);
             lblBienvenida.Text = $"Bienvenido/a {_usuario.Persona.NombreCompleto}  ({_usuario.Rol})";
+            ConfigurarMenu();
             CargarDashboard();
+        }
+
+        private void ConfigurarMenu()
+        {
+            bool esAdmin = _usuario.Rol == "admin";
+            menuRecetas.Visible = esAdmin;
+            menuIngredientes.Visible = esAdmin;
+            menuProveedores.Visible = esAdmin;
         }
 
         private void CargarDashboard()
@@ -29,6 +40,26 @@ namespace Presentacion
             {
                 _navegacion.Mostrar(new ucDashboardCocina(_usuario));
             }
+        }
+
+        private void menuInicio_Click(object sender, EventArgs e)
+        {
+            CargarDashboard();
+        }
+
+        private void menuIngredientes_Click(object sender, EventArgs e)
+        {
+            _navegacion.Mostrar(new ucIngredientes());
+        }
+
+        private void menuRecetas_Click(object sender, EventArgs e)
+        {
+            MensajesUI.MostrarInformacion("Próximamente.");
+        }
+
+        private void menuProveedores_Click(object sender, EventArgs e)
+        {
+            MensajesUI.MostrarInformacion("Próximamente.");
         }
     }
 }
