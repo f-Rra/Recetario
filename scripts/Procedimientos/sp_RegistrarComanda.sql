@@ -6,11 +6,8 @@ CREATE OR ALTER PROCEDURE sp_RegistrarComanda
 AS
 BEGIN
     DECLARE @IdClasificacion INT;
-    DECLARE @IdComanda       INT;
 
-    SELECT @IdClasificacion = IdClasificacion
-    FROM Recetas
-    WHERE IdReceta = @IdReceta;
+    SELECT @IdClasificacion = IdClasificacion FROM Recetas WHERE IdReceta = @IdReceta;
 
     IF @IdClasificacion IS NULL
     BEGIN
@@ -19,26 +16,20 @@ BEGIN
     END
 
     IF @IdPersona IS NULL
-    BEGIN
         SELECT TOP 1 @IdPersona = p.IdPersona
         FROM Personas p
         WHERE p.IdClasificacion = @IdClasificacion
-          AND NOT EXISTS (
-              SELECT 1 FROM Usuarios u WHERE u.IdPersona = p.IdPersona
-          );
+          AND NOT EXISTS (SELECT 1 FROM Usuarios u WHERE u.IdPersona = p.IdPersona);
 
-        IF @IdPersona IS NULL
-        BEGIN
-            RAISERROR('No hay integrante de cocina disponible para la clasificacion de esta receta', 16, 1);
-            RETURN;
-        END
+    IF @IdPersona IS NULL
+    BEGIN
+        RAISERROR('No hay integrante de cocina disponible para la clasificacion de esta receta', 16, 1);
+        RETURN;
     END
 
     INSERT INTO Comandas (IdReceta, Fecha, Porciones, IdUsuario, IdPersona)
     VALUES (@IdReceta, CAST(GETDATE() AS DATE), @Porciones, @IdUsuario, @IdPersona);
 
-    SET @IdComanda = SCOPE_IDENTITY();
-
-    SELECT @IdComanda AS IdComanda;
+    SELECT SCOPE_IDENTITY() AS IdComanda;
 END
 GO
