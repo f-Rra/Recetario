@@ -156,5 +156,53 @@ namespace Presentacion.UserControls
                 MensajesUI.ManejarExcepcion(ex);
             }
         }
+
+        private void btnGenerarCostoPDF_Click(object sender, EventArgs e)
+        {
+            if (!(cboRecetaCosto.SelectedItem is Receta receta))
+            {
+                MensajesUI.MostrarAdvertencia("Elegí una receta.");
+                return;
+            }
+            if (!int.TryParse(txtPorciones.Text, out int porciones) || porciones <= 0)
+            {
+                MensajesUI.MostrarAdvertencia("Ingresá una cantidad de porciones válida mayor a 0.");
+                return;
+            }
+
+            try
+            {
+                Costo costo = _costoNegocio.CalcularCosto(receta.IdReceta, porciones, _usuario.IdUsuario);
+                if (costo == null)
+                {
+                    return;
+                }
+
+                List<DetalleCosto> detalle = _costoNegocio.ObtenerDetalle(receta.IdReceta);
+
+                using (SaveFileDialog dialogo = new SaveFileDialog())
+                {
+                    dialogo.Filter = "Archivos PDF (*.pdf)|*.pdf";
+                    dialogo.FileName = $"Costo_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+                    if (dialogo.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
+
+                    GeneradorPDF.GenerarCosto(dialogo.FileName, receta.Nombre, porciones, detalle, costo.CostoTotal, costo.CostoUnitario);
+                    lblResultado.Text = $"Total: ${costo.CostoTotal:N2}   Unitario: ${costo.CostoUnitario:N2}";
+                    System.Diagnostics.Process.Start(dialogo.FileName);
+                }
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+            catch (Exception ex)
+            {
+                MensajesUI.ManejarExcepcion(ex, "generar el PDF de costo");
+            }
+        }
     }
 }

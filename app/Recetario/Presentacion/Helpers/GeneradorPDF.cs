@@ -95,6 +95,54 @@ namespace Presentacion.Helpers
             }
         }
 
+        public static void GenerarCosto(string ruta, string nombreReceta, int porciones, List<DetalleCosto> detalle, decimal costoTotal, decimal costoUnitario)
+        {
+            Font fontTitulo = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+            Font fontSub = FontFactory.GetFont(FontFactory.HELVETICA, 11);
+            Font fontReceta = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13);
+            Font fontHeader = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.WHITE);
+            Font fontCelda = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+            Font fontTotal = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
+
+            Document doc = new Document(PageSize.A4, 40, 40, 40, 40);
+
+            using (FileStream fs = new FileStream(ruta, FileMode.Create))
+            {
+                PdfWriter.GetInstance(doc, fs);
+                doc.Open();
+
+                doc.Add(new Paragraph("Costo de Receta", fontTitulo));
+                doc.Add(new Paragraph($"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm}", fontSub));
+                doc.Add(new Paragraph(" "));
+                doc.Add(new Paragraph(nombreReceta, fontReceta));
+                doc.Add(new Paragraph(" "));
+
+                PdfPTable tabla = new PdfPTable(4);
+                tabla.WidthPercentage = 100;
+                tabla.SetWidths(new float[] { 4f, 2f, 2f, 2f });
+
+                AgregarEncabezado(tabla, "Ingrediente", fontHeader);
+                AgregarEncabezado(tabla, "Cant. bruta", fontHeader);
+                AgregarEncabezado(tabla, "Precio unit.", fontHeader);
+                AgregarEncabezado(tabla, "Costo", fontHeader);
+
+                foreach (DetalleCosto d in detalle)
+                {
+                    tabla.AddCell(new Phrase(d.NombreIngrediente, fontCelda));
+                    tabla.AddCell(new Phrase($"{d.CantBruta:0.##} {d.Unidad}", fontCelda));
+                    tabla.AddCell(new Phrase($"${d.CostoUnitario:N2}", fontCelda));
+                    tabla.AddCell(new Phrase($"${d.CostoIngrediente:N2}", fontCelda));
+                }
+
+                doc.Add(tabla);
+                doc.Add(new Paragraph(" "));
+                doc.Add(new Paragraph($"Costo total: ${costoTotal:N2}", fontTotal));
+                doc.Add(new Paragraph($"Porciones: {porciones}     Costo por porción: ${costoUnitario:N2}", fontSub));
+
+                doc.Close();
+            }
+        }
+
         private static string DescribirModificacion(Modificacion m)
         {
             switch (m.Tipo)

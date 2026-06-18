@@ -33,7 +33,7 @@ namespace Presentacion.UserControls
 
         private void dgvProveedores_SelectionChanged(object sender, EventArgs e)
         {
-            if (dgvProveedores.CurrentRow != null && dgvProveedores.CurrentRow.DataBoundItem is Proveedor proveedor)
+            if (dgvProveedores.CurrentRow != null && dgvProveedores.CurrentRow.Selected && dgvProveedores.CurrentRow.DataBoundItem is Proveedor proveedor)
             {
                 _idSeleccionado = proveedor.IdProveedor;
                 txtNombre.Text = proveedor.Nombre;

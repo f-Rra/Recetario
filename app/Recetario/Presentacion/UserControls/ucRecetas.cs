@@ -69,7 +69,7 @@ namespace Presentacion.UserControls
 
         private void dgvRecetas_SelectionChanged(object sender, EventArgs e)
         {
-            if (dgvRecetas.CurrentRow != null && dgvRecetas.CurrentRow.DataBoundItem is Receta receta)
+            if (dgvRecetas.CurrentRow != null && dgvRecetas.CurrentRow.Selected && dgvRecetas.CurrentRow.DataBoundItem is Receta receta)
             {
                 _idSeleccionado = receta.IdReceta;
                 txtRCodigo.Text = receta.Codigo;

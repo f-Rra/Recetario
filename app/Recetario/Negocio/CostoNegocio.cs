@@ -40,6 +40,46 @@ namespace Negocio
             }
         }
 
+        public List<DetalleCosto> ObtenerDetalle(int idReceta)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "SELECT i.Descripcion AS NombreIngrediente, ir.CantBruta, u.Abreviatura AS Unidad, " +
+                        "pv.Precio AS CostoUnitario, ir.CantBruta * pv.Precio AS CostoIngrediente " +
+                        "FROM IngredientesxRecetas ir " +
+                        "INNER JOIN Ingredientes i ON i.IdIngrediente = ir.IdIngrediente " +
+                        "INNER JOIN Unidades u ON u.IdUnidad = ir.IdUnidad " +
+                        "INNER JOIN PrecioxIngrediente pv ON pv.IdIngrediente = ir.IdIngrediente " +
+                        "AND pv.FechaVigencia = (SELECT MAX(p2.FechaVigencia) FROM PrecioxIngrediente p2 WHERE p2.IdIngrediente = ir.IdIngrediente) " +
+                        "WHERE ir.IdReceta = @IdReceta " +
+                        "ORDER BY i.Descripcion");
+                    datos.setearParametro("@IdReceta", idReceta);
+                    datos.ejecutarLectura();
+
+                    List<DetalleCosto> detalle = new List<DetalleCosto>();
+                    while (datos.Lector.Read())
+                    {
+                        detalle.Add(new DetalleCosto
+                        {
+                            NombreIngrediente = (string)datos.Lector["NombreIngrediente"],
+                            CantBruta = (decimal)datos.Lector["CantBruta"],
+                            Unidad = (string)datos.Lector["Unidad"],
+                            CostoUnitario = (decimal)datos.Lector["CostoUnitario"],
+                            CostoIngrediente = (decimal)datos.Lector["CostoIngrediente"]
+                        });
+                    }
+                    return detalle;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "obtener detalle de costo");
+            }
+        }
+
         public List<Costo> ListarHistorial()
         {
             try

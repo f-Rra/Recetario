@@ -49,7 +49,7 @@ namespace Presentacion.UserControls
 
         private void dgvIngredientes_SelectionChanged(object sender, EventArgs e)
         {
-            if (dgvIngredientes.CurrentRow != null && dgvIngredientes.CurrentRow.DataBoundItem is Ingrediente ingrediente)
+            if (dgvIngredientes.CurrentRow != null && dgvIngredientes.CurrentRow.Selected && dgvIngredientes.CurrentRow.DataBoundItem is Ingrediente ingrediente)
             {
                 _idSeleccionado = ingrediente.IdIngrediente;
                 txtCodigo.Text = ingrediente.Codigo;

@@ -62,6 +62,7 @@
     <Compile Include="Comanda.cs" />
     <Compile Include="Modificacion.cs" />
     <Compile Include="Costo.cs" />
+    <Compile Include="DetalleCosto.cs" />
     <Compile Include="MovimientoStock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
