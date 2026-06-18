@@ -99,6 +99,12 @@
     <Compile Include="UserControls\ucProveedores.Designer.cs">
       <DependentUpon>ucProveedores.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\ucRecetas.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControls\ucRecetas.Designer.cs">
+      <DependentUpon>ucRecetas.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -54,7 +54,7 @@ namespace Presentacion
 
         private void menuRecetas_Click(object sender, EventArgs e)
         {
-            MensajesUI.MostrarInformacion("Próximamente.");
+            _navegacion.Mostrar(new ucRecetas());
         }
 
         private void menuProveedores_Click(object sender, EventArgs e)

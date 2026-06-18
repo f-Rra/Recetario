@@ -84,6 +84,123 @@ namespace Negocio
             }
         }
 
+        public int Agregar(Receta receta)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "INSERT INTO Recetas (Codigo, Nombre, IdClasificacion, PorcionesBase, Activo, Imagen) " +
+                        "VALUES (@Codigo, @Nombre, @IdClasificacion, @PorcionesBase, 1, @Imagen); " +
+                        "SELECT CAST(SCOPE_IDENTITY() AS INT);");
+                    datos.setearParametro("@Codigo", receta.Codigo);
+                    datos.setearParametro("@Nombre", receta.Nombre);
+                    datos.setearParametro("@IdClasificacion", receta.IdClasificacion);
+                    datos.setearParametro("@PorcionesBase", receta.PorcionesBase);
+                    datos.setearParametro("@Imagen", receta.Imagen);
+
+                    return datos.ejecutarAccionReturn();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "agregar receta");
+            }
+        }
+
+        public void Modificar(Receta receta)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "UPDATE Recetas SET Codigo = @Codigo, Nombre = @Nombre, " +
+                        "IdClasificacion = @IdClasificacion, PorcionesBase = @PorcionesBase " +
+                        "WHERE IdReceta = @IdReceta");
+                    datos.setearParametro("@IdReceta", receta.IdReceta);
+                    datos.setearParametro("@Codigo", receta.Codigo);
+                    datos.setearParametro("@Nombre", receta.Nombre);
+                    datos.setearParametro("@IdClasificacion", receta.IdClasificacion);
+                    datos.setearParametro("@PorcionesBase", receta.PorcionesBase);
+
+                    datos.ejecutarAccion();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "modificar receta");
+            }
+        }
+
+        public void Eliminar(int idReceta)
+        {
+            // Baja lógica: la receta puede estar referenciada por comandas y costos.
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta("UPDATE Recetas SET Activo = 0 WHERE IdReceta = @IdReceta");
+                    datos.setearParametro("@IdReceta", idReceta);
+                    datos.ejecutarAccion();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "eliminar receta");
+            }
+        }
+
+        public void AgregarIngrediente(IngredienteReceta ingredienteReceta)
+        {
+            // CantBruta = CantNeta / (Rendimiento / 100): contempla la merma.
+            decimal cantBruta = ingredienteReceta.Rendimiento > 0
+                ? ingredienteReceta.CantNeta / (ingredienteReceta.Rendimiento / 100m)
+                : ingredienteReceta.CantNeta;
+
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "INSERT INTO IngredientesxRecetas (IdReceta, IdIngrediente, CantNeta, Rendimiento, CantBruta, IdUnidad) " +
+                        "VALUES (@IdReceta, @IdIngrediente, @CantNeta, @Rendimiento, @CantBruta, @IdUnidad)");
+                    datos.setearParametro("@IdReceta", ingredienteReceta.IdReceta);
+                    datos.setearParametro("@IdIngrediente", ingredienteReceta.IdIngrediente);
+                    datos.setearParametro("@CantNeta", ingredienteReceta.CantNeta);
+                    datos.setearParametro("@Rendimiento", ingredienteReceta.Rendimiento);
+                    datos.setearParametro("@CantBruta", cantBruta);
+                    datos.setearParametro("@IdUnidad", ingredienteReceta.IdUnidad);
+
+                    datos.ejecutarAccion();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "agregar ingrediente a la receta");
+            }
+        }
+
+        public void QuitarIngrediente(int idReceta, int idIngrediente)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta("DELETE FROM IngredientesxRecetas WHERE IdReceta = @IdReceta AND IdIngrediente = @IdIngrediente");
+                    datos.setearParametro("@IdReceta", idReceta);
+                    datos.setearParametro("@IdIngrediente", idIngrediente);
+
+                    datos.ejecutarAccion();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "quitar ingrediente de la receta");
+            }
+        }
+
         public List<IngredienteReceta> ListarIngredientes(int idReceta)
         {
             try
