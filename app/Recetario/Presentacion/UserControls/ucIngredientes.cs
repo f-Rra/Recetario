@@ -67,7 +67,6 @@ namespace Presentacion.UserControls
         private void LimpiarFormulario()
         {
             _idSeleccionado = 0;
-            txtCodigo.Clear();
             txtDescripcion.Clear();
             txtStockMinimo.Clear();
             if (cboUnidad.Items.Count > 0)
@@ -75,7 +74,17 @@ namespace Presentacion.UserControls
                 cboUnidad.SelectedIndex = 0;
             }
             dgvIngredientes.ClearSelection();
-            txtCodigo.Focus();
+
+            try
+            {
+                txtCodigo.Text = _ingredienteNegocio.ObtenerProximoCodigo();
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+
+            txtDescripcion.Focus();
         }
 
         private void btnGuardar_Click(object sender, EventArgs e)

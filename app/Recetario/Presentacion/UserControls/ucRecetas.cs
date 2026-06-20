@@ -17,6 +17,7 @@ namespace Presentacion.UserControls
         public ucRecetas()
         {
             InitializeComponent();
+            txtRCodigo.ReadOnly = true;
             dgvRecetas.AutoGenerateColumns = false;
             dgvIngRec.AutoGenerateColumns = false;
             dgvProc.AutoGenerateColumns = false;
@@ -120,7 +121,6 @@ namespace Presentacion.UserControls
         private void LimpiarReceta()
         {
             _idSeleccionado = 0;
-            txtRCodigo.Clear();
             txtRNombre.Clear();
             txtRPorciones.Clear();
             if (cboRClasificacion.Items.Count > 0)
@@ -130,7 +130,17 @@ namespace Presentacion.UserControls
             dgvRecetas.ClearSelection();
             dgvIngRec.DataSource = null;
             dgvProc.DataSource = null;
-            txtRCodigo.Focus();
+
+            try
+            {
+                txtRCodigo.Text = _recetaNegocio.ObtenerProximoCodigo();
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+
+            txtRNombre.Focus();
         }
 
         private void btnGuardar_Click(object sender, EventArgs e)

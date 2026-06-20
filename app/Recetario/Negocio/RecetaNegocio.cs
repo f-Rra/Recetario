@@ -84,6 +84,23 @@ namespace Negocio
             }
         }
 
+        public string ObtenerProximoCodigo()
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta("SELECT ISNULL(MAX(TRY_CAST(SUBSTRING(Codigo, 4, 10) AS INT)), 0) + 1 FROM Recetas WHERE Codigo LIKE 'REC%'");
+                    int numero = datos.ejecutarAccionReturn();
+                    return "REC" + numero.ToString("D3");
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "generar código de receta");
+            }
+        }
+
         public int Agregar(Receta receta)
         {
             try
