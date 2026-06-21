@@ -14,8 +14,6 @@ BEGIN
         RETURN;
     END
 
-    -- Sumar CantBruta * precio vigente por cada ingrediente de la receta.
-    -- Precio vigente = el de mayor FechaVigencia para ese ingrediente en PrecioxIngrediente.
     SELECT @CostoTotal = SUM(ir.CantBruta * pv.Precio)
     FROM IngredientesxRecetas ir
         INNER JOIN PrecioxIngrediente pv ON pv.IdIngrediente = ir.IdIngrediente
