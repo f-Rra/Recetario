@@ -10,6 +10,8 @@ namespace Presentacion.UserControls
 {
     public partial class ucDashboardCocina : UserControl
     {
+        #region Campos y constructor
+
         private readonly Usuario _usuario;
         private readonly RecetaNegocio _recetaNegocio = new RecetaNegocio();
         private readonly ClasificacionNegocio _clasificacionNegocio = new ClasificacionNegocio();
@@ -28,6 +30,10 @@ namespace Presentacion.UserControls
             CargarClasificaciones();
         }
 
+        #endregion
+
+        #region Carga de datos
+
         private void CargarClasificaciones()
         {
             try
@@ -45,17 +51,10 @@ namespace Presentacion.UserControls
             }
         }
 
-        private void cboClasificacion_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            CargarRecetas();
-        }
-
         private void CargarRecetas()
         {
             if (!(cboClasificacion.SelectedValue is int idClasificacion))
-            {
                 return;
-            }
 
             try
             {
@@ -78,12 +77,23 @@ namespace Presentacion.UserControls
             {
                 bool marcado = Convert.ToBoolean(fila.Cells["colSeleccion"].Value ?? false);
                 if (marcado && fila.DataBoundItem is Receta receta)
-                {
                     seleccionadas.Add(receta);
-                }
             }
             return seleccionadas;
         }
+
+        #endregion
+
+        #region Eventos
+
+        private void cboClasificacion_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CargarRecetas();
+        }
+
+        #endregion
+
+        #region Acciones — Comanda
 
         private void btnAgregar_Click(object sender, EventArgs e)
         {
@@ -98,15 +108,11 @@ namespace Presentacion.UserControls
             foreach (Receta receta in seleccionadas)
             {
                 if (!EstaEnComanda(receta.IdReceta))
-                {
                     _comanda.Add(new ItemComanda { Receta = receta });
-                }
             }
 
             foreach (DataGridViewRow fila in dgvRecetas.Rows)
-            {
                 fila.Cells["colSeleccion"].Value = false;
-            }
         }
 
         private bool EstaEnComanda(int idReceta)
@@ -114,9 +120,7 @@ namespace Presentacion.UserControls
             foreach (ItemComanda item in _comanda)
             {
                 if (item.Receta.IdReceta == idReceta)
-                {
                     return true;
-                }
             }
             return false;
         }
@@ -142,13 +146,9 @@ namespace Presentacion.UserControls
         private void btnQuitar_Click(object sender, EventArgs e)
         {
             if (dgvComanda.CurrentRow != null && dgvComanda.CurrentRow.DataBoundItem is ItemComanda item)
-            {
                 _comanda.Remove(item);
-            }
             else
-            {
                 MensajesUI.MostrarAdvertencia("Seleccioná un ítem de la comanda.");
-            }
         }
 
         private void btnGenerar_Click(object sender, EventArgs e)
@@ -171,9 +171,7 @@ namespace Presentacion.UserControls
                     Persona propio = _personaNegocio.ObtenerResponsablePorClasificacion(item.Receta.IdClasificacion);
                     cocineros[item] = propio;
                     if (principal == null && propio != null)
-                    {
                         principal = propio;
-                    }
                 }
 
                 // Una decoración (sin cocinero propio) hereda el de la receta principal.
@@ -187,9 +185,7 @@ namespace Presentacion.UserControls
                 }
 
                 if (!MensajesUI.MostrarConfirmacion($"¿Generar la comanda con {_comanda.Count} receta(s) para {comensales} comensales?"))
-                {
                     return;
-                }
 
                 using (SaveFileDialog dialogo = new SaveFileDialog())
                 {
@@ -197,9 +193,7 @@ namespace Presentacion.UserControls
                     dialogo.FileName = $"Comanda_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
 
                     if (dialogo.ShowDialog() != DialogResult.OK)
-                    {
                         return;
-                    }
 
                     List<SeccionComanda> secciones = new List<SeccionComanda>();
                     foreach (ItemComanda item in _comanda)
@@ -270,13 +264,9 @@ namespace Presentacion.UserControls
 
                     int indice = resultado.FindIndex(i => i.IdIngrediente == mod.IdIngredienteOriginal.Value);
                     if (indice >= 0)
-                    {
                         resultado[indice] = nuevo;
-                    }
                     else
-                    {
                         resultado.Add(nuevo);
-                    }
                 }
                 else if (mod.IdIngredienteOriginal.HasValue)
                 {
@@ -298,5 +288,7 @@ namespace Presentacion.UserControls
 
             return resultado;
         }
+
+        #endregion
     }
 }

@@ -7,6 +7,8 @@ namespace Negocio
 {
     public class CostoNegocio
     {
+        #region Cálculo
+
         public Costo CalcularCosto(int idReceta, int porciones, int idUsuario)
         {
             try
@@ -40,6 +42,10 @@ namespace Negocio
             }
         }
 
+        #endregion
+
+        #region Consultas
+
         public List<DetalleCosto> ObtenerDetalle(int idReceta)
         {
             try
@@ -52,8 +58,11 @@ namespace Negocio
                         "FROM IngredientesxRecetas ir " +
                         "INNER JOIN Ingredientes i ON i.IdIngrediente = ir.IdIngrediente " +
                         "INNER JOIN Unidades u ON u.IdUnidad = ir.IdUnidad " +
-                        "INNER JOIN PrecioxIngrediente pv ON pv.IdIngrediente = ir.IdIngrediente " +
-                        "AND pv.FechaVigencia = (SELECT MAX(p2.FechaVigencia) FROM PrecioxIngrediente p2 WHERE p2.IdIngrediente = ir.IdIngrediente) " +
+                        "INNER JOIN ( " +
+                        "    SELECT IdIngrediente, Precio, " +
+                        "           ROW_NUMBER() OVER (PARTITION BY IdIngrediente ORDER BY FechaVigencia DESC, IdProveedor ASC) AS rn " +
+                        "    FROM PrecioxIngrediente " +
+                        ") pv ON pv.IdIngrediente = ir.IdIngrediente AND pv.rn = 1 " +
                         "WHERE ir.IdReceta = @IdReceta " +
                         "ORDER BY i.Descripcion");
                     datos.setearParametro("@IdReceta", idReceta);
@@ -117,5 +126,7 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "listar historial de costos");
             }
         }
+
+        #endregion
     }
 }

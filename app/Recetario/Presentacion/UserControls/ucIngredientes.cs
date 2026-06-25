@@ -8,6 +8,8 @@ namespace Presentacion.UserControls
 {
     public partial class ucIngredientes : UserControl
     {
+        #region Campos y constructor
+
         private readonly IngredienteNegocio _ingredienteNegocio = new IngredienteNegocio();
         private readonly UnidadNegocio _unidadNegocio = new UnidadNegocio();
         private int _idSeleccionado = 0;
@@ -19,6 +21,10 @@ namespace Presentacion.UserControls
             CargarUnidades();
             CargarIngredientes();
         }
+
+        #endregion
+
+        #region Carga de datos
 
         private void CargarUnidades()
         {
@@ -47,6 +53,10 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region Eventos
+
         private void dgvIngredientes_SelectionChanged(object sender, EventArgs e)
         {
             if (dgvIngredientes.CurrentRow != null && dgvIngredientes.CurrentRow.Selected && dgvIngredientes.CurrentRow.DataBoundItem is Ingrediente ingrediente)
@@ -58,6 +68,10 @@ namespace Presentacion.UserControls
                 txtStockMinimo.Text = ingrediente.StockMinimo.ToString("0.##");
             }
         }
+
+        #endregion
+
+        #region ABM
 
         private void btnNuevo_Click(object sender, EventArgs e)
         {
@@ -166,5 +180,7 @@ namespace Presentacion.UserControls
                 MensajesUI.ManejarExcepcion(ex);
             }
         }
+
+        #endregion
     }
 }

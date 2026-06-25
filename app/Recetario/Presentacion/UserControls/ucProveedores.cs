@@ -8,6 +8,8 @@ namespace Presentacion.UserControls
 {
     public partial class ucProveedores : UserControl
     {
+        #region Campos y constructor
+
         private readonly ProveedorNegocio _proveedorNegocio = new ProveedorNegocio();
         private int _idSeleccionado = 0;
 
@@ -17,6 +19,10 @@ namespace Presentacion.UserControls
             dgvProveedores.AutoGenerateColumns = false;
             CargarProveedores();
         }
+
+        #endregion
+
+        #region Carga de datos
 
         private void CargarProveedores()
         {
@@ -31,6 +37,10 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region Eventos
+
         private void dgvProveedores_SelectionChanged(object sender, EventArgs e)
         {
             if (dgvProveedores.CurrentRow != null && dgvProveedores.CurrentRow.Selected && dgvProveedores.CurrentRow.DataBoundItem is Proveedor proveedor)
@@ -43,6 +53,10 @@ namespace Presentacion.UserControls
                 txtDireccion.Text = proveedor.Direccion;
             }
         }
+
+        #endregion
+
+        #region ABM
 
         private void btnNuevo_Click(object sender, EventArgs e)
         {
@@ -127,9 +141,15 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region Helpers
+
         private static string LimpiarOpcional(string texto)
         {
             return string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
         }
+
+        #endregion
     }
 }

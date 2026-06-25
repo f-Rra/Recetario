@@ -139,7 +139,7 @@ namespace Presentacion.UserControls
             //
             // colClasificacion
             //
-            this.colClasificacion.DataPropertyName = "NombreClasificacion";
+            this.colClasificacion.DataPropertyName = "Clasificacion";
             this.colClasificacion.HeaderText = "Clasificación";
             this.colClasificacion.Name = "colClasificacion";
             this.colClasificacion.ReadOnly = true;

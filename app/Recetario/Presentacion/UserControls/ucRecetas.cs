@@ -8,6 +8,8 @@ namespace Presentacion.UserControls
 {
     public partial class ucRecetas : UserControl
     {
+        #region Campos y constructor
+
         private readonly RecetaNegocio _recetaNegocio = new RecetaNegocio();
         private readonly ClasificacionNegocio _clasificacionNegocio = new ClasificacionNegocio();
         private readonly IngredienteNegocio _ingredienteNegocio = new IngredienteNegocio();
@@ -25,6 +27,10 @@ namespace Presentacion.UserControls
             CargarIngredientesCombo();
             CargarRecetas();
         }
+
+        #endregion
+
+        #region Carga de datos
 
         private void CargarClasificaciones()
         {
@@ -68,19 +74,6 @@ namespace Presentacion.UserControls
             }
         }
 
-        private void dgvRecetas_SelectionChanged(object sender, EventArgs e)
-        {
-            if (dgvRecetas.CurrentRow != null && dgvRecetas.CurrentRow.Selected && dgvRecetas.CurrentRow.DataBoundItem is Receta receta)
-            {
-                _idSeleccionado = receta.IdReceta;
-                txtRCodigo.Text = receta.Codigo;
-                txtRNombre.Text = receta.Nombre;
-                cboRClasificacion.SelectedValue = receta.IdClasificacion;
-                txtRPorciones.Text = receta.PorcionesBase.ToString();
-                CargarDetalle();
-            }
-        }
-
         private void CargarDetalle()
         {
             if (_idSeleccionado == 0)
@@ -101,6 +94,23 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region Selección y navegación
+
+        private void dgvRecetas_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvRecetas.CurrentRow != null && dgvRecetas.CurrentRow.Selected && dgvRecetas.CurrentRow.DataBoundItem is Receta receta)
+            {
+                _idSeleccionado = receta.IdReceta;
+                txtRCodigo.Text = receta.Codigo;
+                txtRNombre.Text = receta.Nombre;
+                cboRClasificacion.SelectedValue = receta.IdClasificacion;
+                txtRPorciones.Text = receta.PorcionesBase.ToString();
+                CargarDetalle();
+            }
+        }
+
         private void SeleccionarReceta(int idReceta)
         {
             foreach (DataGridViewRow fila in dgvRecetas.Rows)
@@ -113,6 +123,10 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region ABM — Receta
+
         private void btnNuevo_Click(object sender, EventArgs e)
         {
             LimpiarReceta();
@@ -124,9 +138,7 @@ namespace Presentacion.UserControls
             txtRNombre.Clear();
             txtRPorciones.Clear();
             if (cboRClasificacion.Items.Count > 0)
-            {
                 cboRClasificacion.SelectedIndex = 0;
-            }
             dgvRecetas.ClearSelection();
             dgvIngRec.DataSource = null;
             dgvProc.DataSource = null;
@@ -208,9 +220,7 @@ namespace Presentacion.UserControls
             }
 
             if (!MensajesUI.MostrarConfirmacion("¿Dar de baja la receta seleccionada?"))
-            {
                 return;
-            }
 
             try
             {
@@ -224,6 +234,10 @@ namespace Presentacion.UserControls
                 MensajesUI.ManejarExcepcion(ex);
             }
         }
+
+        #endregion
+
+        #region ABM — Ingredientes
 
         private void cboIngrediente_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -301,6 +315,10 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region ABM — Procedimiento
+
         private void btnAgregarPaso_Click(object sender, EventArgs e)
         {
             if (_idSeleccionado == 0)
@@ -351,5 +369,7 @@ namespace Presentacion.UserControls
                 MensajesUI.MostrarAdvertencia("Seleccioná un paso del procedimiento.");
             }
         }
+
+        #endregion
     }
 }

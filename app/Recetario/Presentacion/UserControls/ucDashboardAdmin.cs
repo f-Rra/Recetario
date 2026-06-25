@@ -9,6 +9,8 @@ namespace Presentacion.UserControls
 {
     public partial class ucDashboardAdmin : UserControl
     {
+        #region Campos y constructor
+
         private readonly Usuario _usuario;
         private readonly StockNegocio _stockNegocio = new StockNegocio();
         private readonly IngredienteNegocio _ingredienteNegocio = new IngredienteNegocio();
@@ -25,6 +27,10 @@ namespace Presentacion.UserControls
             CargarStockCritico();
             CargarHistorial();
         }
+
+        #endregion
+
+        #region Carga de datos
 
         private void CargarCombos()
         {
@@ -74,6 +80,10 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region Eventos
+
         private void cboIngredienteMov_SelectedIndexChanged(object sender, EventArgs e)
         {
             ActualizarUnidadMovimiento();
@@ -85,6 +95,10 @@ namespace Presentacion.UserControls
                 ? ingrediente.Abreviatura
                 : "-";
         }
+
+        #endregion
+
+        #region Acciones — Movimiento
 
         private void btnRegistrarMov_Click(object sender, EventArgs e)
         {
@@ -130,6 +144,10 @@ namespace Presentacion.UserControls
             }
         }
 
+        #endregion
+
+        #region Acciones — Costo
+
         private void btnCalcular_Click(object sender, EventArgs e)
         {
             if (!(cboRecetaCosto.SelectedItem is Receta receta))
@@ -147,9 +165,7 @@ namespace Presentacion.UserControls
             {
                 Costo costo = _costoNegocio.CalcularCosto(receta.IdReceta, porciones, _usuario.IdUsuario);
                 if (costo != null)
-                {
                     lblResultado.Text = $"Total: ${costo.CostoTotal:N2}   Unitario: ${costo.CostoUnitario:N2}";
-                }
             }
             catch (NegocioException ex)
             {
@@ -174,9 +190,7 @@ namespace Presentacion.UserControls
             {
                 Costo costo = _costoNegocio.CalcularCosto(receta.IdReceta, porciones, _usuario.IdUsuario);
                 if (costo == null)
-                {
                     return;
-                }
 
                 List<DetalleCosto> detalle = _costoNegocio.ObtenerDetalle(receta.IdReceta);
 
@@ -186,9 +200,7 @@ namespace Presentacion.UserControls
                     dialogo.FileName = $"Costo_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
 
                     if (dialogo.ShowDialog() != DialogResult.OK)
-                    {
                         return;
-                    }
 
                     GeneradorPDF.GenerarCosto(dialogo.FileName, receta.Nombre, porciones, detalle, costo.CostoTotal, costo.CostoUnitario);
                     lblResultado.Text = $"Total: ${costo.CostoTotal:N2}   Unitario: ${costo.CostoUnitario:N2}";
@@ -204,5 +216,7 @@ namespace Presentacion.UserControls
                 MensajesUI.ManejarExcepcion(ex, "generar el PDF de costo");
             }
         }
+
+        #endregion
     }
 }

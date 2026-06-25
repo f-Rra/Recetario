@@ -14,15 +14,21 @@ BEGIN
         RETURN;
     END
 
+    IF @Porciones <= 0
+    BEGIN
+        RAISERROR('La cantidad de porciones debe ser mayor a cero.', 16, 1);
+        RETURN;
+    END
+
+    -- ROW_NUMBER garantiza un solo precio por ingrediente (el más reciente; en caso de empate, el menor IdProveedor)
     SELECT @CostoTotal = SUM(ir.CantBruta * pv.Precio)
     FROM IngredientesxRecetas ir
-        INNER JOIN PrecioxIngrediente pv ON pv.IdIngrediente = ir.IdIngrediente
-    WHERE ir.IdReceta = @IdReceta
-      AND pv.FechaVigencia = (
-          SELECT MAX(pv2.FechaVigencia)
-          FROM PrecioxIngrediente pv2
-          WHERE pv2.IdIngrediente = pv.IdIngrediente
-      );
+        INNER JOIN (
+            SELECT IdIngrediente, Precio,
+                   ROW_NUMBER() OVER (PARTITION BY IdIngrediente ORDER BY FechaVigencia DESC, IdProveedor ASC) AS rn
+            FROM PrecioxIngrediente
+        ) pv ON pv.IdIngrediente = ir.IdIngrediente AND pv.rn = 1
+    WHERE ir.IdReceta = @IdReceta;
 
     IF @CostoTotal IS NULL
     BEGIN

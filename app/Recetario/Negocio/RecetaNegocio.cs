@@ -6,6 +6,8 @@ namespace Negocio
 {
     public class RecetaNegocio
     {
+        #region Consultas
+
         public List<Receta> Listar()
         {
             try
@@ -101,6 +103,51 @@ namespace Negocio
             }
         }
 
+        public List<IngredienteReceta> ListarIngredientes(int idReceta)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "SELECT ir.IdReceta, ir.IdIngrediente, i.Descripcion AS NombreIngrediente, " +
+                        "ir.CantNeta, ir.Rendimiento, ir.CantBruta, ir.IdUnidad, u.Abreviatura " +
+                        "FROM IngredientesxRecetas ir " +
+                        "INNER JOIN Ingredientes i ON i.IdIngrediente = ir.IdIngrediente " +
+                        "INNER JOIN Unidades u ON u.IdUnidad = ir.IdUnidad " +
+                        "WHERE ir.IdReceta = @IdReceta " +
+                        "ORDER BY i.Descripcion");
+                    datos.setearParametro("@IdReceta", idReceta);
+                    datos.ejecutarLectura();
+
+                    List<IngredienteReceta> ingredientes = new List<IngredienteReceta>();
+                    while (datos.Lector.Read())
+                    {
+                        ingredientes.Add(new IngredienteReceta
+                        {
+                            IdReceta = (int)datos.Lector["IdReceta"],
+                            IdIngrediente = (int)datos.Lector["IdIngrediente"],
+                            NombreIngrediente = (string)datos.Lector["NombreIngrediente"],
+                            CantNeta = (decimal)datos.Lector["CantNeta"],
+                            Rendimiento = (decimal)datos.Lector["Rendimiento"],
+                            CantBruta = (decimal)datos.Lector["CantBruta"],
+                            IdUnidad = (int)datos.Lector["IdUnidad"],
+                            Abreviatura = (string)datos.Lector["Abreviatura"]
+                        });
+                    }
+                    return ingredientes;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "listar ingredientes de la receta");
+            }
+        }
+
+        #endregion
+
+        #region Modificaciones
+
         public int Agregar(Receta receta)
         {
             try
@@ -169,6 +216,10 @@ namespace Negocio
             }
         }
 
+        #endregion
+
+        #region Ingredientes de receta
+
         public void AgregarIngrediente(IngredienteReceta ingredienteReceta)
         {
             // CantBruta = CantNeta / (Rendimiento / 100): contempla la merma.
@@ -218,46 +269,9 @@ namespace Negocio
             }
         }
 
-        public List<IngredienteReceta> ListarIngredientes(int idReceta)
-        {
-            try
-            {
-                using (AccesoDatos datos = new AccesoDatos())
-                {
-                    datos.setearConsulta(
-                        "SELECT ir.IdReceta, ir.IdIngrediente, i.Descripcion AS NombreIngrediente, " +
-                        "ir.CantNeta, ir.Rendimiento, ir.CantBruta, ir.IdUnidad, u.Abreviatura " +
-                        "FROM IngredientesxRecetas ir " +
-                        "INNER JOIN Ingredientes i ON i.IdIngrediente = ir.IdIngrediente " +
-                        "INNER JOIN Unidades u ON u.IdUnidad = ir.IdUnidad " +
-                        "WHERE ir.IdReceta = @IdReceta " +
-                        "ORDER BY i.Descripcion");
-                    datos.setearParametro("@IdReceta", idReceta);
-                    datos.ejecutarLectura();
+        #endregion
 
-                    List<IngredienteReceta> ingredientes = new List<IngredienteReceta>();
-                    while (datos.Lector.Read())
-                    {
-                        ingredientes.Add(new IngredienteReceta
-                        {
-                            IdReceta = (int)datos.Lector["IdReceta"],
-                            IdIngrediente = (int)datos.Lector["IdIngrediente"],
-                            NombreIngrediente = (string)datos.Lector["NombreIngrediente"],
-                            CantNeta = (decimal)datos.Lector["CantNeta"],
-                            Rendimiento = (decimal)datos.Lector["Rendimiento"],
-                            CantBruta = (decimal)datos.Lector["CantBruta"],
-                            IdUnidad = (int)datos.Lector["IdUnidad"],
-                            Abreviatura = (string)datos.Lector["Abreviatura"]
-                        });
-                    }
-                    return ingredientes;
-                }
-            }
-            catch (SqlException ex)
-            {
-                throw NegocioException.FromDbException(ex, "listar ingredientes de la receta");
-            }
-        }
+        #region Mapeo
 
         private static List<Receta> MapearLista(SqlDataReader reader)
         {
@@ -283,5 +297,7 @@ namespace Negocio
                 Imagen = reader["Imagen"] != System.DBNull.Value ? (string)reader["Imagen"] : null
             };
         }
+
+        #endregion
     }
 }

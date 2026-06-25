@@ -7,6 +7,8 @@ namespace Negocio
 {
     public class IngredienteNegocio
     {
+        #region Consultas
+
         public List<Ingrediente> Listar()
         {
             try
@@ -62,6 +64,27 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "buscar ingrediente por ID");
             }
         }
+
+        public string ObtenerProximoCodigo()
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta("SELECT ISNULL(MAX(TRY_CAST(SUBSTRING(Codigo, 4, 10) AS INT)), 0) + 1 FROM Ingredientes WHERE Codigo LIKE 'ING%'");
+                    int numero = datos.ejecutarAccionReturn();
+                    return "ING" + numero.ToString("D3");
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "generar código de ingrediente");
+            }
+        }
+
+        #endregion
+
+        #region Modificaciones
 
         public void Agregar(Ingrediente ingrediente)
         {
@@ -129,22 +152,9 @@ namespace Negocio
             }
         }
 
-        public string ObtenerProximoCodigo()
-        {
-            try
-            {
-                using (AccesoDatos datos = new AccesoDatos())
-                {
-                    datos.setearConsulta("SELECT ISNULL(MAX(TRY_CAST(SUBSTRING(Codigo, 4, 10) AS INT)), 0) + 1 FROM Ingredientes WHERE Codigo LIKE 'ING%'");
-                    int numero = datos.ejecutarAccionReturn();
-                    return "ING" + numero.ToString("D3");
-                }
-            }
-            catch (SqlException ex)
-            {
-                throw NegocioException.FromDbException(ex, "generar código de ingrediente");
-            }
-        }
+        #endregion
+
+        #region Mapeo
 
         private static Ingrediente Mapear(SqlDataReader reader)
         {
@@ -159,5 +169,7 @@ namespace Negocio
                 StockMinimo = (decimal)reader["StockMinimo"]
             };
         }
+
+        #endregion
     }
 }

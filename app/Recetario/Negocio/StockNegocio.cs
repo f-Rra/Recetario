@@ -7,6 +7,8 @@ namespace Negocio
 {
     public class StockNegocio
     {
+        #region Consultas
+
         public List<Ingrediente> ListarStockCritico()
         {
             try
@@ -35,32 +37,6 @@ namespace Negocio
             catch (SqlException ex)
             {
                 throw NegocioException.FromDbException(ex, "listar stock crítico");
-            }
-        }
-
-        public void RegistrarMovimiento(MovimientoStock movimiento)
-        {
-            try
-            {
-                using (AccesoDatos datos = new AccesoDatos())
-                {
-                    datos.setearConsulta(
-                        "INSERT INTO MovimientosStock " +
-                        "(IdIngrediente, IdTipoMovimiento, Cantidad, IdUnidad, IdUsuario, Observaciones) " +
-                        "VALUES (@IdIngrediente, @IdTipoMovimiento, @Cantidad, @IdUnidad, @IdUsuario, @Observaciones)");
-                    datos.setearParametro("@IdIngrediente", movimiento.IdIngrediente);
-                    datos.setearParametro("@IdTipoMovimiento", movimiento.IdTipoMovimiento);
-                    datos.setearParametro("@Cantidad", movimiento.Cantidad);
-                    datos.setearParametro("@IdUnidad", movimiento.IdUnidad);
-                    datos.setearParametro("@IdUsuario", movimiento.IdUsuario);
-                    datos.setearParametro("@Observaciones", movimiento.Observaciones);
-
-                    datos.ejecutarAccion();
-                }
-            }
-            catch (SqlException ex)
-            {
-                throw NegocioException.FromDbException(ex, "registrar movimiento de stock");
             }
         }
 
@@ -134,5 +110,37 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "listar tipos de movimiento");
             }
         }
+
+        #endregion
+
+        #region Movimientos
+
+        public void RegistrarMovimiento(MovimientoStock movimiento)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "INSERT INTO MovimientosStock " +
+                        "(IdIngrediente, IdTipoMovimiento, Cantidad, IdUnidad, IdUsuario, Observaciones) " +
+                        "VALUES (@IdIngrediente, @IdTipoMovimiento, @Cantidad, @IdUnidad, @IdUsuario, @Observaciones)");
+                    datos.setearParametro("@IdIngrediente", movimiento.IdIngrediente);
+                    datos.setearParametro("@IdTipoMovimiento", movimiento.IdTipoMovimiento);
+                    datos.setearParametro("@Cantidad", movimiento.Cantidad);
+                    datos.setearParametro("@IdUnidad", movimiento.IdUnidad);
+                    datos.setearParametro("@IdUsuario", movimiento.IdUsuario);
+                    datos.setearParametro("@Observaciones", movimiento.Observaciones);
+
+                    datos.ejecutarAccion();
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "registrar movimiento de stock");
+            }
+        }
+
+        #endregion
     }
 }

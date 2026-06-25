@@ -6,6 +6,8 @@ namespace Negocio
 {
     public class ComandaNegocio
     {
+        #region Comandas
+
         public int RegistrarComanda(int idReceta, int porciones, int idUsuario, int? idPersona = null)
         {
             try
@@ -59,6 +61,10 @@ namespace Negocio
             }
         }
 
+        #endregion
+
+        #region Modificaciones
+
         public List<TipoModificacion> ListarTiposModificacion()
         {
             try
@@ -111,5 +117,7 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "registrar modificación");
             }
         }
+
+        #endregion
     }
 }
