@@ -6,6 +6,8 @@ namespace Negocio
 {
     public class UsuarioNegocio
     {
+        #region Validación
+
         public Usuario ValidarUsuario(string email, string password)
         {
             try
@@ -31,6 +33,10 @@ namespace Negocio
             }
         }
 
+        #endregion
+
+        #region Mapeo
+
         private static Usuario Mapear(SqlDataReader reader)
         {
             Usuario usuario = new Usuario
@@ -52,5 +58,7 @@ namespace Negocio
 
             return usuario;
         }
+
+        #endregion
     }
 }

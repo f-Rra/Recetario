@@ -6,6 +6,8 @@ namespace Negocio
 {
     public class PersonaNegocio
     {
+        #region Consultas
+
         public Persona ObtenerResponsablePorClasificacion(int idClasificacion)
         {
             try
@@ -33,6 +35,10 @@ namespace Negocio
             }
         }
 
+        #endregion
+
+        #region Mapeo
+
         private static Persona Mapear(SqlDataReader reader)
         {
             return new Persona
@@ -45,5 +51,7 @@ namespace Negocio
                 IdClasificacion = reader["IdClasificacion"] != DBNull.Value ? (int?)reader["IdClasificacion"] : null
             };
         }
+
+        #endregion
     }
 }

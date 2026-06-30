@@ -16,6 +16,7 @@ namespace Presentacion.UserControls
         private readonly IngredienteNegocio _ingredienteNegocio = new IngredienteNegocio();
         private readonly RecetaNegocio _recetaNegocio = new RecetaNegocio();
         private readonly CostoNegocio _costoNegocio = new CostoNegocio();
+        private readonly ComandaNegocio _comandaNegocio = new ComandaNegocio();
 
         public ucDashboardAdmin(Usuario usuario)
         {
@@ -23,9 +24,11 @@ namespace Presentacion.UserControls
             _usuario = usuario;
             dgvStockCritico.AutoGenerateColumns = false;
             dgvHistorial.AutoGenerateColumns = false;
+            dgvModificaciones.AutoGenerateColumns = false;
             CargarCombos();
             CargarStockCritico();
             CargarHistorial();
+            CargarModificaciones();
         }
 
         #endregion
@@ -73,6 +76,18 @@ namespace Presentacion.UserControls
             try
             {
                 dgvHistorial.DataSource = _stockNegocio.ListarMovimientos();
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+        }
+
+        private void CargarModificaciones()
+        {
+            try
+            {
+                dgvModificaciones.DataSource = _comandaNegocio.ListarModificaciones();
             }
             catch (NegocioException ex)
             {

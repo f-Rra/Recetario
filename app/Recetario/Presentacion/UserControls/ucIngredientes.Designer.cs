@@ -110,6 +110,7 @@ namespace Presentacion.UserControls
             // colStockActual
             //
             this.colStockActual.DataPropertyName = "StockActual";
+            this.colStockActual.DefaultCellStyle.Format = "0.####";
             this.colStockActual.HeaderText = "Stock actual";
             this.colStockActual.Name = "colStockActual";
             this.colStockActual.ReadOnly = true;
@@ -118,6 +119,7 @@ namespace Presentacion.UserControls
             // colStockMinimo
             //
             this.colStockMinimo.DataPropertyName = "StockMinimo";
+            this.colStockMinimo.DefaultCellStyle.Format = "0.####";
             this.colStockMinimo.HeaderText = "Stock mínimo";
             this.colStockMinimo.Name = "colStockMinimo";
             this.colStockMinimo.ReadOnly = true;

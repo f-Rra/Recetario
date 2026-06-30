@@ -1,5 +1,6 @@
 CREATE OR ALTER VIEW vw_Comanda AS
 SELECT
+    r.IdReceta,
     r.Nombre       AS NombreReceta,
     c.Nombre       AS Clasificacion,
     i.Descripcion  AS NombreIngrediente,

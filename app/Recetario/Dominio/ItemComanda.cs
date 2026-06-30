@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using Dominio;
 
-namespace Presentacion.UserControls
+namespace Dominio
 {
     public class ItemComanda
     {

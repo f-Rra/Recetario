@@ -4,8 +4,6 @@ GO
 USE RecetarioDB;
 GO
 
--- Tablas auxiliares de catálogo (sin dependencias)
-
 CREATE TABLE Clasificaciones (
     IdClasificacion INT          IDENTITY(1,1) NOT NULL,
     Nombre          VARCHAR(100) NOT NULL,
@@ -24,8 +22,6 @@ CREATE TABLE Unidades (
 );
 GO
 
--- Tablas auxiliares para campos que antes eran texto libre (feedback Abel Faure)
-
 CREATE TABLE TiposMovimiento (
     IdTipoMovimiento INT         IDENTITY(1,1) NOT NULL,
     Nombre           VARCHAR(30) NOT NULL,
@@ -42,9 +38,6 @@ CREATE TABLE TiposModificacion (
 );
 GO
 
--- Entidad Personas: reemplaza a Equipo y normaliza Usuarios (feedback Abel Faure)
--- Agrupa a toda persona real del sistema: integrantes de cocina y usuarios con acceso.
-
 CREATE TABLE Personas (
     IdPersona       INT          IDENTITY(1,1) NOT NULL,
     Nombre          VARCHAR(100) NOT NULL,
@@ -57,7 +50,6 @@ CREATE TABLE Personas (
 );
 GO
 
--- Usuarios: solo datos de acceso al sistema, vinculado a la persona real por FK
 
 CREATE TABLE Usuarios (
     IdUsuario INT          IDENTITY(1,1) NOT NULL,
@@ -110,9 +102,6 @@ CREATE TABLE Recetas (
 );
 GO
 
--- PK compuesta: un precio por combinación ingrediente+proveedor
--- sp_CalcularCostoReceta obtiene el precio vigente con MAX(FechaVigencia)
-
 CREATE TABLE PrecioxIngrediente (
     IdIngrediente INT           NOT NULL,
     IdProveedor   INT           NOT NULL,
@@ -124,8 +113,6 @@ CREATE TABLE PrecioxIngrediente (
     CONSTRAINT CK_PrecioxIngrediente_Precio       CHECK (Precio > 0)
 );
 GO
-
--- CantBruta = CantNeta / (Rendimiento / 100): se almacena calculada para evitar recalcular en cada consulta
 
 CREATE TABLE IngredientesxRecetas (
     IdReceta      INT           NOT NULL,
@@ -153,9 +140,6 @@ CREATE TABLE Procedimientos (
     CONSTRAINT CK_Procedimientos_NroPaso CHECK (NroPaso > 0)
 );
 GO
-
--- IdPersona: integrante de cocina asignado automáticamente por sp_RegistrarComanda
--- según coincidencia de IdClasificacion entre la receta y la persona
 
 CREATE TABLE Comandas (
     IdComanda INT  IDENTITY(1,1) NOT NULL,

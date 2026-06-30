@@ -19,15 +19,21 @@ namespace Presentacion.UserControls
             this.lblClasificacion = new System.Windows.Forms.Label();
             this.cboClasificacion = new System.Windows.Forms.ComboBox();
             this.lblComensales = new System.Windows.Forms.Label();
-            this.nudComensales = new System.Windows.Forms.NumericUpDown();
+            this.txtComensales = new System.Windows.Forms.TextBox();
+            this.gbRecetas = new System.Windows.Forms.GroupBox();
             this.lblCatalogo = new System.Windows.Forms.Label();
             this.dgvRecetas = new System.Windows.Forms.DataGridView();
             this.colSeleccion = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colCodigo = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colNombre = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colClasificacion = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblIngredientesReceta = new System.Windows.Forms.Label();
+            this.dgvIngredientes = new System.Windows.Forms.DataGridView();
+            this.colIngNombre = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colIngCant = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colIngUnidad = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnAgregar = new System.Windows.Forms.Button();
-            this.lblComanda = new System.Windows.Forms.Label();
+            this.gbComanda = new System.Windows.Forms.GroupBox();
             this.dgvComanda = new System.Windows.Forms.DataGridView();
             this.colItemReceta = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colItemClasificacion = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -35,9 +41,11 @@ namespace Presentacion.UserControls
             this.btnModificar = new System.Windows.Forms.Button();
             this.btnQuitar = new System.Windows.Forms.Button();
             this.btnGenerar = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.nudComensales)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvRecetas)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvIngredientes)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvComanda)).BeginInit();
+            this.gbRecetas.SuspendLayout();
+            this.gbComanda.SuspendLayout();
             this.SuspendLayout();
             //
             // lblTitulo
@@ -77,24 +85,36 @@ namespace Presentacion.UserControls
             this.lblComensales.TabIndex = 3;
             this.lblComensales.Text = "Comensales";
             //
-            // nudComensales
+            // txtComensales
             //
-            this.nudComensales.Location = new System.Drawing.Point(550, 50);
-            this.nudComensales.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
-            this.nudComensales.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            this.nudComensales.Name = "nudComensales";
-            this.nudComensales.Size = new System.Drawing.Size(80, 23);
-            this.nudComensales.TabIndex = 4;
-            this.nudComensales.Value = new decimal(new int[] { 4, 0, 0, 0 });
+            this.txtComensales.Location = new System.Drawing.Point(550, 50);
+            this.txtComensales.Name = "txtComensales";
+            this.txtComensales.Size = new System.Drawing.Size(80, 23);
+            this.txtComensales.TabIndex = 4;
+            this.txtComensales.Text = "4";
+            //
+            // gbRecetas
+            //
+            this.gbRecetas.Controls.Add(this.lblCatalogo);
+            this.gbRecetas.Controls.Add(this.dgvRecetas);
+            this.gbRecetas.Controls.Add(this.lblIngredientesReceta);
+            this.gbRecetas.Controls.Add(this.dgvIngredientes);
+            this.gbRecetas.Controls.Add(this.btnAgregar);
+            this.gbRecetas.Location = new System.Drawing.Point(20, 85);
+            this.gbRecetas.Name = "gbRecetas";
+            this.gbRecetas.Size = new System.Drawing.Size(565, 455);
+            this.gbRecetas.TabIndex = 5;
+            this.gbRecetas.TabStop = false;
+            this.gbRecetas.Text = "Recetas e ingredientes";
             //
             // lblCatalogo
             //
             this.lblCatalogo.AutoSize = true;
             this.lblCatalogo.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
-            this.lblCatalogo.Location = new System.Drawing.Point(20, 85);
+            this.lblCatalogo.Location = new System.Drawing.Point(10, 25);
             this.lblCatalogo.Name = "lblCatalogo";
             this.lblCatalogo.Size = new System.Drawing.Size(127, 17);
-            this.lblCatalogo.TabIndex = 5;
+            this.lblCatalogo.TabIndex = 0;
             this.lblCatalogo.Text = "Recetas disponibles";
             //
             // dgvRecetas
@@ -107,13 +127,14 @@ namespace Presentacion.UserControls
                 this.colCodigo,
                 this.colNombre,
                 this.colClasificacion});
-            this.dgvRecetas.Location = new System.Drawing.Point(20, 105);
+            this.dgvRecetas.Location = new System.Drawing.Point(10, 45);
             this.dgvRecetas.MultiSelect = false;
             this.dgvRecetas.Name = "dgvRecetas";
             this.dgvRecetas.RowHeadersVisible = false;
             this.dgvRecetas.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvRecetas.Size = new System.Drawing.Size(420, 360);
-            this.dgvRecetas.TabIndex = 6;
+            this.dgvRecetas.Size = new System.Drawing.Size(545, 195);
+            this.dgvRecetas.TabIndex = 1;
+            this.dgvRecetas.SelectionChanged += new System.EventHandler(this.dgvRecetas_SelectionChanged);
             //
             // colSeleccion
             //
@@ -139,31 +160,87 @@ namespace Presentacion.UserControls
             //
             // colClasificacion
             //
-            this.colClasificacion.DataPropertyName = "Clasificacion";
+            this.colClasificacion.DataPropertyName = "NombreClasificacion";
             this.colClasificacion.HeaderText = "Clasificación";
             this.colClasificacion.Name = "colClasificacion";
             this.colClasificacion.ReadOnly = true;
-            this.colClasificacion.Width = 120;
+            this.colClasificacion.Width = 110;
+            //
+            // lblIngredientesReceta
+            //
+            this.lblIngredientesReceta.AutoSize = true;
+            this.lblIngredientesReceta.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
+            this.lblIngredientesReceta.Location = new System.Drawing.Point(10, 248);
+            this.lblIngredientesReceta.Name = "lblIngredientesReceta";
+            this.lblIngredientesReceta.Size = new System.Drawing.Size(150, 17);
+            this.lblIngredientesReceta.TabIndex = 2;
+            this.lblIngredientesReceta.Text = "Ingredientes de la receta";
+            //
+            // dgvIngredientes
+            //
+            this.dgvIngredientes.AllowUserToAddRows = false;
+            this.dgvIngredientes.AllowUserToDeleteRows = false;
+            this.dgvIngredientes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvIngredientes.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+                this.colIngNombre,
+                this.colIngCant,
+                this.colIngUnidad});
+            this.dgvIngredientes.Location = new System.Drawing.Point(10, 268);
+            this.dgvIngredientes.MultiSelect = false;
+            this.dgvIngredientes.Name = "dgvIngredientes";
+            this.dgvIngredientes.ReadOnly = true;
+            this.dgvIngredientes.RowHeadersVisible = false;
+            this.dgvIngredientes.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvIngredientes.Size = new System.Drawing.Size(545, 135);
+            this.dgvIngredientes.TabIndex = 3;
+            //
+            // colIngNombre
+            //
+            this.colIngNombre.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.colIngNombre.DataPropertyName = "NombreIngrediente";
+            this.colIngNombre.HeaderText = "Ingrediente";
+            this.colIngNombre.Name = "colIngNombre";
+            this.colIngNombre.ReadOnly = true;
+            //
+            // colIngCant
+            //
+            this.colIngCant.DataPropertyName = "CantNeta";
+            this.colIngCant.DefaultCellStyle.Format = "0.####";
+            this.colIngCant.HeaderText = "Cant.";
+            this.colIngCant.Name = "colIngCant";
+            this.colIngCant.ReadOnly = true;
+            this.colIngCant.Width = 70;
+            //
+            // colIngUnidad
+            //
+            this.colIngUnidad.DataPropertyName = "Abreviatura";
+            this.colIngUnidad.HeaderText = "Un.";
+            this.colIngUnidad.Name = "colIngUnidad";
+            this.colIngUnidad.ReadOnly = true;
+            this.colIngUnidad.Width = 40;
             //
             // btnAgregar
             //
-            this.btnAgregar.Location = new System.Drawing.Point(20, 472);
+            this.btnAgregar.Location = new System.Drawing.Point(10, 412);
             this.btnAgregar.Name = "btnAgregar";
-            this.btnAgregar.Size = new System.Drawing.Size(420, 30);
-            this.btnAgregar.TabIndex = 7;
+            this.btnAgregar.Size = new System.Drawing.Size(545, 30);
+            this.btnAgregar.TabIndex = 4;
             this.btnAgregar.Text = "Agregar a la comanda →";
             this.btnAgregar.UseVisualStyleBackColor = true;
             this.btnAgregar.Click += new System.EventHandler(this.btnAgregar_Click);
             //
-            // lblComanda
+            // gbComanda
             //
-            this.lblComanda.AutoSize = true;
-            this.lblComanda.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
-            this.lblComanda.Location = new System.Drawing.Point(460, 85);
-            this.lblComanda.Name = "lblComanda";
-            this.lblComanda.Size = new System.Drawing.Size(67, 17);
-            this.lblComanda.TabIndex = 8;
-            this.lblComanda.Text = "Comanda";
+            this.gbComanda.Controls.Add(this.dgvComanda);
+            this.gbComanda.Controls.Add(this.btnModificar);
+            this.gbComanda.Controls.Add(this.btnQuitar);
+            this.gbComanda.Controls.Add(this.btnGenerar);
+            this.gbComanda.Location = new System.Drawing.Point(600, 85);
+            this.gbComanda.Name = "gbComanda";
+            this.gbComanda.Size = new System.Drawing.Size(560, 455);
+            this.gbComanda.TabIndex = 6;
+            this.gbComanda.TabStop = false;
+            this.gbComanda.Text = "Comanda";
             //
             // dgvComanda
             //
@@ -174,14 +251,14 @@ namespace Presentacion.UserControls
                 this.colItemReceta,
                 this.colItemClasificacion,
                 this.colItemMods});
-            this.dgvComanda.Location = new System.Drawing.Point(460, 105);
+            this.dgvComanda.Location = new System.Drawing.Point(10, 25);
             this.dgvComanda.MultiSelect = false;
             this.dgvComanda.Name = "dgvComanda";
             this.dgvComanda.ReadOnly = true;
             this.dgvComanda.RowHeadersVisible = false;
             this.dgvComanda.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvComanda.Size = new System.Drawing.Size(420, 320);
-            this.dgvComanda.TabIndex = 9;
+            this.dgvComanda.Size = new System.Drawing.Size(540, 345);
+            this.dgvComanda.TabIndex = 0;
             //
             // colItemReceta
             //
@@ -197,7 +274,7 @@ namespace Presentacion.UserControls
             this.colItemClasificacion.HeaderText = "Clasificación";
             this.colItemClasificacion.Name = "colItemClasificacion";
             this.colItemClasificacion.ReadOnly = true;
-            this.colItemClasificacion.Width = 120;
+            this.colItemClasificacion.Width = 110;
             //
             // colItemMods
             //
@@ -209,30 +286,30 @@ namespace Presentacion.UserControls
             //
             // btnModificar
             //
-            this.btnModificar.Location = new System.Drawing.Point(460, 432);
+            this.btnModificar.Location = new System.Drawing.Point(10, 378);
             this.btnModificar.Name = "btnModificar";
-            this.btnModificar.Size = new System.Drawing.Size(205, 30);
-            this.btnModificar.TabIndex = 10;
+            this.btnModificar.Size = new System.Drawing.Size(265, 30);
+            this.btnModificar.TabIndex = 1;
             this.btnModificar.Text = "Modificar";
             this.btnModificar.UseVisualStyleBackColor = true;
             this.btnModificar.Click += new System.EventHandler(this.btnModificar_Click);
             //
             // btnQuitar
             //
-            this.btnQuitar.Location = new System.Drawing.Point(675, 432);
+            this.btnQuitar.Location = new System.Drawing.Point(285, 378);
             this.btnQuitar.Name = "btnQuitar";
-            this.btnQuitar.Size = new System.Drawing.Size(205, 30);
-            this.btnQuitar.TabIndex = 11;
+            this.btnQuitar.Size = new System.Drawing.Size(265, 30);
+            this.btnQuitar.TabIndex = 2;
             this.btnQuitar.Text = "Quitar de la comanda";
             this.btnQuitar.UseVisualStyleBackColor = true;
             this.btnQuitar.Click += new System.EventHandler(this.btnQuitar_Click);
             //
             // btnGenerar
             //
-            this.btnGenerar.Location = new System.Drawing.Point(460, 472);
+            this.btnGenerar.Location = new System.Drawing.Point(10, 412);
             this.btnGenerar.Name = "btnGenerar";
-            this.btnGenerar.Size = new System.Drawing.Size(420, 30);
-            this.btnGenerar.TabIndex = 12;
+            this.btnGenerar.Size = new System.Drawing.Size(540, 30);
+            this.btnGenerar.TabIndex = 3;
             this.btnGenerar.Text = "Generar comanda";
             this.btnGenerar.UseVisualStyleBackColor = true;
             this.btnGenerar.Click += new System.EventHandler(this.btnGenerar_Click);
@@ -241,24 +318,21 @@ namespace Presentacion.UserControls
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.btnGenerar);
-            this.Controls.Add(this.btnQuitar);
-            this.Controls.Add(this.btnModificar);
-            this.Controls.Add(this.dgvComanda);
-            this.Controls.Add(this.lblComanda);
-            this.Controls.Add(this.btnAgregar);
-            this.Controls.Add(this.dgvRecetas);
-            this.Controls.Add(this.lblCatalogo);
-            this.Controls.Add(this.nudComensales);
+            this.Controls.Add(this.gbComanda);
+            this.Controls.Add(this.gbRecetas);
+            this.Controls.Add(this.txtComensales);
             this.Controls.Add(this.lblComensales);
             this.Controls.Add(this.cboClasificacion);
             this.Controls.Add(this.lblClasificacion);
             this.Controls.Add(this.lblTitulo);
             this.Name = "ucDashboardCocina";
-            this.Size = new System.Drawing.Size(900, 556);
-            ((System.ComponentModel.ISupportInitialize)(this.nudComensales)).EndInit();
+            this.Size = new System.Drawing.Size(1180, 556);
             ((System.ComponentModel.ISupportInitialize)(this.dgvRecetas)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvIngredientes)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvComanda)).EndInit();
+            this.gbRecetas.ResumeLayout(false);
+            this.gbRecetas.PerformLayout();
+            this.gbComanda.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
         }
@@ -267,15 +341,21 @@ namespace Presentacion.UserControls
         private System.Windows.Forms.Label lblClasificacion;
         private System.Windows.Forms.ComboBox cboClasificacion;
         private System.Windows.Forms.Label lblComensales;
-        private System.Windows.Forms.NumericUpDown nudComensales;
+        private System.Windows.Forms.TextBox txtComensales;
+        private System.Windows.Forms.GroupBox gbRecetas;
         private System.Windows.Forms.Label lblCatalogo;
         private System.Windows.Forms.DataGridView dgvRecetas;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colSeleccion;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCodigo;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNombre;
         private System.Windows.Forms.DataGridViewTextBoxColumn colClasificacion;
+        private System.Windows.Forms.Label lblIngredientesReceta;
+        private System.Windows.Forms.DataGridView dgvIngredientes;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colIngNombre;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colIngCant;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colIngUnidad;
         private System.Windows.Forms.Button btnAgregar;
-        private System.Windows.Forms.Label lblComanda;
+        private System.Windows.Forms.GroupBox gbComanda;
         private System.Windows.Forms.DataGridView dgvComanda;
         private System.Windows.Forms.DataGridViewTextBoxColumn colItemReceta;
         private System.Windows.Forms.DataGridViewTextBoxColumn colItemClasificacion;

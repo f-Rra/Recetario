@@ -103,6 +103,37 @@ namespace Negocio
             }
         }
 
+        public List<IngredienteReceta> ListarIngredientesComanda(int idReceta)
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "SELECT NombreIngrediente, Cantidad AS CantNeta, Unidad AS Abreviatura " +
+                        "FROM vw_Comanda WHERE IdReceta = @IdReceta ORDER BY NombreIngrediente");
+                    datos.setearParametro("@IdReceta", idReceta);
+                    datos.ejecutarLectura();
+
+                    List<IngredienteReceta> ingredientes = new List<IngredienteReceta>();
+                    while (datos.Lector.Read())
+                    {
+                        ingredientes.Add(new IngredienteReceta
+                        {
+                            NombreIngrediente = (string)datos.Lector["NombreIngrediente"],
+                            CantNeta          = (decimal)datos.Lector["CantNeta"],
+                            Abreviatura       = (string)datos.Lector["Abreviatura"]
+                        });
+                    }
+                    return ingredientes;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "listar ingredientes de la comanda");
+            }
+        }
+
         public List<IngredienteReceta> ListarIngredientes(int idReceta)
         {
             try

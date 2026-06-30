@@ -306,6 +306,7 @@ namespace Presentacion.UserControls
             // colIRNeta
             //
             this.colIRNeta.DataPropertyName = "CantNeta";
+            this.colIRNeta.DefaultCellStyle.Format = "0.####";
             this.colIRNeta.HeaderText = "Neta";
             this.colIRNeta.Name = "colIRNeta";
             this.colIRNeta.ReadOnly = true;
@@ -314,6 +315,7 @@ namespace Presentacion.UserControls
             // colIRRend
             //
             this.colIRRend.DataPropertyName = "Rendimiento";
+            this.colIRRend.DefaultCellStyle.Format = "0.##";
             this.colIRRend.HeaderText = "Rend.%";
             this.colIRRend.Name = "colIRRend";
             this.colIRRend.ReadOnly = true;
@@ -322,6 +324,7 @@ namespace Presentacion.UserControls
             // colIRBruta
             //
             this.colIRBruta.DataPropertyName = "CantBruta";
+            this.colIRBruta.DefaultCellStyle.Format = "0.####";
             this.colIRBruta.HeaderText = "Bruta";
             this.colIRBruta.Name = "colIRBruta";
             this.colIRBruta.ReadOnly = true;

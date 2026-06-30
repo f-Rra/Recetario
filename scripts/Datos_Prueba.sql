@@ -30,7 +30,6 @@ INSERT INTO TiposModificacion (Nombre) VALUES
 ('eliminacion');
 GO
 
--- Personas: IDs 1-5 son el personal de cocina (ex-Equipo), IDs 6-7 son los usuarios del sistema
 INSERT INTO Personas (Nombre, Apellido, Email, Telefono, IdClasificacion) VALUES
 ('Carlos',  'Gómez',    NULL,                            NULL, 1),
 ('María',   'López',    NULL,                            NULL, 2),
@@ -202,14 +201,12 @@ INSERT INTO Procedimientos (IdReceta, NroPaso, Descripcion) VALUES
 (6, 3, 'Rectificar con sal y pimienta.');
 GO
 
--- IdPersona referencia Personas (IDs 1-5 = personal de cocina)
 INSERT INTO Comandas (IdReceta, Fecha, Porciones, IdUsuario, IdPersona) VALUES
 (1, '2026-05-20', 10, 1, 4),
 (4, '2026-05-20', 10, 1, 2),
 (2, '2026-05-21',  5, 2, 1);
 GO
 
--- IdTipoModificacion: 1=sustitucion, 2=adicion, 3=eliminacion
 INSERT INTO Modificaciones (IdComanda, IdTipoModificacion, IdIngredienteOriginal, IdIngredienteReemplazo, Cantidad, IdUnidad) VALUES
 (1, 3, 1, NULL, 0.3200, 1),
 (1, 1, 3,   25, 0.0500, 1);
@@ -220,7 +217,6 @@ INSERT INTO Costos (IdReceta, Fecha, Porciones, CostoTotal, CostoUnitario, IdUsu
 (4, '2026-05-19', 10, 10991.8600, 1099.1860, 2);
 GO
 
--- IdTipoMovimiento: 1=entrada, 2=salida, 3=ajuste
 INSERT INTO MovimientosStock (IdIngrediente, IdTipoMovimiento, Cantidad, IdUnidad, Fecha, IdUsuario, Observaciones) VALUES
 ( 1, 1,  5.0000, 1, '2026-05-19 08:00:00', 2, 'Compra semanal'),
 ( 3, 1, 20.0000, 1, '2026-05-19 08:30:00', 2, 'Compra semanal'),

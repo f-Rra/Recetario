@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Dominio;
 using Negocio;
 using Presentacion.Helpers;
+using Presentacion;
 
 namespace Presentacion.UserControls
 {
@@ -26,6 +27,7 @@ namespace Presentacion.UserControls
             _usuario = usuario;
             dgvRecetas.AutoGenerateColumns = false;
             dgvComanda.AutoGenerateColumns = false;
+            dgvIngredientes.AutoGenerateColumns = false;
             dgvComanda.DataSource = _comanda;
             CargarClasificaciones();
         }
@@ -82,6 +84,18 @@ namespace Presentacion.UserControls
             return seleccionadas;
         }
 
+        private void CargarIngredientesReceta(int idReceta)
+        {
+            try
+            {
+                dgvIngredientes.DataSource = _recetaNegocio.ListarIngredientesComanda(idReceta);
+            }
+            catch (NegocioException ex)
+            {
+                MensajesUI.ManejarExcepcion(ex);
+            }
+        }
+
         #endregion
 
         #region Eventos
@@ -89,6 +103,14 @@ namespace Presentacion.UserControls
         private void cboClasificacion_SelectedIndexChanged(object sender, EventArgs e)
         {
             CargarRecetas();
+        }
+
+        private void dgvRecetas_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvRecetas.CurrentRow != null && dgvRecetas.CurrentRow.DataBoundItem is Receta receta)
+                CargarIngredientesReceta(receta.IdReceta);
+            else
+                dgvIngredientes.DataSource = null;
         }
 
         #endregion
@@ -159,7 +181,11 @@ namespace Presentacion.UserControls
                 return;
             }
 
-            int comensales = (int)nudComensales.Value;
+            if (!int.TryParse(txtComensales.Text, out int comensales) || comensales <= 0)
+            {
+                MensajesUI.MostrarAdvertencia("Ingresá una cantidad de comensales válida mayor a 0.");
+                return;
+            }
 
             try
             {

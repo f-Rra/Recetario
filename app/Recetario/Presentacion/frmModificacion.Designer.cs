@@ -193,6 +193,7 @@ namespace Presentacion
             // colModCantidad
             //
             this.colModCantidad.DataPropertyName = "Cantidad";
+            this.colModCantidad.DefaultCellStyle.Format = "0.####";
             this.colModCantidad.HeaderText = "Cant.";
             this.colModCantidad.Name = "colModCantidad";
             this.colModCantidad.ReadOnly = true;

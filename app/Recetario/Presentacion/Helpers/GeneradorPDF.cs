@@ -7,18 +7,10 @@ using iTextSharp.text.pdf;
 
 namespace Presentacion.Helpers
 {
-    public class SeccionComanda
-    {
-        public string NombreReceta { get; set; }
-        public string Sector { get; set; }
-        public string Responsable { get; set; }
-        public List<IngredienteReceta> Ingredientes { get; set; }
-        public List<Procedimiento> Procedimientos { get; set; }
-        public List<Modificacion> Modificaciones { get; set; }
-    }
-
     public static class GeneradorPDF
     {
+        #region Comanda
+
         public static void GenerarComanda(string ruta, int comensales, List<SeccionComanda> secciones)
         {
             Font fontTitulo = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
@@ -95,6 +87,10 @@ namespace Presentacion.Helpers
             }
         }
 
+        #endregion
+
+        #region Costo
+
         public static void GenerarCosto(string ruta, string nombreReceta, int porciones, List<DetalleCosto> detalle, decimal costoTotal, decimal costoUnitario)
         {
             Font fontTitulo = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
@@ -143,6 +139,10 @@ namespace Presentacion.Helpers
             }
         }
 
+        #endregion
+
+        #region Helpers
+
         private static string DescribirModificacion(Modificacion m)
         {
             switch (m.Tipo)
@@ -165,5 +165,7 @@ namespace Presentacion.Helpers
             celda.Padding = 5;
             tabla.AddCell(celda);
         }
+
+        #endregion
     }
 }

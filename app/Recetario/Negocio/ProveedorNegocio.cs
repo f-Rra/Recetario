@@ -7,6 +7,8 @@ namespace Negocio
 {
     public class ProveedorNegocio
     {
+        #region Consultas
+
         public List<Proveedor> Listar()
         {
             try
@@ -56,6 +58,10 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "buscar proveedor por ID");
             }
         }
+
+        #endregion
+
+        #region Modificaciones
 
         public void Agregar(Proveedor proveedor)
         {
@@ -124,6 +130,10 @@ namespace Negocio
             }
         }
 
+        #endregion
+
+        #region Mapeo
+
         private static Proveedor Mapear(SqlDataReader reader)
         {
             return new Proveedor
@@ -136,5 +146,7 @@ namespace Negocio
                 Direccion = reader["Direccion"] != DBNull.Value ? (string)reader["Direccion"] : null
             };
         }
+
+        #endregion
     }
 }

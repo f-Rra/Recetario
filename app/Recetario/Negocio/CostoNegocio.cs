@@ -53,18 +53,8 @@ namespace Negocio
                 using (AccesoDatos datos = new AccesoDatos())
                 {
                     datos.setearConsulta(
-                        "SELECT i.Descripcion AS NombreIngrediente, ir.CantBruta, u.Abreviatura AS Unidad, " +
-                        "pv.Precio AS CostoUnitario, ir.CantBruta * pv.Precio AS CostoIngrediente " +
-                        "FROM IngredientesxRecetas ir " +
-                        "INNER JOIN Ingredientes i ON i.IdIngrediente = ir.IdIngrediente " +
-                        "INNER JOIN Unidades u ON u.IdUnidad = ir.IdUnidad " +
-                        "INNER JOIN ( " +
-                        "    SELECT IdIngrediente, Precio, " +
-                        "           ROW_NUMBER() OVER (PARTITION BY IdIngrediente ORDER BY FechaVigencia DESC, IdProveedor ASC) AS rn " +
-                        "    FROM PrecioxIngrediente " +
-                        ") pv ON pv.IdIngrediente = ir.IdIngrediente AND pv.rn = 1 " +
-                        "WHERE ir.IdReceta = @IdReceta " +
-                        "ORDER BY i.Descripcion");
+                        "SELECT NombreIngrediente, CantBruta, Unidad, CostoUnitario, CostoIngrediente " +
+                        "FROM vw_CostoReceta WHERE IdReceta = @IdReceta ORDER BY NombreIngrediente");
                     datos.setearParametro("@IdReceta", idReceta);
                     datos.ejecutarLectura();
 

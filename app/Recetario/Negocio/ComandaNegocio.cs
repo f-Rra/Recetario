@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using Dominio;
@@ -89,6 +90,41 @@ namespace Negocio
             catch (SqlException ex)
             {
                 throw NegocioException.FromDbException(ex, "listar tipos de modificación");
+            }
+        }
+
+        public List<ModificacionRegistrada> ListarModificaciones()
+        {
+            try
+            {
+                using (AccesoDatos datos = new AccesoDatos())
+                {
+                    datos.setearConsulta(
+                        "SELECT Fecha, NombreReceta, Tipo, IngredienteOriginal, " +
+                        "IngredienteReemplazo, Cantidad, Unidad " +
+                        "FROM vw_ModificacionesRegistradas ORDER BY Fecha DESC");
+                    datos.ejecutarLectura();
+
+                    List<ModificacionRegistrada> lista = new List<ModificacionRegistrada>();
+                    while (datos.Lector.Read())
+                    {
+                        lista.Add(new ModificacionRegistrada
+                        {
+                            Fecha                = (DateTime)datos.Lector["Fecha"],
+                            NombreReceta         = (string)datos.Lector["NombreReceta"],
+                            Tipo                 = (string)datos.Lector["Tipo"],
+                            IngredienteOriginal  = datos.Lector["IngredienteOriginal"]  != DBNull.Value ? (string)datos.Lector["IngredienteOriginal"]  : null,
+                            IngredienteReemplazo = datos.Lector["IngredienteReemplazo"] != DBNull.Value ? (string)datos.Lector["IngredienteReemplazo"] : null,
+                            Cantidad             = (decimal)datos.Lector["Cantidad"],
+                            Unidad               = (string)datos.Lector["Unidad"]
+                        });
+                    }
+                    return lista;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw NegocioException.FromDbException(ex, "listar modificaciones registradas");
             }
         }
 

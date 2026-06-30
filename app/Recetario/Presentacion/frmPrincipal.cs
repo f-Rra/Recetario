@@ -9,6 +9,8 @@ namespace Presentacion
 {
     public partial class frmPrincipal : Form
     {
+        #region Campos y constructor
+
         private readonly Usuario _usuario;
         private readonly GestorNavegacion _navegacion;
 
@@ -17,18 +19,24 @@ namespace Presentacion
             InitializeComponent();
             _usuario = usuario;
             _navegacion = new GestorNavegacion(pnlContenido);
-            lblBienvenida.Text = $"Bienvenido/a {_usuario.Persona.NombreCompleto}  ({_usuario.Rol})";
+            lblBienvenida.Text = $"{_usuario.Persona.NombreCompleto}  ({RolDisplay(_usuario.Rol)})";
             ConfigurarMenu();
             CargarDashboard();
         }
 
-        private void ConfigurarMenu()
+        #endregion
+
+        private static string RolDisplay(string rol)
         {
-            bool esAdmin = _usuario.Rol == "admin";
-            menuRecetas.Visible = esAdmin;
-            menuIngredientes.Visible = esAdmin;
-            menuProveedores.Visible = esAdmin;
+            switch (rol)
+            {
+                case "lider": return "Cocina";
+                case "admin": return "Admin";
+                default:      return rol;
+            }
         }
+
+        #region Navegación
 
         private void CargarDashboard()
         {
@@ -41,6 +49,21 @@ namespace Presentacion
                 _navegacion.Mostrar(new ucDashboardCocina(_usuario));
             }
         }
+
+        private void ConfigurarMenu()
+        {
+            // El menú superior solo tiene sentido para el admin (ABMs + volver al panel).
+            // Cocina trabaja en un único dashboard, así que no ve menú.
+            bool esAdmin = _usuario.Rol == "admin";
+            menuInicio.Visible = esAdmin;
+            menuRecetas.Visible = esAdmin;
+            menuIngredientes.Visible = esAdmin;
+            menuProveedores.Visible = esAdmin;
+        }
+
+        #endregion
+
+        #region Menú
 
         private void menuInicio_Click(object sender, EventArgs e)
         {
@@ -61,5 +84,7 @@ namespace Presentacion
         {
             _navegacion.Mostrar(new ucProveedores());
         }
+
+        #endregion
     }
 }

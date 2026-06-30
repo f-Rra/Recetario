@@ -10,6 +10,8 @@ namespace Presentacion
 {
     public partial class frmModificacion : Form
     {
+        #region Campos y constructor
+
         private readonly Receta _receta;
         private readonly ComandaNegocio _comandaNegocio = new ComandaNegocio();
         private readonly RecetaNegocio _recetaNegocio = new RecetaNegocio();
@@ -29,6 +31,10 @@ namespace Presentacion
             dgvMods.DataSource = _modificaciones;
             CargarCombos();
         }
+
+        #endregion
+
+        #region Carga de datos
 
         private void CargarCombos()
         {
@@ -63,9 +69,23 @@ namespace Presentacion
             }
         }
 
+        #endregion
+
+        #region Eventos
+
         private void cboTipo_SelectedIndexChanged(object sender, EventArgs e)
         {
             ActualizarCamposPorTipo();
+        }
+
+        private void cboOriginal_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarUnidad();
+        }
+
+        private void cboReemplazo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarUnidad();
         }
 
         private void ActualizarCamposPorTipo()
@@ -94,16 +114,6 @@ namespace Presentacion
                     break;
             }
 
-            ActualizarUnidad();
-        }
-
-        private void cboOriginal_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ActualizarUnidad();
-        }
-
-        private void cboReemplazo_SelectedIndexChanged(object sender, EventArgs e)
-        {
             ActualizarUnidad();
         }
 
@@ -136,6 +146,10 @@ namespace Presentacion
                 cboUnidad.SelectedValue = idUnidad.Value;
             }
         }
+
+        #endregion
+
+        #region Acciones
 
         private void btnAgregarMod_Click(object sender, EventArgs e)
         {
@@ -221,5 +235,7 @@ namespace Presentacion
             DialogResult = DialogResult.OK;
             Close();
         }
+
+        #endregion
     }
 }

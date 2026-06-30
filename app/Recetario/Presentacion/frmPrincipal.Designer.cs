@@ -83,14 +83,14 @@ namespace Presentacion
             this.pnlContenido.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlContenido.Location = new System.Drawing.Point(0, 68);
             this.pnlContenido.Name = "pnlContenido";
-            this.pnlContenido.Size = new System.Drawing.Size(900, 532);
+            this.pnlContenido.Size = new System.Drawing.Size(1200, 592);
             this.pnlContenido.TabIndex = 1;
             //
             // frmPrincipal
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(900, 600);
+            this.ClientSize = new System.Drawing.Size(1200, 660);
             this.Controls.Add(this.pnlContenido);
             this.Controls.Add(this.lblBienvenida);
             this.Controls.Add(this.menuPrincipal);

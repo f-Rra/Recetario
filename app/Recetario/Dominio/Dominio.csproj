@@ -64,6 +64,9 @@
     <Compile Include="Costo.cs" />
     <Compile Include="DetalleCosto.cs" />
     <Compile Include="MovimientoStock.cs" />
+    <Compile Include="ItemComanda.cs" />
+    <Compile Include="ModificacionRegistrada.cs" />
+    <Compile Include="SeccionComanda.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

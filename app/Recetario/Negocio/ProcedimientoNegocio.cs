@@ -6,6 +6,8 @@ namespace Negocio
 {
     public class ProcedimientoNegocio
     {
+        #region Consultas
+
         public List<Procedimiento> ListarPorReceta(int idReceta)
         {
             try
@@ -37,6 +39,10 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "listar procedimientos");
             }
         }
+
+        #endregion
+
+        #region Modificaciones
 
         public void Agregar(Procedimiento procedimiento)
         {
@@ -77,5 +83,7 @@ namespace Negocio
                 throw NegocioException.FromDbException(ex, "eliminar paso del procedimiento");
             }
         }
+
+        #endregion
     }
 }
