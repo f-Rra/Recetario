@@ -1,6 +1,6 @@
 # Guía 03 — Modelo de datos
 
-> **Estado:** pendiente
+> **Estado:** completada
 
 ## Objetivo
 
