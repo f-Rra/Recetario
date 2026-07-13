@@ -39,9 +39,10 @@
                 </span>
                 @if (esAdmin)
                 {
-                    <span class="nav-item-sx deshabilitado" title="Próximamente">
+                    <a class="nav-item-sx @(controllerActual == "Ingredientes" ? "activo" : "")"
+                       asp-controller="Ingredientes" asp-action="Index">
                         <i class="bi bi-egg-fried"></i> Ingredientes
-                    </span>
+                    </a>
                     <span class="nav-item-sx deshabilitado" title="Próximamente">
                         <i class="bi bi-truck"></i> Proveedores
                     </span>

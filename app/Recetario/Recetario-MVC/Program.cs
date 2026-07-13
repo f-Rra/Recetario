@@ -1,9 +1,16 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using RecetarioMVC.Data;
 using RecetarioMVC.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cultura es-AR en toda la app: decimales con coma en binding y formato (guía 07)
+var culturaArgentina = new CultureInfo("es-AR");
+CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;
+CultureInfo.DefaultThreadCurrentUICulture = culturaArgentina;
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("RecetarioMVC")));
@@ -28,6 +35,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddScoped<RecetarioMVC.Services.IDashboardService, RecetarioMVC.Services.DashboardService>();
+builder.Services.AddScoped<RecetarioMVC.Services.IIngredienteService, RecetarioMVC.Services.IngredienteService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -38,6 +46,13 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(culturaArgentina),
+    SupportedCultures = [culturaArgentina],
+    SupportedUICultures = [culturaArgentina]
+});
 
 app.UseHttpsRedirection();
 app.UseRouting();

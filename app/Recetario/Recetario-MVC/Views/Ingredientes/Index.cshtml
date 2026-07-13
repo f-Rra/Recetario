@@ -1,0 +1,113 @@
+@model List<IngredienteListaItem>
+@using RecetarioMVC.Helpers
+@{
+    ViewData["Title"] = "Ingredientes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="d-flex gap-2" role="search">
+        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control"
+               style="width: 260px;" placeholder="Buscar por código o descripción…" />
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+    </form>
+    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo ingrediente</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-egg-fried" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2">
+                    @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"])
+                        ? "Todavía no hay ingredientes cargados."
+                        : "No se encontraron ingredientes con esa búsqueda.")
+                </p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th class="num">Stock actual</th>
+                        <th class="num">Stock mínimo</th>
+                        <th>Estado</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Codigo</td>
+                            <td>@item.Descripcion</td>
+                            <td class="num">@item.StockActual.ToString("N1") @item.Unidad</td>
+                            <td class="num">@item.StockMinimo.ToString("N1") @item.Unidad</td>
+                            <td>
+                                @if (item.Estado == StockEstado.Critico)
+                                {
+                                    <span class="badge rounded-pill badge-estado-critico">@item.Estado</span>
+                                }
+                                else if (item.Estado == StockEstado.Bajo)
+                                {
+                                    <span class="badge rounded-pill badge-estado-bajo">@item.Estado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill badge-estado-ok">@item.Estado</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Editar" asp-route-id="@item.IdIngrediente"
+                                   class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                        data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                        data-id="@item.IdIngrediente" data-nombre="@item.Descripcion">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@* Modal de confirmación de borrado (guía 01: botón rojo solo acá) *@
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar ingrediente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                Se va a eliminar <b id="modalEliminarNombre"></b>. Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form asp-action="Eliminar" method="post" class="d-inline">
+                    <input type="hidden" name="id" id="modalEliminarId" />
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("modalEliminar").addEventListener("show.bs.modal", function (evento) {
+            const boton = evento.relatedTarget;
+            document.getElementById("modalEliminarId").value = boton.dataset.id;
+            document.getElementById("modalEliminarNombre").textContent = boton.dataset.nombre;
+        });
+    </script>
+}
