@@ -27,6 +27,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
 
+builder.Services.AddScoped<RecetarioMVC.Services.IDashboardService, RecetarioMVC.Services.DashboardService>();
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

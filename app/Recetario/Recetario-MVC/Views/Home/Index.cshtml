@@ -1,11 +1,92 @@
+@model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
 }
 
+<div class="row g-3 mb-4">
+    <div class="col-3">
+        <div class="metric-card">
+            <div>
+                <div class="metric-label">Recetas activas</div>
+                <div class="metric-valor">@Model.RecetasActivas</div>
+            </div>
+            <div class="metric-icono"><i class="bi bi-journal-text"></i></div>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="metric-card">
+            <div>
+                <div class="metric-label">Ingredientes</div>
+                <div class="metric-valor">@Model.TotalIngredientes</div>
+            </div>
+            <div class="metric-icono"><i class="bi bi-egg-fried"></i></div>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="metric-card @(Model.IngredientesCriticos > 0 ? "alerta" : "")">
+            <div>
+                <div class="metric-label">Stock crítico</div>
+                <div class="metric-valor">@Model.IngredientesCriticos</div>
+            </div>
+            <div class="metric-icono"><i class="bi bi-exclamation-triangle"></i></div>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="metric-card">
+            <div>
+                <div class="metric-label">Costo promedio por porción</div>
+                <div class="metric-valor">$ @Model.CostoPromedioPorcion.ToString("N2")</div>
+            </div>
+            <div class="metric-icono"><i class="bi bi-currency-dollar"></i></div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-grid-1x2" style="font-size: 40px; color: var(--sx-celeste);"></i>
-        <h2 class="h5 mt-3 mb-1">Dashboard en construcción</h2>
-        <p class="text-muted mb-0">Las métricas y el resumen de stock llegan en la guía 06.</p>
+    <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">Ingredientes con stock bajo</h2>
+
+        @if (Model.StockBajo.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-check2-circle" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2">Sin ingredientes por debajo del stock mínimo.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Ingrediente</th>
+                        <th class="num">Stock actual</th>
+                        <th class="num">Stock mínimo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.StockBajo)
+                    {
+                        <tr>
+                            <td>@item.Codigo</td>
+                            <td>@item.Descripcion</td>
+                            <td class="num">@item.StockActual.ToString("N1") @item.Unidad</td>
+                            <td class="num">@item.StockMinimo.ToString("N1") @item.Unidad</td>
+                            <td>
+                                @if (item.EsCritico)
+                                {
+                                    <span class="badge rounded-pill badge-estado-critico">Crítico</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill badge-estado-bajo">Bajo</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
