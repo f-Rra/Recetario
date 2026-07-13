@@ -17,6 +17,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         options.Lockout.MaxFailedAccessAttempts = 5;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddErrorDescriber<RecetarioMVC.Helpers.IdentityErrorDescriberEspanol>()
     .AddDefaultTokenProviders();
 
 builder.Services.ConfigureApplicationCookie(options =>

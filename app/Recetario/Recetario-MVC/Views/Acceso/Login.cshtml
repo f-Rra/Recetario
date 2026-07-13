@@ -1,0 +1,85 @@
+@model LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Iniciar sesión";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar sesión — Recetario</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        /* Estilos propios de la pantalla de login (paleta guía 01).
+           El resto de la app toma el layout general en la guía 05. */
+        body {
+            background: #F5F7F9;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            color: #2B3A45;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(16, 60, 90, 0.10);
+            width: 100%;
+            max-width: 400px;
+            padding: 36px 32px;
+        }
+        .login-brand { text-align: center; margin-bottom: 28px; }
+        .login-brand h1 { font-size: 26px; font-weight: 650; color: #1078B0; margin: 0; }
+        .login-brand small {
+            color: #6C7A85; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px;
+        }
+        .form-label { font-weight: 600; font-size: 14px; }
+        .form-control:focus {
+            border-color: #68A8D0;
+            box-shadow: 0 0 0 3px rgba(104, 168, 208, 0.25);
+        }
+        .btn-ingresar {
+            background: #1078B0; border: none; color: #fff; font-weight: 600; width: 100%;
+        }
+        .btn-ingresar:hover { background: #0C5A85; color: #fff; }
+        .text-danger { font-size: 13px; }
+    </style>
+</head>
+<body>
+    <main class="login-card">
+        <div class="login-brand">
+            <h1>Recetario</h1>
+            <small>Grupo Southex</small>
+        </div>
+
+        <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autofocus autocomplete="username" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-4">
+                <input asp-for="Recordarme" class="form-check-input" />
+                <label asp-for="Recordarme" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-ingresar">Ingresar</button>
+        </form>
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

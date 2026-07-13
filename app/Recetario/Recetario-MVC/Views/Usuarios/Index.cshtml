@@ -1,0 +1,59 @@
+@model List<UsuarioListaViewModel>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Usuarios</h1>
+    <a asp-action="Crear" class="btn btn-primary">+ Nuevo usuario</a>
+</div>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success py-2">@exito</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger py-2">@error</div>
+}
+
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th class="text-end"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr>
+                <td>@usuario.NombreCompleto @(usuario.EsUsuarioActual ? "(vos)" : "")</td>
+                <td>@usuario.Email</td>
+                <td><span class="badge text-bg-info">@usuario.Rol</span></td>
+                <td>
+                    @if (usuario.Activo)
+                    {
+                        <span class="badge text-bg-success">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-secondary">Inactivo</span>
+                    }
+                </td>
+                <td class="text-end">
+                    @if (!usuario.EsUsuarioActual)
+                    {
+                        <form asp-action="CambiarEstado" asp-route-id="@usuario.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm @(usuario.Activo ? "btn-outline-danger" : "btn-outline-success")">
+                                @(usuario.Activo ? "Desactivar" : "Activar")
+                            </button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
