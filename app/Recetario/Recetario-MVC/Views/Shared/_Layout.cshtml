@@ -1,47 +1,94 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@using Microsoft.AspNetCore.Identity
+@using RecetarioMVC.Data
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var controllerActual = (string?)ViewContext.RouteData.Values["controller"] ?? "";
+    var usuario = User.Identity?.IsAuthenticated == true
+        ? await UserManager.GetUserAsync(User)
+        : null;
+    var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
+    var rol = esAdmin ? DbSeeder.RolAdmin : (User.IsInRole(DbSeeder.RolCocina) ? DbSeeder.RolCocina : "");
+}
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - RecetarioMVC</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] — Recetario</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RecetarioMVC.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RecetarioMVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                Recetario
+                <small>Grupo Southex</small>
+            </a>
+
+            <nav class="sidebar-nav">
+                <div class="nav-seccion">General</div>
+                <a class="nav-item-sx @(controllerActual == "Home" ? "activo" : "")"
+                   asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+                @* Módulos pendientes: se habilitan en sus guías (fase 1 en adelante) *@
+                <span class="nav-item-sx deshabilitado" title="Próximamente">
+                    <i class="bi bi-journal-text"></i> Recetas
+                </span>
+                @if (esAdmin)
+                {
+                    <span class="nav-item-sx deshabilitado" title="Próximamente">
+                        <i class="bi bi-egg-fried"></i> Ingredientes
+                    </span>
+                    <span class="nav-item-sx deshabilitado" title="Próximamente">
+                        <i class="bi bi-truck"></i> Proveedores
+                    </span>
+                }
+
+                <div class="nav-seccion">Operación</div>
+                <span class="nav-item-sx deshabilitado" title="Próximamente">
+                    <i class="bi bi-receipt"></i> Comandas
+                </span>
+                @if (esAdmin)
+                {
+                    <span class="nav-item-sx deshabilitado" title="Próximamente">
+                        <i class="bi bi-box-seam"></i> Stock
+                    </span>
+
+                    <div class="nav-seccion">Sistema</div>
+                    <a class="nav-item-sx @(controllerActual == "Usuarios" ? "activo" : "")"
+                       asp-controller="Usuarios" asp-action="Index">
+                        <i class="bi bi-people-fill"></i> Usuarios
+                    </a>
+                }
+            </nav>
+
+            <div class="sidebar-usuario">
+                <span title="@usuario?.Email">@(usuario?.NombreCompleto ?? "—")</span>
+                <form asp-controller="Acceso" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="btn-salir">Salir</button>
+                </form>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </aside>
+
+        <div class="main-area">
+            <header class="topbar">
+                <h1>@ViewData["Title"]</h1>
+                <div class="usuario-info">
+                    Conectado como <b>@(usuario?.NombreCompleto ?? "—")</b>@(rol.Length > 0 ? $" ({rol})" : "")
+                    · <a asp-controller="Acceso" asp-action="CambiarPassword">Cambiar contraseña</a>
+                </div>
+            </header>
+
+            <main role="main" class="contenido">
+                <partial name="_Alertas" />
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - RecetarioMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

@@ -1,31 +1,326 @@
-html {
+/* ============================================================
+   Recetario MVC — Sistema de diseño (Guía 01)
+   Paleta Grupo Southex + layout sidebar/topbar
+   ============================================================ */
+
+:root {
+  /* Tokens de la paleta */
+  --sx-azul: #1078B0;
+  --sx-azul-oscuro: #0C5A85;
+  --sx-celeste: #68A8D0;
+  --sx-celeste-claro: #EAF3F9;
+  --sx-rojo: #E01820;
+  --sx-gris-fondo: #F5F7F9;
+  --sx-gris-texto: #2B3A45;
+  --sx-gris-suave: #6C7A85;
+
+  /* Bootstrap hereda la paleta */
+  --bs-primary: var(--sx-azul);
+  --bs-primary-rgb: 16, 120, 176;
+  --bs-danger: var(--sx-rojo);
+  --bs-danger-rgb: 224, 24, 32;
+  --bs-info: var(--sx-celeste);
+  --bs-info-rgb: 104, 168, 208;
+  --bs-body-color: var(--sx-gris-texto);
+  --bs-body-bg: var(--sx-gris-fondo);
+  --bs-body-font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  font-size: 16px;
+}
+
+/* ============ Layout general: sidebar + main ============ */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--sx-azul);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-brand {
+  padding: 22px 20px 16px;
+  font-size: 19px;
+  font-weight: 650;
+  color: #fff;
+  text-decoration: none;
+}
+
+.sidebar-brand small {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  opacity: 0.75;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 6px 0;
+  overflow-y: auto;
+}
+
+.nav-seccion {
+  padding: 12px 20px 4px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
+}
+
+.nav-item-sx {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  font-size: 14.5px;
+}
+
+.nav-item-sx:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.nav-item-sx.activo {
+  background: rgba(255, 255, 255, 0.14);
+  border-left-color: #fff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-item-sx.deshabilitado {
+  color: rgba(255, 255, 255, 0.38);
+  cursor: default;
+  pointer-events: none;
+}
+
+.nav-item-sx .bi {
+  font-size: 15px;
+  width: 18px;
+  text-align: center;
+}
+
+.sidebar-usuario {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.sidebar-usuario .btn-salir {
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: underline;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.sidebar-usuario .btn-salir:hover {
+  color: #fff;
+}
+
+/* ---------- Main: topbar + contenido ---------- */
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  background: #fff;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #E4EAEE;
+}
+
+.topbar .usuario-info {
+  text-align: right;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--sx-gris-texto);
+}
+
+.topbar .usuario-info {
+  font-size: 13px;
+  color: var(--sx-gris-suave);
+}
+
+.topbar .usuario-info b {
+  color: var(--sx-gris-texto);
+  font-weight: 600;
+}
+
+.contenido {
+  padding: 24px 28px;
+  flex: 1;
+}
+
+/* ============ Componentes (Guía 01) ============ */
+
+/* Cards blancas sobre fondo gris, sin bordes duros */
+.card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+}
+
+/* Botones: primario azul, hover azul oscuro */
+.btn-primary {
+  --bs-btn-bg: var(--sx-azul);
+  --bs-btn-border-color: var(--sx-azul);
+  --bs-btn-hover-bg: var(--sx-azul-oscuro);
+  --bs-btn-hover-border-color: var(--sx-azul-oscuro);
+  --bs-btn-active-bg: var(--sx-azul-oscuro);
+  --bs-btn-active-border-color: var(--sx-azul-oscuro);
+  font-weight: 600;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sx-azul);
+  --bs-btn-border-color: var(--sx-azul);
+  --bs-btn-hover-bg: var(--sx-celeste-claro);
+  --bs-btn-hover-color: var(--sx-azul-oscuro);
+  --bs-btn-hover-border-color: var(--sx-azul);
+  --bs-btn-active-bg: var(--sx-celeste-claro);
+  --bs-btn-active-color: var(--sx-azul-oscuro);
+  --bs-btn-active-border-color: var(--sx-azul);
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--sx-rojo);
+  --bs-btn-border-color: var(--sx-rojo);
+  --bs-btn-hover-bg: #B91218;
+  --bs-btn-hover-border-color: #B91218;
+  --bs-btn-active-bg: #B91218;
+  --bs-btn-active-border-color: #B91218;
+  font-weight: 600;
+}
+
+/* Tablas: encabezado celeste claro, hover de fila, números tabulares */
+.table thead th {
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  font-size: 13px;
+  font-weight: 650;
+  border-bottom: none;
+}
+
+.table-hover > tbody > tr:hover > * {
+  background-color: var(--sx-celeste-claro);
+  --bs-table-bg-state: var(--sx-celeste-claro);
+}
+
+.table td {
   font-size: 14px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* Formularios: foco celeste, asterisco rojo en obligatorios */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sx-celeste);
+  box-shadow: 0 0 0 3px rgba(104, 168, 208, 0.25);
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.form-label {
+  font-weight: 600;
+  font-size: 14px;
 }
 
-body {
-  margin-bottom: 60px;
+.text-danger {
+  font-size: 13px;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* Badges de estado de stock (guía 01) */
+.badge-estado-ok {
+  background: #EDF4EE;
+  color: #2E6B3E;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.badge-estado-bajo {
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+}
+
+.badge-estado-critico {
+  background: #FCE9EA;
+  color: var(--sx-rojo);
+}
+
+/* Cards de métricas para dashboards (guía 06) */
+.metric-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+  height: 100%;
+}
+
+.metric-card .metric-label {
+  font-size: 12.5px;
+  color: var(--sx-gris-suave);
+  margin-bottom: 4px;
+}
+
+.metric-card .metric-valor {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--sx-azul);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.metric-card.alerta .metric-valor {
+  color: var(--sx-rojo);
+}
+
+.metric-card .metric-icono {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--sx-celeste-claro);
+  display: grid;
+  place-items: center;
+  color: var(--sx-azul);
+  font-size: 18px;
 }

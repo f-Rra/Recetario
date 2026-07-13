@@ -1,0 +1,9 @@
+@* Alertas globales desde TempData; las llena cualquier controller *@
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success py-2">@exito</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger py-2">@error</div>
+}
