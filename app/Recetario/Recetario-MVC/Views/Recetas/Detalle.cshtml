@@ -10,9 +10,14 @@
     </a>
     @if (User.IsInRole(DbSeeder.RolAdmin))
     {
-        <a asp-action="Editar" asp-route-id="@Model.IdReceta" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-pencil"></i> Editar
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-controller="Costos" asp-action="Costear" asp-route-id="@Model.IdReceta" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-currency-dollar"></i> Costear
+            </a>
+            <a asp-action="Editar" asp-route-id="@Model.IdReceta" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+        </div>
     }
 </div>
 
