@@ -1,0 +1,165 @@
+@model RecetaDetalleViewModel
+@{
+    ViewData["Title"] = $"Editar — {Model.Nombre}";
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <a asp-action="Index" class="text-decoration-none">
+        <i class="bi bi-arrow-left"></i> Volver a recetas
+    </a>
+    <a asp-action="Detalle" asp-route-id="@Model.IdReceta" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-eye"></i> Ver como Cocina
+    </a>
+</div>
+
+<div class="row g-3">
+    @* ---------- Datos ---------- *@
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Datos</h2>
+                <form asp-action="EditarDatos" method="post">
+                    <input type="hidden" asp-for="Datos.IdReceta" />
+                    <div class="mb-3">
+                        <label asp-for="Datos.Codigo" class="form-label"></label>
+                        <input asp-for="Datos.Codigo" class="form-control" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Datos.Nombre" class="form-label"><span class="req text-danger">*</span> Nombre</label>
+                        <input asp-for="Datos.Nombre" class="form-control" />
+                        <span asp-validation-for="Datos.Nombre" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Datos.IdClasificacion" class="form-label"><span class="req text-danger">*</span> Clasificación</label>
+                        <select asp-for="Datos.IdClasificacion" asp-items="ViewBag.Clasificaciones" class="form-select">
+                            <option value="">Elegí una clasificación…</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Datos.PorcionesBase" class="form-label"><span class="req text-danger">*</span> Porciones base</label>
+                        <input asp-for="Datos.PorcionesBase" class="form-control" />
+                        <span asp-validation-for="Datos.PorcionesBase" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="Datos.Activo" class="form-check-input" />
+                        <label asp-for="Datos.Activo" class="form-check-label"></label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Guardar datos</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Ingredientes ---------- *@
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Ingredientes</h2>
+
+                @if (Model.Ingredientes.Count == 0)
+                {
+                    <p class="text-muted mb-3">Todavía no tiene ingredientes.</p>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle mb-3">
+                        <thead>
+                            <tr>
+                                <th>Ingrediente</th>
+                                <th class="num">Cant. neta</th>
+                                <th class="num">Rend. %</th>
+                                <th class="num">Cant. bruta</th>
+                                <th class="text-end"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ing in Model.Ingredientes)
+                            {
+                                <tr>
+                                    <td>@ing.Ingrediente</td>
+                                    <td class="num">@ing.CantNeta.ToString("N2") @ing.Unidad</td>
+                                    <td class="num">@ing.Rendimiento.ToString("N0")%</td>
+                                    <td class="num">@ing.CantBruta.ToString("N2") @ing.Unidad</td>
+                                    <td class="text-end">
+                                        <form asp-action="QuitarIngrediente" method="post" class="d-inline">
+                                            <input type="hidden" name="idReceta" value="@Model.IdReceta" />
+                                            <input type="hidden" name="idIngrediente" value="@ing.IdIngrediente" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <form asp-action="AgregarIngrediente" method="post" class="row g-2 align-items-end">
+                    <input type="hidden" asp-for="NuevoIngrediente.IdReceta" />
+                    <div class="col-5">
+                        <label asp-for="NuevoIngrediente.IdIngrediente" class="form-label"></label>
+                        <select asp-for="NuevoIngrediente.IdIngrediente" asp-items="ViewBag.Ingredientes" class="form-select form-select-sm">
+                            <option value="">Elegí un ingrediente…</option>
+                        </select>
+                    </div>
+                    <div class="col-3">
+                        <label asp-for="NuevoIngrediente.CantNeta" class="form-label"></label>
+                        <input asp-for="NuevoIngrediente.CantNeta" class="form-control form-control-sm" placeholder="0,00" />
+                    </div>
+                    <div class="col-2">
+                        <label asp-for="NuevoIngrediente.Rendimiento" class="form-label"></label>
+                        <input asp-for="NuevoIngrediente.Rendimiento" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Agregar</button>
+                    </div>
+                </form>
+                <div class="form-text mt-1">
+                    La cantidad bruta se calcula sola: neta ÷ (rendimiento ÷ 100). Rendimiento 100 = sin desperdicio.
+                </div>
+            </div>
+        </div>
+
+        @* ---------- Procedimiento ---------- *@
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Procedimiento</h2>
+
+                @if (Model.Pasos.Count == 0)
+                {
+                    <p class="text-muted mb-3">Todavía no tiene pasos cargados.</p>
+                }
+                else
+                {
+                    <ol class="mb-3">
+                        @foreach (var paso in Model.Pasos)
+                        {
+                            <li class="mb-2">
+                                @paso.Descripcion
+                                <form asp-action="QuitarPaso" method="post" class="d-inline ms-1">
+                                    <input type="hidden" name="idProcedimiento" value="@paso.IdProcedimiento" />
+                                    <input type="hidden" name="idReceta" value="@Model.IdReceta" />
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Quitar paso">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ol>
+                }
+
+                <form asp-action="AgregarPaso" method="post" class="d-flex gap-2">
+                    <input type="hidden" asp-for="NuevoPaso.IdReceta" />
+                    <input asp-for="NuevoPaso.Descripcion" class="form-control form-control-sm"
+                           placeholder="Describí el paso siguiente…" />
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar paso</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

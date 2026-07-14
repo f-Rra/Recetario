@@ -1,0 +1,136 @@
+@model List<RecetaListaItem>
+@using RecetarioMVC.Data
+@{
+    ViewData["Title"] = "Recetas";
+    var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="d-flex gap-2" role="search">
+        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control"
+               style="width: 240px;" placeholder="Buscar por código o nombre…" />
+        <select name="clasificacion" class="form-select" style="width: 200px;"
+                onchange="this.form.submit()">
+            <option value="">Todas las clasificaciones</option>
+            @foreach (var c in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones)
+            {
+                <option value="@c.Value" selected="@c.Selected">@c.Text</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+    </form>
+    @if (esAdmin)
+    {
+        <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nueva receta</a>
+    }
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-journal-text" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2">
+                    @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"]) && ViewData["Clasificacion"] is null
+                        ? "Todavía no hay recetas cargadas."
+                        : "No se encontraron recetas con esos filtros.")
+                </p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Clasificación</th>
+                        <th class="num">Porciones</th>
+                        <th class="num">Ingredientes</th>
+                        <th>Estado</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Codigo</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Clasificacion</td>
+                            <td class="num">@item.PorcionesBase</td>
+                            <td class="num">@item.CantidadIngredientes</td>
+                            <td>
+                                @if (item.Activo)
+                                {
+                                    <span class="badge rounded-pill badge-estado-ok">Activa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill text-bg-secondary">Inactiva</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Detalle" asp-route-id="@item.IdReceta"
+                                   class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                @if (esAdmin)
+                                {
+                                    <a asp-action="Editar" asp-route-id="@item.IdReceta"
+                                       class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                            data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                            data-id="@item.IdReceta" data-nombre="@item.Nombre">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (esAdmin)
+{
+    <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar receta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    Se va a eliminar <b id="modalEliminarNombre"></b> con sus ingredientes y procedimiento.
+                    Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form asp-action="Eliminar" method="post" class="d-inline">
+                        <input type="hidden" name="id" id="modalEliminarId" />
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const modal = document.getElementById("modalEliminar");
+        if (modal) {
+            modal.addEventListener("show.bs.modal", function (evento) {
+                const boton = evento.relatedTarget;
+                document.getElementById("modalEliminarId").value = boton.dataset.id;
+                document.getElementById("modalEliminarNombre").textContent = boton.dataset.nombre;
+            });
+        }
+    </script>
+}

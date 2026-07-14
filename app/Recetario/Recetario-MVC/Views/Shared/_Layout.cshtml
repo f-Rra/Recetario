@@ -33,10 +33,10 @@
                    asp-controller="Home" asp-action="Index">
                     <i class="bi bi-grid-1x2-fill"></i> Dashboard
                 </a>
-                @* Módulos pendientes: se habilitan en sus guías (fase 1 en adelante) *@
-                <span class="nav-item-sx deshabilitado" title="Próximamente">
+                <a class="nav-item-sx @(controllerActual == "Recetas" ? "activo" : "")"
+                   asp-controller="Recetas" asp-action="Index">
                     <i class="bi bi-journal-text"></i> Recetas
-                </span>
+                </a>
                 @if (esAdmin)
                 {
                     <a class="nav-item-sx @(controllerActual == "Ingredientes" ? "activo" : "")"
