@@ -1,16 +1,15 @@
-@model List<IngredienteListaItem>
-@using RecetarioMVC.Helpers
+@model List<ProveedorListaItem>
 @{
-    ViewData["Title"] = "Ingredientes";
+    ViewData["Title"] = "Proveedores";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <form method="get" class="d-flex gap-2" role="search">
         <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control"
-               style="width: 260px;" placeholder="Buscar por código o descripción…" />
+               style="width: 260px;" placeholder="Buscar por nombre o contacto…" />
         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
     </form>
-    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo ingrediente</a>
+    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo proveedor</a>
 </div>
 
 <div class="card">
@@ -18,11 +17,11 @@
         @if (Model.Count == 0)
         {
             <div class="text-center text-muted py-4">
-                <i class="bi bi-egg-fried" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <i class="bi bi-truck" style="font-size: 28px; color: var(--sx-celeste);"></i>
                 <p class="mb-0 mt-2">
                     @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"])
-                        ? "Todavía no hay ingredientes cargados."
-                        : "No se encontraron ingredientes con esa búsqueda.")
+                        ? "Todavía no hay proveedores cargados."
+                        : "No se encontraron proveedores con esa búsqueda.")
                 </p>
             </div>
         }
@@ -31,11 +30,11 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Descripción</th>
-                        <th class="num">Stock actual</th>
-                        <th class="num">Stock mínimo</th>
-                        <th>Estado</th>
+                        <th>Nombre</th>
+                        <th>Contacto</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th class="num">Precios</th>
                         <th class="text-end"></th>
                     </tr>
                 </thead>
@@ -43,36 +42,19 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.Codigo</td>
-                            <td>@item.Descripcion</td>
-                            <td class="num">@item.StockActual.ToString("N1") @item.Unidad</td>
-                            <td class="num">@item.StockMinimo.ToString("N1") @item.Unidad</td>
-                            <td>
-                                @if (item.Estado == StockEstado.Critico)
-                                {
-                                    <span class="badge rounded-pill badge-estado-critico">@item.Estado</span>
-                                }
-                                else if (item.Estado == StockEstado.Bajo)
-                                {
-                                    <span class="badge rounded-pill badge-estado-bajo">@item.Estado</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill badge-estado-ok">@item.Estado</span>
-                                }
-                            </td>
+                            <td>@item.Nombre</td>
+                            <td>@(item.Contacto ?? "—")</td>
+                            <td>@(item.Telefono ?? "—")</td>
+                            <td>@(item.Email ?? "—")</td>
+                            <td class="num">@item.CantidadPrecios</td>
                             <td class="text-end">
-                                <a asp-action="Precios" asp-route-id="@item.IdIngrediente"
-                                   class="btn btn-sm btn-outline-primary" title="Precios">
-                                    <i class="bi bi-currency-dollar"></i>
-                                </a>
-                                <a asp-action="Editar" asp-route-id="@item.IdIngrediente"
+                                <a asp-action="Editar" asp-route-id="@item.IdProveedor"
                                    class="btn btn-sm btn-outline-primary" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
                                         data-bs-toggle="modal" data-bs-target="#modalEliminar"
-                                        data-id="@item.IdIngrediente" data-nombre="@item.Descripcion">
+                                        data-id="@item.IdProveedor" data-nombre="@item.Nombre">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </td>
@@ -84,12 +66,11 @@
     </div>
 </div>
 
-@* Modal de confirmación de borrado (guía 01: botón rojo solo acá) *@
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Eliminar ingrediente</h5>
+                <h5 class="modal-title">Eliminar proveedor</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">

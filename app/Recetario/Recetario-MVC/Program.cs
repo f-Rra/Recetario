@@ -36,6 +36,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddScoped<RecetarioMVC.Services.IDashboardService, RecetarioMVC.Services.DashboardService>();
 builder.Services.AddScoped<RecetarioMVC.Services.IIngredienteService, RecetarioMVC.Services.IngredienteService>();
+builder.Services.AddScoped<RecetarioMVC.Services.IProveedorService, RecetarioMVC.Services.ProveedorService>();
+builder.Services.AddScoped<RecetarioMVC.Services.IPrecioIngredienteService, RecetarioMVC.Services.PrecioIngredienteService>();
 
 builder.Services.AddControllersWithViews();
 

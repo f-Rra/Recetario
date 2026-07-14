@@ -43,9 +43,10 @@
                        asp-controller="Ingredientes" asp-action="Index">
                         <i class="bi bi-egg-fried"></i> Ingredientes
                     </a>
-                    <span class="nav-item-sx deshabilitado" title="Próximamente">
+                    <a class="nav-item-sx @(controllerActual == "Proveedores" ? "activo" : "")"
+                       asp-controller="Proveedores" asp-action="Index">
                         <i class="bi bi-truck"></i> Proveedores
-                    </span>
+                    </a>
                 }
 
                 <div class="nav-seccion">Operación</div>

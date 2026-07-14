@@ -1,0 +1,22 @@
+@model ProveedorFormViewModel
+@{
+    ViewData["Title"] = "Nuevo proveedor";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Crear" method="post">
+                    <partial name="_Form" model="Model" />
+                    <button type="submit" class="btn btn-primary">Crear proveedor</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

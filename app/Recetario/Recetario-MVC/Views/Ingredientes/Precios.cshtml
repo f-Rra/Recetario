@@ -1,0 +1,112 @@
+@model IngredientePreciosViewModel
+@{
+    ViewData["Title"] = $"Precios — {Model.Descripcion}";
+}
+
+<div class="mb-3">
+    <a asp-action="Index" class="text-decoration-none">
+        <i class="bi bi-arrow-left"></i> Volver a ingredientes
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">
+                    Historial de precios
+                    <span class="text-muted fw-normal">(@Model.Codigo · por @Model.Unidad)</span>
+                </h2>
+
+                @if (Model.Historial.Count == 0)
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-currency-dollar" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                        <p class="mb-0 mt-2">Todavía no hay precios registrados para este ingrediente.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th class="num">Precio</th>
+                                <th>Vigencia</th>
+                                <th></th>
+                                <th class="text-end"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var precio in Model.Historial)
+                            {
+                                <tr>
+                                    <td>@precio.Proveedor</td>
+                                    <td class="num">$ @precio.Precio.ToString("N2")</td>
+                                    <td>@precio.FechaVigencia.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @if (precio.EsVigente)
+                                        {
+                                            <span class="badge rounded-pill badge-estado-bajo">Vigente</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-action="EliminarPrecio" method="post" class="d-inline"
+                                              onsubmit="return confirm('¿Eliminar este precio del historial?');">
+                                            <input type="hidden" name="idPrecio" value="@precio.IdPrecio" />
+                                            <input type="hidden" name="idIngrediente" value="@Model.IdIngrediente" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Registrar precio</h2>
+
+                <form asp-action="AgregarPrecio" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+                    <input type="hidden" asp-for="NuevoPrecio.IdIngrediente" />
+
+                    <div class="mb-3">
+                        <label asp-for="NuevoPrecio.IdProveedor" class="form-label"><span class="req text-danger">*</span> Proveedor</label>
+                        <select asp-for="NuevoPrecio.IdProveedor" asp-items="ViewBag.Proveedores" class="form-select">
+                            <option value="">Elegí un proveedor…</option>
+                        </select>
+                        <span asp-validation-for="NuevoPrecio.IdProveedor" class="text-danger"></span>
+                        <div class="form-text">¿Falta el proveedor? <a asp-controller="Proveedores" asp-action="Crear">Crealo acá</a>.</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col mb-4">
+                            <label asp-for="NuevoPrecio.Precio" class="form-label"><span class="req text-danger">*</span> Precio</label>
+                            <input asp-for="NuevoPrecio.Precio" class="form-control" placeholder="0,00" />
+                            <span asp-validation-for="NuevoPrecio.Precio" class="text-danger"></span>
+                        </div>
+                        <div class="col mb-4">
+                            <label asp-for="NuevoPrecio.FechaVigencia" class="form-label"><span class="req text-danger">*</span> Vigencia</label>
+                            <input asp-for="NuevoPrecio.FechaVigencia" type="date" class="form-control" />
+                            <span asp-validation-for="NuevoPrecio.FechaVigencia" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
