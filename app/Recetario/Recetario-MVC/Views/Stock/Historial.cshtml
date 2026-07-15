@@ -1,0 +1,105 @@
+@model HistorialFiltrosViewModel
+@using RecetarioMVC.Models
+@{
+    ViewData["Title"] = "Historial de movimientos";
+}
+
+<div class="mb-3">
+    <a asp-action="Index" class="text-decoration-none">
+        <i class="bi bi-arrow-left"></i> Volver a stock
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-3">
+                <label class="form-label" for="fIngrediente">Ingrediente</label>
+                <select name="ingrediente" id="fIngrediente" class="form-select form-select-sm"
+                        asp-items="ViewBag.Ingredientes">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <label class="form-label" for="fTipo">Tipo</label>
+                <select name="tipo" id="fTipo" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option value="@((int)TipoMovimiento.Entrada)" selected="@(Model.Tipo == TipoMovimiento.Entrada)">Entrada</option>
+                    <option value="@((int)TipoMovimiento.Salida)" selected="@(Model.Tipo == TipoMovimiento.Salida)">Salida</option>
+                    <option value="@((int)TipoMovimiento.Ajuste)" selected="@(Model.Tipo == TipoMovimiento.Ajuste)">Ajuste</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <label class="form-label" for="fDesde">Desde</label>
+                <input type="date" name="desde" id="fDesde" value="@Model.Desde?.ToString("yyyy-MM-dd")"
+                       class="form-control form-control-sm" />
+            </div>
+            <div class="col-2">
+                <label class="form-label" for="fHasta">Hasta</label>
+                <input type="date" name="hasta" id="fHasta" value="@Model.Hasta?.ToString("yyyy-MM-dd")"
+                       class="form-control form-control-sm" />
+            </div>
+            <div class="col-2">
+                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                <a asp-action="Historial" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Movimientos.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-clock-history" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2">Sin movimientos con esos filtros.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Ingrediente</th>
+                        <th>Tipo</th>
+                        <th class="num">Cantidad</th>
+                        <th>Usuario</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model.Movimientos)
+                    {
+                        <tr>
+                            <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@m.Ingrediente</td>
+                            <td>
+                                @if (m.Tipo == TipoMovimiento.Entrada)
+                                {
+                                    <span class="badge rounded-pill badge-estado-ok">Entrada</span>
+                                }
+                                else if (m.Tipo == TipoMovimiento.Salida)
+                                {
+                                    <span class="badge rounded-pill badge-estado-critico">Salida</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill badge-estado-bajo">Ajuste</span>
+                                }
+                            </td>
+                            <td class="num">@m.Cantidad.ToString("N2") @m.Unidad</td>
+                            <td>@m.Usuario</td>
+                            <td class="text-muted">@(m.Observaciones ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (Model.Movimientos.Count == 100)
+            {
+                <div class="form-text mt-2">Se muestran los últimos 100 movimientos: afiná los filtros para ver más atrás.</div>
+            }
+        }
+    </div>
+</div>

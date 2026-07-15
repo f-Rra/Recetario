@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using RecetarioMVC.Data;
+using RecetarioMVC.Models;
 using RecetarioMVC.Services;
 using RecetarioMVC.ViewModels;
 
@@ -12,11 +14,16 @@ public class IngredientesController : Controller
 {
     private readonly IIngredienteService _ingredientes;
     private readonly IPrecioIngredienteService _precios;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public IngredientesController(IIngredienteService ingredientes, IPrecioIngredienteService precios)
+    public IngredientesController(
+        IIngredienteService ingredientes,
+        IPrecioIngredienteService precios,
+        UserManager<ApplicationUser> userManager)
     {
         _ingredientes = ingredientes;
         _precios = precios;
+        _userManager = userManager;
     }
 
     public async Task<IActionResult> Index(string? busqueda)
@@ -46,7 +53,7 @@ public class IngredientesController : Controller
             return View(modelo);
         }
 
-        await _ingredientes.CrearAsync(modelo);
+        await _ingredientes.CrearAsync(modelo, _userManager.GetUserId(User)!);
         TempData["Exito"] = $"Ingrediente {modelo.Descripcion.Trim()} creado.";
         return RedirectToAction(nameof(Index));
     }

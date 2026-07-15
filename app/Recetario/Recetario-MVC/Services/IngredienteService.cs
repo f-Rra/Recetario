@@ -83,7 +83,7 @@ public class IngredienteService : IIngredienteService
         return $"{PrefijoCodigo}{maximo + 1:000}";
     }
 
-    public async Task CrearAsync(IngredienteFormViewModel modelo)
+    public async Task CrearAsync(IngredienteFormViewModel modelo, string usuarioId)
     {
         // El código se regenera en el POST: el del form pudo quedar viejo
         // si otro admin creó un ingrediente en el medio.
@@ -98,6 +98,22 @@ public class IngredienteService : IIngredienteService
 
         _context.Ingredientes.Add(ingrediente);
         await _context.SaveChangesAsync();
+
+        // El stock inicial también queda auditado (guía 12)
+        if (modelo.StockActual > 0)
+        {
+            _context.MovimientosStock.Add(new MovimientoStock
+            {
+                IdIngrediente = ingrediente.IdIngrediente,
+                Tipo = TipoMovimiento.Entrada,
+                Cantidad = modelo.StockActual,
+                IdUnidad = ingrediente.IdUnidad,
+                Fecha = DateTime.Now,
+                UsuarioId = usuarioId,
+                Observaciones = "Stock inicial"
+            });
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<bool> EditarAsync(IngredienteFormViewModel modelo)
@@ -108,7 +124,7 @@ public class IngredienteService : IIngredienteService
 
         ingrediente.Descripcion = modelo.Descripcion.Trim();
         ingrediente.IdUnidad = modelo.IdUnidad!.Value;
-        ingrediente.StockActual = modelo.StockActual;
+        // StockActual no se toca: solo se mueve por movimientos auditados (guía 12)
         ingrediente.StockMinimo = modelo.StockMinimo;
         await _context.SaveChangesAsync();
         return true;

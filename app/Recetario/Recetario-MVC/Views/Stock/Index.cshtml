@@ -1,0 +1,128 @@
+@model List<IngredienteListaItem>
+@using RecetarioMVC.Helpers
+@using RecetarioMVC.Models
+@{
+    ViewData["Title"] = "Stock";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="d-flex gap-2" role="search">
+        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control"
+               style="width: 260px;" placeholder="Buscar ingrediente…" />
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+    </form>
+    <a asp-action="Historial" class="btn btn-outline-primary">
+        <i class="bi bi-clock-history"></i> Historial de movimientos
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-box-seam" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2">No hay ingredientes para mostrar.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Ingrediente</th>
+                        <th class="num">Stock actual</th>
+                        <th class="num">Stock mínimo</th>
+                        <th>Estado</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Codigo</td>
+                            <td>@item.Descripcion</td>
+                            <td class="num">@item.StockActual.ToString("N2") @item.Unidad</td>
+                            <td class="num">@item.StockMinimo.ToString("N2") @item.Unidad</td>
+                            <td>
+                                @if (item.Estado == StockEstado.Critico)
+                                {
+                                    <span class="badge rounded-pill badge-estado-critico">@item.Estado</span>
+                                }
+                                else if (item.Estado == StockEstado.Bajo)
+                                {
+                                    <span class="badge rounded-pill badge-estado-bajo">@item.Estado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill badge-estado-ok">@item.Estado</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal" data-bs-target="#modalMovimiento"
+                                        data-id="@item.IdIngrediente" data-nombre="@item.Descripcion"
+                                        data-unidad="@item.Unidad">
+                                    <i class="bi bi-arrow-left-right"></i> Movimiento
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="modalMovimiento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="RegistrarMovimiento" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Movimiento — <span id="modalMovNombre"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="IdIngrediente" id="modalMovId" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="movTipo"><span class="req text-danger">*</span> Tipo</label>
+                        <select name="Tipo" id="movTipo" class="form-select" required>
+                            <option value="">Elegí el tipo…</option>
+                            <option value="@((int)TipoMovimiento.Entrada)">Entrada (compra/reposición: suma)</option>
+                            <option value="@((int)TipoMovimiento.Salida)">Salida (merma/uso fuera de comanda: resta)</option>
+                            <option value="@((int)TipoMovimiento.Ajuste)">Ajuste (inventario: deja el stock en el valor contado)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="movCantidad"><span class="req text-danger">*</span> Cantidad (<span id="modalMovUnidad"></span>)</label>
+                        <input name="Cantidad" id="movCantidad" class="form-control" placeholder="0,00" required />
+                    </div>
+
+                    <div class="mb-1">
+                        <label class="form-label" for="movObs">Observaciones</label>
+                        <input name="Observaciones" id="movObs" class="form-control" maxlength="255" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("modalMovimiento").addEventListener("show.bs.modal", function (evento) {
+            const boton = evento.relatedTarget;
+            document.getElementById("modalMovId").value = boton.dataset.id;
+            document.getElementById("modalMovNombre").textContent = boton.dataset.nombre;
+            document.getElementById("modalMovUnidad").textContent = boton.dataset.unidad;
+        });
+    </script>
+}

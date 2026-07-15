@@ -9,6 +9,19 @@
             <div class="card-body">
                 <form asp-action="Crear" method="post">
                     <partial name="_Form" model="Model" />
+                    <div class="row">
+                        <div class="col mb-4">
+                            <label asp-for="StockActual" class="form-label">Stock inicial</label>
+                            <input asp-for="StockActual" class="form-control" />
+                            <span asp-validation-for="StockActual" class="text-danger"></span>
+                            <div class="form-text">Queda auditado como movimiento de entrada.</div>
+                        </div>
+                        <div class="col mb-4">
+                            <label asp-for="StockMinimo" class="form-label"></label>
+                            <input asp-for="StockMinimo" class="form-control" />
+                            <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Crear ingrediente</button>
                     <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
                 </form>

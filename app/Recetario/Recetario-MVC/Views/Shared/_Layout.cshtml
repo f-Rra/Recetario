@@ -56,9 +56,10 @@
                 </a>
                 @if (esAdmin)
                 {
-                    <span class="nav-item-sx deshabilitado" title="Próximamente">
+                    <a class="nav-item-sx @(controllerActual == "Stock" ? "activo" : "")"
+                       asp-controller="Stock" asp-action="Index">
                         <i class="bi bi-box-seam"></i> Stock
-                    </span>
+                    </a>
 
                     <div class="nav-seccion">Sistema</div>
                     <a class="nav-item-sx @(controllerActual == "Responsables" ? "activo" : "")"
