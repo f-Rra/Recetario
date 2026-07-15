@@ -40,6 +40,8 @@ builder.Services.AddScoped<RecetarioMVC.Services.IProveedorService, RecetarioMVC
 builder.Services.AddScoped<RecetarioMVC.Services.IPrecioIngredienteService, RecetarioMVC.Services.PrecioIngredienteService>();
 builder.Services.AddScoped<RecetarioMVC.Services.IRecetaService, RecetarioMVC.Services.RecetaService>();
 builder.Services.AddScoped<RecetarioMVC.Services.ICosteoService, RecetarioMVC.Services.CosteoService>();
+builder.Services.AddScoped<RecetarioMVC.Services.IComandaService, RecetarioMVC.Services.ComandaService>();
+builder.Services.AddScoped<RecetarioMVC.Services.IPersonaService, RecetarioMVC.Services.PersonaService>();
 
 builder.Services.AddControllersWithViews();
 

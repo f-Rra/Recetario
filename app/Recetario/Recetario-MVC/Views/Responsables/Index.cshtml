@@ -1,0 +1,89 @@
+@model List<PersonaListaItem>
+@{
+    ViewData["Title"] = "Responsables";
+}
+
+<div class="d-flex justify-content-end mb-3">
+    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo responsable</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-person-badge" style="font-size: 28px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2">Todavía no hay responsables de cocina cargados. Se necesitan para registrar comandas.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Sector</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th class="num">Comandas</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.NombreCompleto</td>
+                            <td>@item.Sector</td>
+                            <td>@(item.Email ?? "—")</td>
+                            <td>@(item.Telefono ?? "—")</td>
+                            <td class="num">@item.CantidadComandas</td>
+                            <td class="text-end">
+                                <a asp-action="Editar" asp-route-id="@item.IdPersona"
+                                   class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                        data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                        data-id="@item.IdPersona" data-nombre="@item.NombreCompleto">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar responsable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                Se va a eliminar <b id="modalEliminarNombre"></b>. Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form asp-action="Eliminar" method="post" class="d-inline">
+                    <input type="hidden" name="id" id="modalEliminarId" />
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("modalEliminar").addEventListener("show.bs.modal", function (evento) {
+            const boton = evento.relatedTarget;
+            document.getElementById("modalEliminarId").value = boton.dataset.id;
+            document.getElementById("modalEliminarNombre").textContent = boton.dataset.nombre;
+        });
+    </script>
+}

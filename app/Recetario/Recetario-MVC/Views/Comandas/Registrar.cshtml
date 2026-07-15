@@ -1,0 +1,65 @@
+@model RegistrarComandaViewModel
+@{
+    ViewData["Title"] = "Registrar comanda";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                @if (ViewBag.HayResponsables is false)
+                {
+                    <div class="alert alert-danger py-2">
+                        No hay responsables de cocina cargados: la comanda necesita uno.
+                        @if (User.IsInRole(RecetarioMVC.Data.DbSeeder.RolAdmin))
+                        {
+                            <a asp-controller="Responsables" asp-action="Crear">Cargar responsable</a>
+                        }
+                        else
+                        {
+                            <span>Pedile al administrador que los cargue.</span>
+                        }
+                    </div>
+                }
+
+                <form asp-action="Registrar" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="IdReceta" class="form-label"><span class="req text-danger">*</span> Receta</label>
+                        <select asp-for="IdReceta" asp-items="ViewBag.Recetas" class="form-select">
+                            <option value="">Elegí una receta…</option>
+                        </select>
+                        <span asp-validation-for="IdReceta" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Porciones" class="form-label"><span class="req text-danger">*</span> Porciones</label>
+                        <input asp-for="Porciones" class="form-control" />
+                        <span asp-validation-for="Porciones" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="IdPersona" class="form-label"></label>
+                        <select asp-for="IdPersona" asp-items="ViewBag.Responsables" class="form-select">
+                            <option value="">Asignar según el sector de la receta</option>
+                        </select>
+                        <div class="form-text">Si no elegís, se asigna el responsable del sector.</div>
+                    </div>
+
+                    <div class="alert alert-info py-2">
+                        Al registrar se descuenta el stock de todos los ingredientes de la receta,
+                        escalado a las porciones pedidas.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Registrar comanda</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

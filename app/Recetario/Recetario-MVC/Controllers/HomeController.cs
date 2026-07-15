@@ -11,17 +11,18 @@ namespace RecetarioMVC.Controllers;
 public class HomeController : Controller
 {
     private readonly IDashboardService _dashboardService;
+    private readonly IComandaService _comandaService;
 
-    public HomeController(IDashboardService dashboardService)
+    public HomeController(IDashboardService dashboardService, IComandaService comandaService)
     {
         _dashboardService = dashboardService;
+        _comandaService = comandaService;
     }
 
     public async Task<IActionResult> Index()
     {
-        // El dashboard de Cocina (comandas del día) llega en la guía 11
         if (!User.IsInRole(DbSeeder.RolAdmin))
-            return View("Cocina");
+            return View("Cocina", await _comandaService.ObtenerPanelDelDiaAsync());
 
         return View(await _dashboardService.ObtenerResumenAsync());
     }
