@@ -7,6 +7,9 @@ using RecetarioMVC.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// QuestPDF con licencia Community (guía 13)
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 // Cultura es-AR en toda la app: decimales con coma en binding y formato (guía 07)
 var culturaArgentina = new CultureInfo("es-AR");
 CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;

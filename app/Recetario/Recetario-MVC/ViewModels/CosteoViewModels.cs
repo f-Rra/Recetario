@@ -54,3 +54,17 @@ public class CosteoHistorialItem
     public decimal CostoUnitario { get; set; }
     public string Usuario { get; set; } = string.Empty;
 }
+
+/// <summary>Costeo registrado leído del desglose persistido, para reimprimir fiel.</summary>
+public class CosteoRegistradoViewModel
+{
+    public int IdCosto { get; set; }
+    public string Receta { get; set; } = string.Empty;
+    public string Codigo { get; set; } = string.Empty;
+    public DateOnly Fecha { get; set; }
+    public int Porciones { get; set; }
+    public decimal CostoTotal { get; set; }
+    public decimal CostoUnitario { get; set; }
+    public string Usuario { get; set; } = string.Empty;
+    public List<CosteoDetalleItem> Detalles { get; set; } = new();
+}

@@ -48,6 +48,17 @@ public class CostosController : Controller
         return View(nameof(Costear), modelo);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Pdf(int id)
+    {
+        var costeo = await _costeo.ObtenerRegistradoAsync(id);
+        if (costeo is null)
+            return NotFound();
+
+        var pdf = Services.Pdf.CosteoPdf.Generar(costeo);
+        return File(pdf, "application/pdf", $"costeo-{costeo.Codigo}-{costeo.Fecha:yyyy-MM-dd}.pdf");
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Registrar(int idReceta, int porciones)

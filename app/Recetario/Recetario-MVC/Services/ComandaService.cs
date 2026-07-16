@@ -75,6 +75,17 @@ public class ComandaService : IComandaService
             })
             .ToList();
 
+        comanda.Pasos = await _context.Procedimientos
+            .Where(p => p.IdReceta == comanda.IdReceta)
+            .OrderBy(p => p.NroPaso)
+            .Select(p => new PasoItem
+            {
+                IdProcedimiento = p.IdProcedimiento,
+                NroPaso = p.NroPaso,
+                Descripcion = p.Descripcion
+            })
+            .ToListAsync();
+
         comanda.Modificaciones = await _context.Modificaciones
             .Where(m => m.IdComanda == idComanda)
             .OrderBy(m => m.IdModificacion)

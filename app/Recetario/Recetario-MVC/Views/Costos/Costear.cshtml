@@ -124,6 +124,7 @@
                                 <th class="num">Porc.</th>
                                 <th class="num">Total</th>
                                 <th class="num">Por porción</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -134,6 +135,12 @@
                                     <td class="num">@c.Porciones</td>
                                     <td class="num">$ @c.CostoTotal.ToString("N2")</td>
                                     <td class="num">$ @c.CostoUnitario.ToString("N2")</td>
+                                    <td class="text-end">
+                                        <a asp-action="Pdf" asp-route-id="@c.IdCosto" target="_blank"
+                                           class="btn btn-sm btn-outline-primary" title="Descargar PDF">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                             }
                         </tbody>

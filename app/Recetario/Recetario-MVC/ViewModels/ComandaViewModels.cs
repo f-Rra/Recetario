@@ -46,6 +46,7 @@ public class ComandaDetalleViewModel
     /// <summary>Ingredientes de la receta escalados a las porciones de la comanda (ex vw_Comanda).</summary>
     public List<IngredienteEscaladoItem> Ingredientes { get; set; } = new();
 
+    public List<PasoItem> Pasos { get; set; } = new();
     public List<ModificacionItem> Modificaciones { get; set; } = new();
     public ModificacionFormViewModel NuevaModificacion { get; set; } = new();
 }

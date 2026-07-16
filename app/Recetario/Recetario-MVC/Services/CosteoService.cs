@@ -153,4 +153,31 @@ public class CosteoService : ICosteoService
         await _context.SaveChangesAsync();
         return costo.IdCosto;
     }
+
+    public async Task<CosteoRegistradoViewModel?> ObtenerRegistradoAsync(int idCosto)
+    {
+        return await _context.Costos
+            .Where(c => c.IdCosto == idCosto)
+            .Select(c => new CosteoRegistradoViewModel
+            {
+                IdCosto = c.IdCosto,
+                Receta = c.Receta.Nombre,
+                Codigo = c.Receta.Codigo,
+                Fecha = c.Fecha,
+                Porciones = c.Porciones,
+                CostoTotal = c.CostoTotal,
+                CostoUnitario = c.CostoUnitario,
+                Usuario = c.Usuario.Nombre + " " + c.Usuario.Apellido,
+                Detalles = c.Detalles.Select(d => new CosteoDetalleItem
+                {
+                    IdIngrediente = d.IdIngrediente,
+                    Ingrediente = d.Ingrediente.Descripcion,
+                    CantBruta = d.CantBruta,
+                    Unidad = d.Ingrediente.Unidad.Abreviatura,
+                    PrecioUnitario = d.CostoUnitario,
+                    Subtotal = d.Subtotal
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+    }
 }

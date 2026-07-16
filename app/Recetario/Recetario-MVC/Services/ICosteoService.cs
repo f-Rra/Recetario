@@ -16,4 +16,7 @@ public interface ICosteoService
 
     /// <summary>Recalcula y persiste cabecera + desglose. Null si el cálculo no es registrable.</summary>
     Task<int?> RegistrarAsync(int idReceta, int porciones, string usuarioId);
+
+    /// <summary>Lee un costeo registrado desde el desglose persistido. Null si no existe.</summary>
+    Task<CosteoRegistradoViewModel?> ObtenerRegistradoAsync(int idCosto);
 }

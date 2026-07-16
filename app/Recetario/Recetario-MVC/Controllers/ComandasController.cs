@@ -92,6 +92,17 @@ public class ComandasController : Controller
         return RedirectToAction(nameof(Detalle), new { id = nuevaModificacion.IdComanda });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Pdf(int id)
+    {
+        var comanda = await _comandas.ObtenerDetalleAsync(id);
+        if (comanda is null)
+            return NotFound();
+
+        var pdf = Services.Pdf.ComandaPdf.Generar(comanda);
+        return File(pdf, "application/pdf", $"comanda-{comanda.IdComanda}.pdf");
+    }
+
     private async Task CargarCombosRegistroAsync()
     {
         var recetas = await _comandas.ListarRecetasActivasAsync();

@@ -22,10 +22,16 @@
                 Registrada por @Model.Usuario
             </span>
         </div>
-        <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@Model.IdReceta"
-           class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-journal-text"></i> Ver receta
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-action="Pdf" asp-route-id="@Model.IdComanda" target="_blank"
+               class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+            </a>
+            <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@Model.IdReceta"
+               class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-journal-text"></i> Ver receta
+            </a>
+        </div>
     </div>
 </div>
 
