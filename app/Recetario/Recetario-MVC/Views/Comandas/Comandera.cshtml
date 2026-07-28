@@ -1,0 +1,451 @@
+@model ComanderaViewModel
+@using System.Text.Json
+@using RecetarioMVC.Models
+@{
+    ViewData["Title"] = "Comanda de cocina";
+
+    // Ingredientes de cada receta del carrito, para los selects del modal
+    var ingredientesJson = JsonSerializer.Serialize(
+        Model.IngredientesPorItem.ToDictionary(
+            par => par.Key.ToString(),
+            par => par.Value.Select(i => new { id = i.IdIngrediente, nombre = i.Ingrediente, unidad = i.Unidad })));
+}
+
+<div class="comandera-tablero">
+
+    @* ==================== Arriba: elegir ==================== *@
+    <div class="fila-superior">
+
+        @* ---------- Catálogo ---------- *@
+        <form asp-action="AgregarAlCarrito" method="post" id="formCatalogo"
+              class="panel-comandera" style="width: 58%;">
+            <input type="hidden" name="comensales" id="comensalesCatalogo" value="@Model.Carrito.Comensales" />
+
+            <div class="panel-encabezado">
+                <span>Catálogo de recetas</span>
+                <span class="titulo-secundario">
+                    @Model.Catalogo.Count @(Model.Catalogo.Count == 1 ? "activa" : "activas")
+                </span>
+            </div>
+
+            <div class="p-2 border-bottom d-flex gap-2 flex-shrink-0">
+                <input type="search" name="busqueda" form="formFiltros" value="@Model.Busqueda"
+                       class="form-control form-control-sm" placeholder="Buscar receta…" />
+                <select name="clasificacion" form="formFiltros" class="form-select form-select-sm"
+                        style="max-width: 190px;" onchange="this.form.submit()">
+                    <option value="">Todas las clasificaciones</option>
+                    @foreach (var c in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones)
+                    {
+                        <option value="@c.Value" selected="@c.Selected">@c.Text</option>
+                    }
+                </select>
+                <button type="submit" form="formFiltros" class="btn btn-outline-primary btn-sm flex-shrink-0">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
+            <div class="panel-cuerpo sin-espaciado">
+                @if (Model.Catalogo.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-journal-text" style="font-size: 26px; color: var(--sx-celeste);"></i>
+                        <p class="mb-0 mt-2 small">No hay recetas activas con esos filtros.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 36px;"></th>
+                                <th>Receta</th>
+                                <th>Clasificación</th>
+                                <th class="num" style="width: 62px;">Base</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var receta in Model.Catalogo)
+                            {
+                                <tr class="fila-receta" data-id="@receta.IdReceta" style="cursor: pointer;">
+                                    <td>
+                                        <input class="form-check-input" type="checkbox" name="seleccion"
+                                               value="@receta.IdReceta" disabled="@receta.EnCarrito"
+                                               title="@(receta.EnCarrito ? "Ya está en la comanda" : "Seleccionar")" />
+                                    </td>
+                                    <td>
+                                        @receta.Nombre
+                                        @if (receta.EnCarrito)
+                                        {
+                                            <i class="bi bi-check-circle-fill ms-1"
+                                               style="color: var(--sx-celeste);" title="En la comanda"></i>
+                                        }
+                                    </td>
+                                    <td class="text-muted">@receta.Clasificacion</td>
+                                    <td class="num text-muted">@receta.PorcionesBase</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            <div class="panel-pie d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Seleccioná una o varias recetas</span>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg"></i> <span id="textoBotonAgregar">Agregar receta</span>
+                </button>
+            </div>
+        </form>
+
+        @* ---------- Ingredientes de la receta elegida ---------- *@
+        <div class="panel-comandera flex-grow-1">
+            <div class="panel-encabezado">
+                <span id="tituloIngredientes">Ingredientes</span>
+                <span class="titulo-secundario" id="subtituloIngredientes"></span>
+            </div>
+            <div class="panel-cuerpo">
+                <div id="panelIngredientes">
+                    <p class="text-muted small mb-0">Elegí una receta del catálogo para ver qué lleva.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ==================== Abajo: la comanda ==================== *@
+    <div class="fila-inferior">
+        <div class="panel-comandera ajustado">
+            <div class="panel-encabezado principal">
+                <div class="d-flex align-items-center gap-3">
+                    <span>
+                        Comanda
+                        <span class="titulo-secundario">
+                            · @Model.Carrito.Items.Count @(Model.Carrito.Items.Count == 1 ? "receta" : "recetas")
+                        </span>
+                    </span>
+
+                    <span class="separador"></span>
+
+                    <form asp-action="ActualizarComensales" method="post"
+                          class="d-flex align-items-center gap-2" id="formComensales">
+                        <label for="comensales" class="form-label mb-0 small flex-shrink-0">Comensales</label>
+                        <input type="number" min="1" id="comensales" name="comensales" value="@Model.Carrito.Comensales"
+                               class="form-control form-control-sm text-center fw-semibold" style="width: 76px;" />
+                    </form>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <a asp-action="Index" class="text-decoration-none small" title="Comandas ya generadas">
+                        <i class="bi bi-clock-history"></i> Historial
+                    </a>
+
+                    @if (Model.Carrito.EstaVacio)
+                    {
+                        <button type="button" class="btn btn-generar btn-sm" disabled
+                                title="Agregá al menos una receta">
+                            <i class="bi bi-file-earmark-pdf"></i> Generar comanda
+                        </button>
+                    }
+                    else
+                    {
+                        <form asp-action="Generar" method="post">
+                            <button type="submit" class="btn btn-generar btn-sm">
+                                <i class="bi bi-file-earmark-pdf"></i> Generar comanda
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <div class="panel-cuerpo sin-espaciado">
+                @if (Model.Carrito.EstaVacio)
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-basket" style="font-size: 24px; color: var(--sx-celeste);"></i>
+                        <p class="mb-0 mt-2 small">
+                            La comanda está vacía. Seleccioná recetas del catálogo y agregalas.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Receta</th>
+                                <th>Sector</th>
+                                <th>Responsable</th>
+                                <th>Modificaciones</th>
+                                <th class="text-end" style="width: 110px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Carrito.Items)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@item.Nombre</td>
+                                    <td class="text-muted">@item.Clasificacion</td>
+                                    <td class="text-muted">
+                                        @(Model.Responsables.TryGetValue(item.IdReceta, out var resp)
+                                            ? resp
+                                            : "sin responsable")
+                                    </td>
+                                    <td>
+                                        @if (item.Modificaciones.Count == 0)
+                                        {
+                                            <span class="text-muted small">sin modificaciones</span>
+                                        }
+                                        else
+                                        {
+                                            @for (var i = 0; i < item.Modificaciones.Count; i++)
+                                            {
+                                                <span class="chip-modificacion">
+                                                    @item.Modificaciones[i].Descripcion
+                                                    <form asp-action="QuitarModificacion" method="post" class="d-inline">
+                                                        <input type="hidden" name="idReceta" value="@item.IdReceta" />
+                                                        <input type="hidden" name="indice" value="@i" />
+                                                        <button type="submit" title="Quitar modificación">
+                                                            <i class="bi bi-x-circle-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                </span>
+                                            }
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-modificar"
+                                                data-bs-toggle="modal" data-bs-target="#modalModificar"
+                                                data-id="@item.IdReceta" data-nombre="@item.Nombre"
+                                                title="Modificar ingredientes">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <form asp-action="QuitarDelCarrito" method="post" class="d-inline">
+                                            <input type="hidden" name="idReceta" value="@item.IdReceta" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    title="Quitar de la comanda">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            <div class="panel-pie text-muted small">
+                Al generar se registra la comanda, se descuenta el stock y se descarga el PDF.
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Formulario de filtros: vive fuera del form de agregar para no anidarlos *@
+<form method="get" id="formFiltros"></form>
+
+@* ============ Modal de modificación ============ *@
+<div class="modal fade" id="modalModificar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="GuardarModificacion" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modificar · <span id="modalReceta"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="IdReceta" id="modalIdReceta" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="modalTipo"><span class="text-danger">*</span> Tipo</label>
+                        <select name="Tipo" id="modalTipo" class="form-select" required>
+                            <option value="">Elegí el tipo…</option>
+                            <option value="@((int)TipoModificacion.Sustitucion)">Sustituir un ingrediente</option>
+                            <option value="@((int)TipoModificacion.Adicion)">Agregar un ingrediente</option>
+                            <option value="@((int)TipoModificacion.Eliminacion)">Quitar un ingrediente</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="grupoOriginal">
+                        <label class="form-label" for="modalOriginal">Ingrediente de la receta</label>
+                        <select name="IdIngredienteOriginal" id="modalOriginal" class="form-select"></select>
+                        <div class="form-text d-none" id="ayudaHereda">
+                            Se toma la cantidad que ya tiene en la receta.
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-none" id="grupoReemplazo">
+                        <label class="form-label" for="modalReemplazo">
+                            <span id="etiquetaReemplazo">Ingrediente nuevo</span>
+                        </label>
+                        <select name="IdIngredienteReemplazo" id="modalReemplazo" asp-items="ViewBag.Ingredientes"
+                                class="form-select">
+                            <option value="">Elegí un ingrediente…</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-1 d-none" id="grupoCantidad">
+                        <label class="form-label" for="modalCantidad">Cantidad para toda la comanda</label>
+                        <input name="Cantidad" id="modalCantidad" class="form-control" placeholder="0,00" />
+                        <div class="form-text">
+                            Total a usar para
+                            @(Model.Carrito.Comensales == 1 ? "1 comensal" : $"los {Model.Carrito.Comensales} comensales").
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar modificación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ingredientesPorReceta = @Html.Raw(ingredientesJson);
+        const comensalesActuales = @Model.Carrito.Comensales;
+
+        // ---- Previsualización de ingredientes al elegir una receta ----
+        document.querySelectorAll(".fila-receta").forEach(fila => {
+            fila.addEventListener("click", evento => {
+                if (evento.target.type === "checkbox") return;
+                seleccionarReceta(fila);
+            });
+        });
+
+        // ---- El botón de agregar acompaña a lo seleccionado ----
+        const casillas = document.querySelectorAll('input[name="seleccion"]');
+        casillas.forEach(casilla => casilla.addEventListener("change", actualizarBotonAgregar));
+
+        function actualizarBotonAgregar() {
+            const marcadas = [...casillas].filter(c => c.checked).length;
+            document.getElementById("textoBotonAgregar").textContent =
+                marcadas > 1 ? "Agregar recetas" : "Agregar receta";
+        }
+
+        async function seleccionarReceta(fila) {
+            document.querySelectorAll(".fila-receta").forEach(f => f.classList.remove("seleccionada"));
+            fila.classList.add("seleccionada");
+
+            const panel = document.getElementById("panelIngredientes");
+            panel.innerHTML = '<p class="text-muted small mb-0">Cargando…</p>';
+
+            const respuesta = await fetch(`@Url.Action("IngredientesReceta")?id=${fila.dataset.id}&comensales=${comensalesActuales}`);
+            if (!respuesta.ok) {
+                panel.innerHTML = '<p class="text-danger small mb-0">No se pudieron cargar los ingredientes.</p>';
+                return;
+            }
+
+            const datos = await respuesta.json();
+            document.getElementById("tituloIngredientes").textContent = datos.receta;
+            document.getElementById("subtituloIngredientes").textContent =
+                `para ${datos.comensales} ${datos.comensales === 1 ? "comensal" : "comensales"}`;
+
+            if (datos.ingredientes.length === 0) {
+                panel.innerHTML = '<p class="text-muted small mb-0">La receta no tiene ingredientes cargados.</p>';
+                return;
+            }
+
+            panel.innerHTML = `
+                <table class="table table-sm align-middle mb-0">
+                    <tbody>
+                        ${datos.ingredientes.map(i => `
+                            <tr>
+                                <td>${i.ingrediente}${badgeStock(i)}</td>
+                                <td class="num text-nowrap">${formatear(i.cantidad)} ${i.unidad}</td>
+                            </tr>`).join("")}
+                    </tbody>
+                </table>`;
+        }
+
+        function formatear(numero) {
+            return numero.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function badgeStock(ingrediente) {
+            if (!ingrediente.alcanza)
+                return ' <span class="badge rounded-pill badge-estado-critico">No alcanza</span>';
+            if (ingrediente.estado === "Crítico")
+                return ' <span class="badge rounded-pill badge-estado-critico">Crítico</span>';
+            if (ingrediente.estado === "Bajo")
+                return ' <span class="badge rounded-pill badge-estado-bajo">Bajo</span>';
+            return "";
+        }
+
+        // ---- Modal de modificación ----
+        const modal = document.getElementById("modalModificar");
+        modal.addEventListener("show.bs.modal", evento => {
+            const boton = evento.relatedTarget;
+            const idReceta = boton.dataset.id;
+
+            document.getElementById("modalIdReceta").value = idReceta;
+            document.getElementById("modalReceta").textContent = boton.dataset.nombre;
+            document.getElementById("modalTipo").value = "";
+
+            document.getElementById("modalOriginal").innerHTML = (ingredientesPorReceta[idReceta] || [])
+                .map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`)
+                .join("");
+
+            document.getElementById("modalReemplazo").value = "";
+            document.getElementById("modalCantidad").value = "";
+            actualizarCampos();
+        });
+
+        document.getElementById("modalTipo").addEventListener("change", actualizarCampos);
+
+        function actualizarCampos() {
+            const tipo = document.getElementById("modalTipo").value;
+            const sustitucion = tipo === "@((int)TipoModificacion.Sustitucion)";
+            const adicion = tipo === "@((int)TipoModificacion.Adicion)";
+            const eliminacion = tipo === "@((int)TipoModificacion.Eliminacion)";
+
+            mostrar("grupoOriginal", sustitucion || eliminacion);
+            mostrar("grupoReemplazo", sustitucion || adicion);
+            // Sustituir y quitar heredan la cantidad del ingrediente original:
+            // el cocinero no tiene que calcular nada
+            mostrar("grupoCantidad", adicion);
+            mostrar("ayudaHereda", sustitucion || eliminacion);
+
+            document.getElementById("etiquetaReemplazo").textContent =
+                sustitucion ? "Reemplazar por" : "Ingrediente a agregar";
+            document.getElementById("modalCantidad").required = adicion;
+        }
+
+        function mostrar(id, visible) {
+            document.getElementById(id).classList.toggle("d-none", !visible);
+        }
+
+        // ---- Comensales: se aplican solos, sin botón ----
+        const campoComensales = document.getElementById("comensales");
+
+        campoComensales.addEventListener("input", evento => {
+            // El catálogo viaja con el mismo valor al agregar recetas
+            document.getElementById("comensalesCatalogo").value = evento.target.value;
+        });
+
+        // "change" salta al salir del campo o al apretar Enter: no recarga
+        // mientras se está tipeando
+        campoComensales.addEventListener("change", () => {
+            const valor = parseInt(campoComensales.value, 10);
+
+            if (Number.isInteger(valor) && valor > 0) {
+                if (valor !== comensalesActuales)
+                    document.getElementById("formComensales").submit();
+                return;
+            }
+
+            // Valor vacío o inválido: se vuelve al anterior sin molestar
+            campoComensales.value = comensalesActuales;
+            document.getElementById("comensalesCatalogo").value = comensalesActuales;
+        });
+
+        @if (ViewBag.HayPdfPendiente == true)
+        {
+            <text>
+            // La comanda recién generada: se descarga el PDF y la pantalla ya quedó limpia
+            window.location = "@Url.Action("DescargarPdf")";
+            </text>
+        }
+    </script>
+}

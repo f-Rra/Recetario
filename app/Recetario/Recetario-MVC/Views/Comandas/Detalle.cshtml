@@ -1,5 +1,4 @@
 @model ComandaDetalleViewModel
-@using RecetarioMVC.Models
 @{
     ViewData["Title"] = $"Comanda #{Model.IdComanda}";
 }
@@ -18,14 +17,14 @@
             </h2>
             <span class="text-muted">
                 @Model.Fecha.ToString("dd/MM/yyyy") · @Model.Clasificacion ·
-                @Model.Porciones porciones · Responsable: @Model.Responsable ·
+                @Model.Porciones comensales · Responsable: @Model.Responsable ·
                 Registrada por @Model.Usuario
             </span>
         </div>
         <div class="d-flex gap-2">
             <a asp-action="Pdf" asp-route-id="@Model.IdComanda" target="_blank"
                class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                <i class="bi bi-file-earmark-pdf"></i> Reimprimir
             </a>
             <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@Model.IdReceta"
                class="btn btn-outline-primary btn-sm">
@@ -39,7 +38,7 @@
     <div class="col-lg-5">
         <div class="card h-100">
             <div class="card-body">
-                <h3 class="h6 fw-semibold mb-3">Ingredientes para @Model.Porciones porciones</h3>
+                <h3 class="h6 fw-semibold mb-3">Ingredientes para @Model.Porciones comensales</h3>
                 @if (Model.Ingredientes.Count == 0)
                 {
                     <p class="text-muted mb-0">La receta no tiene ingredientes cargados.</p>
@@ -63,86 +62,56 @@
                             }
                         </tbody>
                     </table>
+                    @if (Model.Modificaciones.Count > 0)
+                    {
+                        <div class="form-text mt-2">
+                            Cantidades de la receta original: mirá las modificaciones para saber qué se cambió.
+                        </div>
+                    }
                 }
             </div>
         </div>
     </div>
 
     <div class="col-lg-7">
-        <div class="card h-100">
+        <div class="card mb-3">
             <div class="card-body">
                 <h3 class="h6 fw-semibold mb-3">Modificaciones</h3>
-
                 @if (Model.Modificaciones.Count == 0)
                 {
-                    <p class="text-muted">Sin modificaciones registradas.</p>
+                    <p class="text-muted mb-0">Se cocinó según la receta, sin cambios.</p>
                 }
                 else
                 {
-                    <table class="table align-middle mb-3">
-                        <thead>
-                            <tr>
-                                <th>Tipo</th>
-                                <th>Original</th>
-                                <th>Reemplazo/Agregado</th>
-                                <th class="num">Cantidad</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var m in Model.Modificaciones)
-                            {
-                                <tr>
-                                    <td><span class="badge rounded-pill badge-estado-bajo">@m.Tipo</span></td>
-                                    <td>@(m.IngredienteOriginal ?? "—")</td>
-                                    <td>@(m.IngredienteReemplazo ?? "—")</td>
-                                    <td class="num">@m.Cantidad.ToString("N2") @m.Unidad</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var m in Model.Modificaciones)
+                        {
+                            <li class="mb-1">
+                                <span class="badge rounded-pill badge-estado-bajo">@m.Tipo</span>
+                                @m.Descripcion
+                            </li>
+                        }
+                    </ul>
                 }
+            </div>
+        </div>
 
-                <hr />
-                <h4 class="h6 fw-semibold mb-2">Agregar modificación</h4>
-                <form asp-action="AgregarModificacion" method="post" class="row g-2 align-items-end">
-                    <input type="hidden" asp-for="NuevaModificacion.IdComanda" />
-                    <div class="col-6 col-lg-3">
-                        <label asp-for="NuevaModificacion.Tipo" class="form-label"></label>
-                        <select asp-for="NuevaModificacion.Tipo" class="form-select form-select-sm">
-                            <option value="">Tipo…</option>
-                            <option value="@((int)TipoModificacion.Sustitucion)">Sustitución</option>
-                            <option value="@((int)TipoModificacion.Adicion)">Adición</option>
-                            <option value="@((int)TipoModificacion.Eliminacion)">Eliminación</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <label asp-for="NuevaModificacion.IdIngredienteOriginal" class="form-label"></label>
-                        <select asp-for="NuevaModificacion.IdIngredienteOriginal" asp-items="ViewBag.Ingredientes"
-                                class="form-select form-select-sm">
-                            <option value="">—</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <label asp-for="NuevaModificacion.IdIngredienteReemplazo" class="form-label"></label>
-                        <select asp-for="NuevaModificacion.IdIngredienteReemplazo" asp-items="ViewBag.Ingredientes"
-                                class="form-select form-select-sm">
-                            <option value="">—</option>
-                        </select>
-                    </div>
-                    <div class="col-4 col-lg-2">
-                        <label asp-for="NuevaModificacion.Cantidad" class="form-label"></label>
-                        <input asp-for="NuevaModificacion.Cantidad" class="form-control form-control-sm" placeholder="0,00" />
-                    </div>
-                    <div class="col-2 col-lg-1">
-                        <button type="submit" class="btn btn-primary btn-sm w-100" title="Agregar">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
-                    </div>
-                </form>
-                <div class="form-text mt-1">
-                    Sustitución: original + reemplazo · Adición: solo agregado · Eliminación: solo original.
-                    El stock se ajusta y queda auditado en movimientos.
-                </div>
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h6 fw-semibold mb-3">Procedimiento</h3>
+                @if (Model.Pasos.Count == 0)
+                {
+                    <p class="text-muted mb-0">Sin pasos cargados.</p>
+                }
+                else
+                {
+                    <ol class="mb-0">
+                        @foreach (var paso in Model.Pasos)
+                        {
+                            <li class="mb-2">@paso.Descripcion</li>
+                        }
+                    </ol>
+                }
             </div>
         </div>
     </div>

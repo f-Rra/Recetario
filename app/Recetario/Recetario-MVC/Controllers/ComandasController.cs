@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.Models;
 using RecetarioMVC.Services;
+using RecetarioMVC.Services.Pdf;
 using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
@@ -11,6 +13,8 @@ namespace RecetarioMVC.Controllers;
 [Authorize] // Cocina y Admin
 public class ComandasController : Controller
 {
+    private const string ClavePdfPendiente = "ComanderaPdfPendiente";
+
     private readonly IComandaService _comandas;
     private readonly UserManager<ApplicationUser> _userManager;
 
@@ -19,6 +23,230 @@ public class ComandasController : Controller
         _comandas = comandas;
         _userManager = userManager;
     }
+
+    // ================= Comandera =================
+
+    [HttpGet]
+    public async Task<IActionResult> Comandera(string? busqueda, int? clasificacion)
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+
+        var modelo = new ComanderaViewModel
+        {
+            Busqueda = busqueda,
+            IdClasificacion = clasificacion,
+            Catalogo = await _comandas.ListarCatalogoAsync(busqueda, clasificacion),
+            Carrito = carrito,
+            Responsables = await _comandas.ResolverResponsablesAsync(carrito)
+        };
+
+        foreach (var item in carrito.Items)
+            modelo.IngredientesPorItem[item.IdReceta] =
+                await _comandas.ListarIngredientesDeRecetaAsync(item.IdReceta);
+
+        var enCarrito = carrito.Items.Select(i => i.IdReceta).ToHashSet();
+        foreach (var receta in modelo.Catalogo)
+            receta.EnCarrito = enCarrito.Contains(receta.IdReceta);
+
+        await CargarCombosAsync(clasificacion);
+        ViewBag.HayPdfPendiente = HttpContext.Session.Get(ClavePdfPendiente) is not null;
+        return View(modelo);
+    }
+
+    /// <summary>Previsualización de ingredientes al seleccionar una receta del catálogo.</summary>
+    [HttpGet]
+    public async Task<IActionResult> IngredientesReceta(int id, int comensales)
+    {
+        var modelo = await _comandas.ObtenerIngredientesPreviewAsync(id, comensales);
+        if (modelo is null)
+            return NotFound();
+
+        return Json(modelo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AgregarAlCarrito(int comensales, List<int>? seleccion)
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+        carrito.Comensales = comensales > 0 ? comensales : carrito.Comensales;
+
+        if (seleccion is null || seleccion.Count == 0)
+        {
+            TempData["Error"] = "Tildá al menos una receta del catálogo.";
+            CarritoSesion.Guardar(HttpContext.Session, carrito);
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        var agregadas = 0;
+        foreach (var idReceta in seleccion.Distinct())
+        {
+            if (carrito.Items.Any(i => i.IdReceta == idReceta))
+                continue;
+
+            var item = await _comandas.ObtenerParaCarritoAsync(idReceta);
+            if (item is null)
+                continue;
+
+            carrito.Items.Add(item);
+            agregadas++;
+        }
+
+        CarritoSesion.Guardar(HttpContext.Session, carrito);
+        TempData["Exito"] = agregadas switch
+        {
+            0 => "Las recetas tildadas ya estaban en la comanda.",
+            1 => "Receta agregada a la comanda.",
+            _ => $"{agregadas} recetas agregadas a la comanda."
+        };
+        return RedirectToAction(nameof(Comandera));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ActualizarComensales(int comensales)
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+        if (comensales <= 0)
+            TempData["Error"] = "Los comensales deben ser mayores a cero.";
+        else
+            carrito.Comensales = comensales;
+
+        CarritoSesion.Guardar(HttpContext.Session, carrito);
+        return RedirectToAction(nameof(Comandera));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult QuitarDelCarrito(int idReceta)
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+        carrito.Items.RemoveAll(i => i.IdReceta == idReceta);
+        CarritoSesion.Guardar(HttpContext.Session, carrito);
+        TempData["Exito"] = "Receta quitada de la comanda.";
+        return RedirectToAction(nameof(Comandera));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarModificacion(ModificacionComanderaForm form)
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+        var item = carrito.Items.FirstOrDefault(i => i.IdReceta == form.IdReceta);
+
+        if (item is null || form.Tipo is null)
+        {
+            TempData["Error"] = "No se pudo registrar la modificación.";
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        var error = await ValidarModificacionAsync(form, item);
+        if (error is not null)
+        {
+            TempData["Error"] = error;
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        var ingredientesReceta = await _comandas.ListarIngredientesDeRecetaAsync(form.IdReceta);
+        var todos = await _comandas.ListarIngredientesAsync();
+
+        var original = ingredientesReceta.FirstOrDefault(i => i.IdIngrediente == form.IdIngredienteOriginal);
+        var reemplazo = todos.FirstOrDefault(i => i.IdIngrediente == form.IdIngredienteReemplazo);
+
+        // Una sustitución entre unidades distintas no puede heredar la cantidad
+        var heredaCantidad = form.Tipo != TipoModificacion.Adicion &&
+                             (reemplazo is null || original is null || reemplazo.Unidad.Abreviatura == original.Unidad);
+
+        if (!heredaCantidad && form.Cantidad is null)
+        {
+            TempData["Error"] = "El reemplazo usa otra unidad: indicá la cantidad.";
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        item.Modificaciones.Add(new ModificacionCarrito
+        {
+            Tipo = form.Tipo.Value,
+            IdIngredienteOriginal = form.IdIngredienteOriginal,
+            NombreOriginal = original?.Ingrediente,
+            IdIngredienteReemplazo = form.IdIngredienteReemplazo,
+            NombreReemplazo = reemplazo?.Descripcion,
+            Cantidad = heredaCantidad ? null : form.Cantidad,
+            Unidad = reemplazo?.Unidad.Abreviatura ?? original?.Unidad
+        });
+
+        CarritoSesion.Guardar(HttpContext.Session, carrito);
+        TempData["Exito"] = "Modificación agregada.";
+        return RedirectToAction(nameof(Comandera));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult QuitarModificacion(int idReceta, int indice)
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+        var item = carrito.Items.FirstOrDefault(i => i.IdReceta == idReceta);
+
+        if (item is not null && indice >= 0 && indice < item.Modificaciones.Count)
+        {
+            item.Modificaciones.RemoveAt(indice);
+            CarritoSesion.Guardar(HttpContext.Session, carrito);
+            TempData["Exito"] = "Modificación quitada.";
+        }
+
+        return RedirectToAction(nameof(Comandera));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Generar()
+    {
+        var carrito = CarritoSesion.Obtener(HttpContext.Session);
+        var usuarioId = _userManager.GetUserId(User)!;
+        var resultado = await _comandas.GenerarAsync(carrito, usuarioId);
+
+        if (resultado.Faltantes.Count > 0)
+        {
+            TempData["Error"] = "No hay stock suficiente: " + string.Join(" ", resultado.Faltantes);
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        if (!resultado.Ok)
+        {
+            TempData["Error"] = resultado.Error;
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        var usuario = await _userManager.GetUserAsync(User);
+        var pdf = ComandaPdf.Generar(new ComandaPdfViewModel
+        {
+            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Comensales = carrito.Comensales,
+            Usuario = usuario?.NombreCompleto ?? string.Empty,
+            Secciones = resultado.Secciones
+        });
+
+        // El PDF queda para descargar en el siguiente request: así la pantalla
+        // vuelve con el carrito vacío y el aviso de éxito
+        HttpContext.Session.Set(ClavePdfPendiente, pdf);
+        CarritoSesion.Vaciar(HttpContext.Session, carrito.Comensales);
+
+        TempData["Exito"] = $"Comanda generada: {resultado.IdsComandas.Count} receta(s). " +
+                            "El stock ya fue descontado.";
+        return RedirectToAction(nameof(Comandera));
+    }
+
+    [HttpGet]
+    public IActionResult DescargarPdf()
+    {
+        var pdf = HttpContext.Session.Get(ClavePdfPendiente);
+        if (pdf is null)
+            return NotFound();
+
+        HttpContext.Session.Remove(ClavePdfPendiente);
+        return File(pdf, "application/pdf", $"comanda-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
+    }
+
+    // ================= Consulta =================
 
     public async Task<IActionResult> Index(DateOnly? fecha)
     {
@@ -34,64 +262,10 @@ public class ComandasController : Controller
         if (modelo is null)
             return NotFound();
 
-        await CargarIngredientesAsync();
         return View(modelo);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Registrar()
-    {
-        await CargarCombosRegistroAsync();
-        return View(new RegistrarComandaViewModel());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Registrar(RegistrarComandaViewModel modelo)
-    {
-        if (!ModelState.IsValid)
-        {
-            await CargarCombosRegistroAsync();
-            return View(modelo);
-        }
-
-        var usuarioId = _userManager.GetUserId(User)!;
-        var (idComanda, error) = await _comandas.RegistrarAsync(
-            modelo.IdReceta!.Value, modelo.Porciones!.Value, usuarioId, modelo.IdPersona);
-
-        if (error is not null)
-        {
-            ModelState.AddModelError(string.Empty, error);
-            await CargarCombosRegistroAsync();
-            return View(modelo);
-        }
-
-        TempData["Exito"] = $"Comanda #{idComanda} registrada. El stock ya fue descontado.";
-        return RedirectToAction(nameof(Detalle), new { id = idComanda });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AgregarModificacion(ModificacionFormViewModel nuevaModificacion)
-    {
-        if (!ModelState.IsValid)
-        {
-            TempData["Error"] = string.Join(" ",
-                ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-            return RedirectToAction(nameof(Detalle), new { id = nuevaModificacion.IdComanda });
-        }
-
-        var usuarioId = _userManager.GetUserId(User)!;
-        var error = await _comandas.AgregarModificacionAsync(nuevaModificacion, usuarioId);
-
-        if (error is null)
-            TempData["Exito"] = "Modificación registrada con su ajuste de stock.";
-        else
-            TempData["Error"] = error;
-
-        return RedirectToAction(nameof(Detalle), new { id = nuevaModificacion.IdComanda });
-    }
-
+    /// <summary>Reimpresión de una comanda ya registrada.</summary>
     [HttpGet]
     public async Task<IActionResult> Pdf(int id)
     {
@@ -99,28 +273,55 @@ public class ComandasController : Controller
         if (comanda is null)
             return NotFound();
 
-        var pdf = Services.Pdf.ComandaPdf.Generar(comanda);
+        var pdf = ComandaPdf.Generar(new ComandaPdfViewModel
+        {
+            Fecha = comanda.Fecha,
+            Comensales = comanda.Porciones,
+            Usuario = comanda.Usuario,
+            Secciones =
+            [
+                new SeccionComandaPdf
+                {
+                    Receta = comanda.Receta,
+                    Codigo = comanda.Codigo,
+                    Sector = comanda.Clasificacion,
+                    Responsable = comanda.Responsable,
+                    Ingredientes = comanda.Ingredientes,
+                    Modificaciones = comanda.Modificaciones.Select(m => m.Descripcion).ToList(),
+                    Pasos = comanda.Pasos
+                }
+            ]
+        });
+
         return File(pdf, "application/pdf", $"comanda-{comanda.IdComanda}.pdf");
     }
 
-    private async Task CargarCombosRegistroAsync()
-    {
-        var recetas = await _comandas.ListarRecetasActivasAsync();
-        ViewBag.Recetas = recetas
-            .Select(r => new SelectListItem($"{r.Nombre} ({r.Codigo})", r.IdReceta.ToString()))
-            .ToList();
+    // ================= Auxiliares =================
 
-        var responsables = await _comandas.ListarResponsablesAsync();
-        ViewBag.Responsables = responsables
-            .Select(p => new SelectListItem(
-                $"{p.Apellido}, {p.Nombre}" + (p.Clasificacion is null ? "" : $" — {p.Clasificacion.Nombre}"),
-                p.IdPersona.ToString()))
-            .ToList();
-        ViewBag.HayResponsables = responsables.Count > 0;
+    private async Task<string?> ValidarModificacionAsync(ModificacionComanderaForm form, CarritoItem item)
+    {
+        return form.Tipo switch
+        {
+            TipoModificacion.Sustitucion when form.IdIngredienteOriginal is null || form.IdIngredienteReemplazo is null
+                => "La sustitución necesita el ingrediente a reemplazar y el nuevo.",
+            TipoModificacion.Adicion when form.IdIngredienteReemplazo is null
+                => "Elegí el ingrediente a agregar.",
+            TipoModificacion.Adicion when form.Cantidad is null or <= 0
+                => "Indicá la cantidad a agregar para toda la comanda.",
+            TipoModificacion.Eliminacion when form.IdIngredienteOriginal is null
+                => "Elegí el ingrediente a quitar.",
+            _ => await Task.FromResult<string?>(null)
+        };
     }
 
-    private async Task CargarIngredientesAsync()
+    private async Task CargarCombosAsync(int? clasificacionSeleccionada)
     {
+        var clasificaciones = await _comandas.ListarClasificacionesAsync();
+        ViewBag.Clasificaciones = clasificaciones
+            .Select(c => new SelectListItem(c.Nombre, c.IdClasificacion.ToString(),
+                c.IdClasificacion == clasificacionSeleccionada))
+            .ToList();
+
         var ingredientes = await _comandas.ListarIngredientesAsync();
         ViewBag.Ingredientes = ingredientes
             .Select(i => new SelectListItem($"{i.Descripcion} ({i.Unidad.Abreviatura})", i.IdIngrediente.ToString()))

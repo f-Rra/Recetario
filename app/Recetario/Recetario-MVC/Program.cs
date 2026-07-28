@@ -47,6 +47,15 @@ builder.Services.AddScoped<RecetarioMVC.Services.IComandaService, RecetarioMVC.S
 builder.Services.AddScoped<RecetarioMVC.Services.IPersonaService, RecetarioMVC.Services.PersonaService>();
 builder.Services.AddScoped<RecetarioMVC.Services.IStockService, RecetarioMVC.Services.StockService>();
 
+// El pedido en curso de la comandera vive en la sesión (guía 15)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -69,6 +78,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
 
 app.MapStaticAssets();
 
