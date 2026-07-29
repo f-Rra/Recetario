@@ -1,14 +1,17 @@
 @model List<IngredienteListaItem>
+@using RecetarioMVC.Data
 @using RecetarioMVC.Helpers
 @using RecetarioMVC.Models
 @{
     ViewData["Title"] = "Stock";
+    // Cocina consulta el stock; registrar movimientos es de Admin
+    var puedeMover = User.IsInRole(DbSeeder.RolAdmin);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <form method="get" class="d-flex gap-2" role="search">
-        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control"
-               style="width: 260px;" placeholder="Buscar ingrediente…" />
+        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control filtro-busqueda"
+               placeholder="Buscar ingrediente…" />
         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
     </form>
     <a asp-action="Historial" class="btn btn-outline-primary">
@@ -61,12 +64,15 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="modal" data-bs-target="#modalMovimiento"
-                                        data-id="@item.IdIngrediente" data-nombre="@item.Descripcion"
-                                        data-unidad="@item.Unidad">
-                                    <i class="bi bi-arrow-left-right"></i> Movimiento
-                                </button>
+                                @if (puedeMover)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal" data-bs-target="#modalMovimiento"
+                                            data-id="@item.IdIngrediente" data-nombre="@item.Descripcion"
+                                            data-unidad="@item.Unidad">
+                                        <i class="bi bi-arrow-left-right"></i> Movimiento
+                                    </button>
+                                }
                             </td>
                         </tr>
                     }
@@ -76,6 +82,8 @@
     </div>
 </div>
 
+@if (puedeMover)
+{
 <div class="modal fade" id="modalMovimiento" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -115,10 +123,12 @@
         </div>
     </div>
 </div>
+}
 
 @section Scripts {
     <script>
-        document.getElementById("modalMovimiento").addEventListener("show.bs.modal", function (evento) {
+        const modalMov = document.getElementById("modalMovimiento");
+        if (modalMov) modalMov.addEventListener("show.bs.modal", function (evento) {
             const boton = evento.relatedTarget;
             document.getElementById("modalMovId").value = boton.dataset.id;
             document.getElementById("modalMovNombre").textContent = boton.dataset.nombre;

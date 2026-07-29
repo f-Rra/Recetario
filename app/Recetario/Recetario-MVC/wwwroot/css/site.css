@@ -268,6 +268,15 @@ html, body {
   font-size: 13px;
 }
 
+/* Filtros de listado: anchos pensados para que entre el texto completo */
+.filtro-busqueda {
+  width: 300px;
+}
+
+.filtro-select {
+  width: 250px;
+}
+
 /* Badges de estado de stock (guía 01) */
 .badge-estado-ok {
   background: #EDF4EE;

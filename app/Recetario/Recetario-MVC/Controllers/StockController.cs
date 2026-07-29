@@ -9,7 +9,8 @@ using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
 
-[Authorize(Roles = DbSeeder.RolAdmin)]
+// Consulta para ambos roles; registrar movimientos sigue siendo de Admin
+[Authorize]
 public class StockController : Controller
 {
     private readonly IStockService _stock;
@@ -34,6 +35,7 @@ public class StockController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = DbSeeder.RolAdmin)]
     public async Task<IActionResult> RegistrarMovimiento(MovimientoFormViewModel modelo)
     {
         if (!ModelState.IsValid)

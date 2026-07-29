@@ -496,11 +496,20 @@ public class ComandaService : IComandaService
 
     // ================= Consulta =================
 
-    public Task<List<ComandaListaItem>> ListarPorFechaAsync(DateOnly fecha)
+    public Task<List<ComandaListaItem>> ListarAsync(DateOnly? desde, DateOnly? hasta, int? idReceta)
     {
-        return _context.Comandas
-            .Where(c => c.Fecha == fecha)
-            .OrderByDescending(c => c.IdComanda)
+        var query = _context.Comandas.AsQueryable();
+
+        if (desde.HasValue)
+            query = query.Where(c => c.Fecha >= desde.Value);
+        if (hasta.HasValue)
+            query = query.Where(c => c.Fecha <= hasta.Value);
+        if (idReceta.HasValue)
+            query = query.Where(c => c.IdReceta == idReceta.Value);
+
+        return query
+            .OrderByDescending(c => c.Fecha)
+            .ThenByDescending(c => c.IdComanda)
             .Select(c => new ComandaListaItem
             {
                 IdComanda = c.IdComanda,

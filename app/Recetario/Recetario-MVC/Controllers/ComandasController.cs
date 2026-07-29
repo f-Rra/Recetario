@@ -248,11 +248,23 @@ public class ComandasController : Controller
 
     // ================= Consulta =================
 
-    public async Task<IActionResult> Index(DateOnly? fecha)
+    public async Task<IActionResult> Index(DateOnly? desde, DateOnly? hasta, int? receta)
     {
-        var dia = fecha ?? DateOnly.FromDateTime(DateTime.Today);
-        ViewData["Fecha"] = dia;
-        return View(await _comandas.ListarPorFechaAsync(dia));
+        // Por defecto, las del día
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        desde ??= hoy;
+        hasta ??= hoy;
+
+        ViewData["Desde"] = desde;
+        ViewData["Hasta"] = hasta;
+        ViewData["Receta"] = receta;
+
+        var recetas = await _comandas.ListarCatalogoAsync(null, null);
+        ViewBag.Recetas = recetas
+            .Select(r => new SelectListItem(r.Nombre, r.IdReceta.ToString(), r.IdReceta == receta))
+            .ToList();
+
+        return View(await _comandas.ListarAsync(desde, hasta, receta));
     }
 
     [HttpGet]

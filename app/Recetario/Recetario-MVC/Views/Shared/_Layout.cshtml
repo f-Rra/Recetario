@@ -3,6 +3,11 @@
 @inject UserManager<ApplicationUser> UserManager
 @{
     var controllerActual = (string?)ViewContext.RouteData.Values["controller"] ?? "";
+    var accionActual = (string?)ViewContext.RouteData.Values["action"] ?? "";
+
+    // Comandas tiene dos pantallas distintas: armar una nueva y ver las hechas
+    var esComandera = controllerActual == "Comandas" && accionActual == "Comandera";
+    var esHistorialComandas = controllerActual == "Comandas" && !esComandera;
     var usuario = User.Identity?.IsAuthenticated == true
         ? await UserManager.GetUserAsync(User)
         : null;
@@ -27,18 +32,21 @@
                 <small>Grupo Southex</small>
             </a>
 
+            @* La sidebar se arma por rol: cada uno ve primero lo que más usa *@
             <nav class="sidebar-nav">
-                <div class="nav-seccion">General</div>
-                <a class="nav-item-sx @(controllerActual == "Home" ? "activo" : "")"
-                   asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                </a>
-                <a class="nav-item-sx @(controllerActual == "Recetas" ? "activo" : "")"
-                   asp-controller="Recetas" asp-action="Index">
-                    <i class="bi bi-journal-text"></i> Recetas
-                </a>
                 @if (esAdmin)
                 {
+                    <div class="nav-seccion">General</div>
+                    <a class="nav-item-sx @(controllerActual == "Home" ? "activo" : "")"
+                       asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                    </a>
+
+                    <div class="nav-seccion">Gestión</div>
+                    <a class="nav-item-sx @(controllerActual == "Recetas" ? "activo" : "")"
+                       asp-controller="Recetas" asp-action="Index">
+                        <i class="bi bi-journal-text"></i> Recetas
+                    </a>
                     <a class="nav-item-sx @(controllerActual == "Ingredientes" ? "activo" : "")"
                        asp-controller="Ingredientes" asp-action="Index">
                         <i class="bi bi-egg-fried"></i> Ingredientes
@@ -47,15 +55,16 @@
                        asp-controller="Proveedores" asp-action="Index">
                         <i class="bi bi-truck"></i> Proveedores
                     </a>
-                }
 
-                <div class="nav-seccion">Operación</div>
-                <a class="nav-item-sx @(controllerActual == "Comandas" ? "activo" : "")"
-                   asp-controller="Comandas" asp-action="Comandera">
-                    <i class="bi bi-receipt"></i> Comandas
-                </a>
-                @if (esAdmin)
-                {
+                    <div class="nav-seccion">Operación</div>
+                    <a class="nav-item-sx @(esComandera ? "activo" : "")"
+                       asp-controller="Comandas" asp-action="Comandera">
+                        <i class="bi bi-plus-square"></i> Nueva comanda
+                    </a>
+                    <a class="nav-item-sx @(esHistorialComandas ? "activo" : "")"
+                       asp-controller="Comandas" asp-action="Index">
+                        <i class="bi bi-receipt"></i> Comandas
+                    </a>
                     <a class="nav-item-sx @(controllerActual == "Stock" ? "activo" : "")"
                        asp-controller="Stock" asp-action="Index">
                         <i class="bi bi-box-seam"></i> Stock
@@ -69,6 +78,28 @@
                     <a class="nav-item-sx @(controllerActual == "Usuarios" ? "activo" : "")"
                        asp-controller="Usuarios" asp-action="Index">
                         <i class="bi bi-people-fill"></i> Usuarios
+                    </a>
+                }
+                else
+                {
+                    @* Cocina tiene pocos accesos: van sin secciones, con el
+                       nombre completo de cada pantalla *@
+                    <div class="pt-2"></div>
+                    <a class="nav-item-sx @(esComandera ? "activo" : "")"
+                       asp-controller="Comandas" asp-action="Comandera">
+                        <i class="bi bi-plus-square"></i> Nueva comanda
+                    </a>
+                    <a class="nav-item-sx @(esHistorialComandas ? "activo" : "")"
+                       asp-controller="Comandas" asp-action="Index">
+                        <i class="bi bi-receipt"></i> Historial de comandas
+                    </a>
+                    <a class="nav-item-sx @(controllerActual == "Recetas" ? "activo" : "")"
+                       asp-controller="Recetas" asp-action="Index">
+                        <i class="bi bi-journal-text"></i> Listado de recetas
+                    </a>
+                    <a class="nav-item-sx @(controllerActual == "Stock" ? "activo" : "")"
+                       asp-controller="Stock" asp-action="Index">
+                        <i class="bi bi-box-seam"></i> Stock de ingredientes
                     </a>
                 }
             </nav>

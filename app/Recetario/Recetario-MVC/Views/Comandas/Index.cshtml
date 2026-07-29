@@ -1,16 +1,43 @@
 @model List<ComandaListaItem>
 @{
     ViewData["Title"] = "Comandas";
-    var fecha = (DateOnly)ViewData["Fecha"]!;
+    var desde = (DateOnly?)ViewData["Desde"];
+    var hasta = (DateOnly?)ViewData["Hasta"];
+    var hoy = DateOnly.FromDateTime(DateTime.Today);
+    var esHoy = desde == hoy && hasta == hoy;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <form method="get" class="d-flex gap-2 align-items-center">
-        <label for="fecha" class="form-label mb-0">Día</label>
-        <input type="date" id="fecha" name="fecha" value="@fecha.ToString("yyyy-MM-dd")"
-               class="form-control" style="width: 180px;" onchange="this.form.submit()" />
+<div class="d-flex justify-content-between align-items-end mb-3 gap-3 flex-wrap">
+    <form method="get" class="d-flex gap-2 align-items-end">
+        <div>
+            <label for="desde" class="form-label mb-1 small fw-semibold">Desde</label>
+            <input type="date" id="desde" name="desde" value="@desde?.ToString("yyyy-MM-dd")"
+                   class="form-control form-control-sm" style="width: 160px;" />
+        </div>
+        <div>
+            <label for="hasta" class="form-label mb-1 small fw-semibold">Hasta</label>
+            <input type="date" id="hasta" name="hasta" value="@hasta?.ToString("yyyy-MM-dd")"
+                   class="form-control form-control-sm" style="width: 160px;" />
+        </div>
+        <div>
+            <label for="receta" class="form-label mb-1 small fw-semibold">Receta</label>
+            <select id="receta" name="receta" asp-items="ViewBag.Recetas"
+                    class="form-select form-select-sm" style="width: 220px;">
+                <option value="">Todas</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-search"></i> Filtrar
+        </button>
+        @if (!esHoy)
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Hoy</a>
+        }
     </form>
-    <a asp-action="Comandera" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nueva comanda</a>
+
+    <a asp-action="Comandera" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nueva comanda
+    </a>
 </div>
 
 <div class="card">
@@ -19,7 +46,11 @@
         {
             <div class="text-center text-muted py-4">
                 <i class="bi bi-receipt" style="font-size: 28px; color: var(--sx-celeste);"></i>
-                <p class="mb-0 mt-2">Sin comandas para el @fecha.ToString("dd/MM/yyyy").</p>
+                <p class="mb-0 mt-2">
+                    @(esHoy
+                        ? "Todavía no hay comandas hoy."
+                        : "No hay comandas con esos filtros.")
+                </p>
             </div>
         }
         else
@@ -28,11 +59,12 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Fecha</th>
                         <th>Receta</th>
                         <th>Sector</th>
-                        <th class="num">Porciones</th>
+                        <th class="num">Comensales</th>
                         <th>Responsable</th>
-                        <th>Registrada por</th>
+                        <th>Generada por</th>
                         <th class="num">Modif.</th>
                         <th class="text-end"></th>
                     </tr>
@@ -41,14 +73,28 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.IdComanda</td>
-                            <td>@item.Receta</td>
-                            <td>@item.Clasificacion</td>
+                            <td class="text-muted">@item.IdComanda</td>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td class="fw-semibold">@item.Receta</td>
+                            <td class="text-muted">@item.Clasificacion</td>
                             <td class="num">@item.Porciones</td>
-                            <td>@item.Responsable</td>
-                            <td>@item.Usuario</td>
-                            <td class="num">@item.CantidadModificaciones</td>
+                            <td class="text-muted">@item.Responsable</td>
+                            <td class="text-muted">@item.Usuario</td>
+                            <td class="num">
+                                @if (item.CantidadModificaciones > 0)
+                                {
+                                    <span class="badge rounded-pill badge-estado-bajo">@item.CantidadModificaciones</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
                             <td class="text-end">
+                                <a asp-action="Pdf" asp-route-id="@item.IdComanda" target="_blank"
+                                   class="btn btn-sm btn-outline-primary" title="Reimprimir PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </a>
                                 <a asp-action="Detalle" asp-route-id="@item.IdComanda"
                                    class="btn btn-sm btn-outline-primary" title="Ver detalle">
                                     <i class="bi bi-eye"></i>
