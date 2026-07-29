@@ -83,6 +83,10 @@ public class IngredientePreviewItem
     public string Ingrediente { get; set; } = string.Empty;
     public decimal Cantidad { get; set; }
     public string Unidad { get; set; } = string.Empty;
+
+    /// <summary>Cantidad ya formateada para mostrar (el JS solo la imprime).</summary>
+    public string CantidadTexto { get; set; } = string.Empty;
+
     public string Estado { get; set; } = string.Empty;
     public bool Alcanza { get; set; }
 }

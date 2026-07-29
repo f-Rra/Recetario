@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Services.Pdf;
@@ -55,7 +56,8 @@ public static class CosteoPdf
                         foreach (var d in costeo.Detalles)
                         {
                             tabla.Cell().Element(EstiloPdf.Celda).Text(d.Ingrediente);
-                            tabla.Cell().Element(EstiloPdf.Celda).AlignRight().Text($"{d.CantBruta:N2} {d.Unidad}");
+                            tabla.Cell().Element(EstiloPdf.Celda).AlignRight()
+                                .Text(FormatoCantidad.Formatear(d.CantBruta, d.Unidad));
                             tabla.Cell().Element(EstiloPdf.Celda).AlignRight().Text($"$ {d.PrecioUnitario:N2}");
                             tabla.Cell().Element(EstiloPdf.Celda).AlignRight().Text($"$ {d.Subtotal:N2}");
                         }

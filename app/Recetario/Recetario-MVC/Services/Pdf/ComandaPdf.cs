@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Services.Pdf;
@@ -74,7 +75,7 @@ public static class ComandaPdf
                 {
                     tabla.Cell().Element(EstiloPdf.Celda).Text(ing.Ingrediente);
                     tabla.Cell().Element(EstiloPdf.Celda).AlignRight()
-                        .Text($"{ing.Cantidad:N2} {ing.Unidad}");
+                        .Text(FormatoCantidad.Formatear(ing.Cantidad, ing.Unidad));
                 }
             });
 

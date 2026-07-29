@@ -90,6 +90,7 @@ public class ComandaService : IComandaService
                     Ingrediente = i.Descripcion,
                     Cantidad = necesario,
                     Unidad = i.Unidad,
+                    CantidadTexto = FormatoCantidad.Formatear(necesario, i.Unidad),
                     Estado = StockEstado.De(i.StockActual, i.StockMinimo),
                     Alcanza = i.StockActual >= necesario
                 };

@@ -75,7 +75,7 @@
                                 {
                                     <tr>
                                         <td>@d.Ingrediente</td>
-                                        <td class="num">@d.CantBruta.ToString("N2") @d.Unidad</td>
+                                        <td class="num">@FormatoCantidad.Formatear(d.CantBruta, d.Unidad)</td>
                                         <td class="num">$ @d.PrecioUnitario.ToString("N2")</td>
                                         <td>@d.Proveedor</td>
                                         <td class="num">$ @d.Subtotal.ToString("N2")</td>

@@ -88,11 +88,14 @@ GO
 SET IDENTITY_INSERT Recetas ON;
 INSERT INTO Recetas (IdReceta, Codigo, Nombre, IdClasificacion, PorcionesBase, Activo, Imagen) VALUES
 (1, 'REC001', N'Ensalada César',           5,  10, 1, NULL),
-(2, 'REC002', N'Sopa de papas y puerros',  1,   1, 1, NULL),
+-- Las cantidades de la sopa son de olla, no de plato: van para 10 porciones
+(2, 'REC002', N'Sopa de papas y puerros',  1,  10, 1, NULL),
 (3, 'REC003', N'Salsa blanca',             6,  10, 1, NULL),
 (4, 'REC004', N'Pollo al horno con arroz', 2,  10, 1, NULL),
 (5, 'REC005', N'Tarta de manzana',         3, 100, 1, NULL),
-(6, 'REC006', N'Mayonesa de zanahorias',   4,   1, 1, NULL);
+-- La mayonesa es una decoración: las cantidades del script viejo son para
+-- 100 porciones, no para 1 (con base 1 pedía 750 kg de zanahorias)
+(6, 'REC006', N'Mayonesa de zanahorias',   4, 100, 1, NULL);
 SET IDENTITY_INSERT Recetas OFF;
 GO
 
@@ -208,6 +211,27 @@ INSERT INTO Procedimientos (IdReceta, NroPaso, Descripcion) VALUES
 (6, 1, N'Asar las zanahorias en papel aluminio.'),
 (6, 2, N'Mixear las zanahorias con la leche y el aceite.'),
 (6, 3, N'Rectificar con sal y pimienta.');
+GO
+
+/* ---------- Stock dimensionado para probar ----------
+   Los valores de arriba vienen del sistema viejo y alcanzan para pocas
+   porciones. Para poder generar varias comandas grandes sin quedarse sin
+   stock, se recalculan:
+     · mínimo = lo que consume UNA comanda de 200 comensales con todas las recetas
+     · actual = seis veces eso
+   Así el semáforo sigue avisando: al bajar del mínimo, no alcanza para otra. */
+WITH Necesidad AS (
+    SELECT ir.IdIngrediente,
+           SUM(ir.CantBruta / r.PorcionesBase * 200) AS Para200
+    FROM IngredientesReceta ir
+        INNER JOIN Recetas r ON r.IdReceta = ir.IdReceta
+    GROUP BY ir.IdIngrediente
+)
+UPDATE i
+SET i.StockActual = CEILING(n.Para200 * 6),
+    i.StockMinimo = CEILING(n.Para200)
+FROM Ingredientes i
+    INNER JOIN Necesidad n ON n.IdIngrediente = i.IdIngrediente;
 GO
 
 -- ---------- Stock inicial auditado ----------

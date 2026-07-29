@@ -57,7 +57,7 @@
                             {
                                 <tr>
                                     <td>@ing.Ingrediente</td>
-                                    <td class="num">@ing.Cantidad.ToString("N2") @ing.Unidad</td>
+                                    <td class="num">@FormatoCantidad.Formatear(ing.Cantidad, ing.Unidad)</td>
                                 </tr>
                             }
                         </tbody>

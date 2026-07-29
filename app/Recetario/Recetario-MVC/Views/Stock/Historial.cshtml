@@ -89,7 +89,7 @@
                                     <span class="badge rounded-pill badge-estado-bajo">Ajuste</span>
                                 }
                             </td>
-                            <td class="num">@m.Cantidad.ToString("N2") @m.Unidad</td>
+                            <td class="num">@FormatoCantidad.Formatear(m.Cantidad, m.Unidad)</td>
                             <td>@m.Usuario</td>
                             <td class="text-muted">@(m.Observaciones ?? "—")</td>
                         </tr>

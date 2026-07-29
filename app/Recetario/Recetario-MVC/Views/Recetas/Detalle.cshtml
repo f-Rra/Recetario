@@ -62,8 +62,8 @@
                             {
                                 <tr>
                                     <td>@ing.Ingrediente</td>
-                                    <td class="num">@ing.CantNeta.ToString("N2") @ing.Unidad</td>
-                                    <td class="num">@ing.CantBruta.ToString("N2") @ing.Unidad</td>
+                                    <td class="num">@FormatoCantidad.Formatear(ing.CantNeta, ing.Unidad)</td>
+                                    <td class="num">@FormatoCantidad.Formatear(ing.CantBruta, ing.Unidad)</td>
                                 </tr>
                             }
                         </tbody>

@@ -353,14 +353,10 @@
                         ${datos.ingredientes.map(i => `
                             <tr>
                                 <td>${i.ingrediente}${badgeStock(i)}</td>
-                                <td class="num text-nowrap">${formatear(i.cantidad)} ${i.unidad}</td>
+                                <td class="num text-nowrap">${i.cantidadTexto}</td>
                             </tr>`).join("")}
                     </tbody>
                 </table>`;
-        }
-
-        function formatear(numero) {
-            return numero.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function badgeStock(ingrediente) {
