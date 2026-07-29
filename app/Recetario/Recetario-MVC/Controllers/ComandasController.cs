@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -93,9 +94,9 @@ public class ComandasController : Controller
         }
 
         CarritoSesion.Guardar(HttpContext.Session, carrito);
-        TempData["Exito"] = agregadas switch
+        TempData[agregadas == 0 ? "Error" : "Exito"] = agregadas switch
         {
-            0 => "Las recetas tildadas ya estaban en la comanda.",
+            0 => "Las recetas que seleccionaste ya estaban en la comanda.",
             1 => "Receta agregada a la comanda.",
             _ => $"{agregadas} recetas agregadas a la comanda."
         };
@@ -153,13 +154,14 @@ public class ComandasController : Controller
         var original = ingredientesReceta.FirstOrDefault(i => i.IdIngrediente == form.IdIngredienteOriginal);
         var reemplazo = todos.FirstOrDefault(i => i.IdIngrediente == form.IdIngredienteReemplazo);
 
-        // Una sustitución entre unidades distintas no puede heredar la cantidad
-        var heredaCantidad = form.Tipo != TipoModificacion.Adicion &&
-                             (reemplazo is null || original is null || reemplazo.Unidad.Abreviatura == original.Unidad);
-
-        if (!heredaCantidad && form.Cantidad is null)
+        // Se puede sustituir por un ingrediente medido en otra unidad siempre que
+        // sean equivalentes (kg con g, L con ml): la cantidad se convierte sola
+        if (form.Tipo == TipoModificacion.Sustitucion && original is not null && reemplazo is not null &&
+            !Unidades.SonEquivalentes(original.Unidad, reemplazo.Unidad.Abreviatura))
         {
-            TempData["Error"] = "El reemplazo usa otra unidad: indicá la cantidad.";
+            TempData["Error"] =
+                $"No se puede reemplazar {original.Ingrediente} ({original.Unidad}) por " +
+                $"{reemplazo.Descripcion} ({reemplazo.Unidad.Abreviatura}): son unidades distintas.";
             return RedirectToAction(nameof(Comandera));
         }
 
@@ -170,12 +172,13 @@ public class ComandasController : Controller
             NombreOriginal = original?.Ingrediente,
             IdIngredienteReemplazo = form.IdIngredienteReemplazo,
             NombreReemplazo = reemplazo?.Descripcion,
-            Cantidad = heredaCantidad ? null : form.Cantidad,
+            // Solo la adición trae cantidad; el resto la hereda de la receta
+            Cantidad = form.Tipo == TipoModificacion.Adicion ? form.Cantidad : null,
             Unidad = reemplazo?.Unidad.Abreviatura ?? original?.Unidad
         });
 
         CarritoSesion.Guardar(HttpContext.Session, carrito);
-        TempData["Exito"] = "Modificación agregada.";
+        TempData["Exito"] = "Modificación agregada a la receta.";
         return RedirectToAction(nameof(Comandera));
     }
 
@@ -230,8 +233,7 @@ public class ComandasController : Controller
         HttpContext.Session.Set(ClavePdfPendiente, pdf);
         CarritoSesion.Vaciar(HttpContext.Session, carrito.Comensales);
 
-        TempData["Exito"] = $"Comanda generada: {resultado.IdsComandas.Count} receta(s). " +
-                            "El stock ya fue descontado.";
+        TempData["Exito"] = "Comanda generada. El PDF se está descargando.";
         return RedirectToAction(nameof(Comandera));
     }
 
@@ -338,5 +340,9 @@ public class ComandasController : Controller
         ViewBag.Ingredientes = ingredientes
             .Select(i => new SelectListItem($"{i.Descripcion} ({i.Unidad.Abreviatura})", i.IdIngrediente.ToString()))
             .ToList();
+
+        // El modal filtra los reemplazos por unidad equivalente sin ir al servidor
+        ViewBag.IngredientesJson = JsonSerializer.Serialize(ingredientes
+            .Select(i => new { id = i.IdIngrediente, nombre = i.Descripcion, unidad = i.Unidad.Abreviatura }));
     }
 }

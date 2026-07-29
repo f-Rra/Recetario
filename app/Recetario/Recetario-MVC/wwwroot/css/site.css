@@ -268,6 +268,31 @@ html, body {
   font-size: 13px;
 }
 
+/* Avisos flotantes: se muestran unos segundos y se van solos */
+.toast-aviso {
+  background: #fff;
+  border: none;
+  border-left: 4px solid var(--sx-azul);
+  border-radius: 6px;
+  box-shadow: 0 6px 22px rgba(20, 40, 55, 0.18);
+  max-width: 420px;
+  font-size: 14px;
+  color: var(--sx-gris-texto);
+}
+
+.toast-aviso.exito {
+  border-left-color: #1E8A54;
+}
+
+.toast-aviso.error {
+  border-left-color: var(--sx-rojo);
+}
+
+.toast-aviso .bi {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
 /* Filtros de listado: anchos pensados para que entre el texto completo */
 .filtro-busqueda {
   width: 300px;
@@ -435,6 +460,12 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+/* Aire entre el borde de la fila y la casilla de selección */
+.panel-comandera table th:first-child,
+.panel-comandera table td:first-child {
+  padding-left: 14px;
 }
 
 .fila-receta.seleccionada > * {

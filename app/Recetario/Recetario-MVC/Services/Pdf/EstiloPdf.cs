@@ -21,13 +21,13 @@ public static class EstiloPdf
             {
                 fila.RelativeItem().Column(c =>
                 {
-                    c.Item().Text(titulo).FontSize(18).Bold().FontColor(Azul);
-                    c.Item().Text(subtitulo).FontSize(10).FontColor(GrisSuave);
+                    c.Item().Text(titulo).FontSize(22).Bold().FontColor(Azul);
+                    c.Item().Text(subtitulo).FontSize(12).FontColor(GrisSuave);
                 });
-                fila.ConstantItem(140).AlignRight().Column(c =>
+                fila.ConstantItem(150).AlignRight().Column(c =>
                 {
-                    c.Item().AlignRight().Text("Recetario").FontSize(13).Bold().FontColor(Azul);
-                    c.Item().AlignRight().Text("GRUPO SOUTHEX").FontSize(7).FontColor(GrisSuave).LetterSpacing(0.1f);
+                    c.Item().AlignRight().Text("Recetario").FontSize(15).Bold().FontColor(Azul);
+                    c.Item().AlignRight().Text("GRUPO SOUTHEX").FontSize(8).FontColor(GrisSuave).LetterSpacing(0.1f);
                 });
             });
             columna.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Azul);
@@ -35,19 +35,19 @@ public static class EstiloPdf
     }
 
     public static IContainer CeldaEncabezado(IContainer celda) =>
-        celda.Background(CelesteClaro).PaddingVertical(4).PaddingHorizontal(6)
-             .DefaultTextStyle(t => t.SemiBold().FontSize(9).FontColor(AzulOscuro));
+        celda.Background(CelesteClaro).PaddingVertical(6).PaddingHorizontal(8)
+             .DefaultTextStyle(t => t.SemiBold().FontSize(11.5f).FontColor(AzulOscuro));
 
     public static IContainer Celda(IContainer celda) =>
         celda.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3)
-             .PaddingVertical(4).PaddingHorizontal(6)
-             .DefaultTextStyle(t => t.FontSize(9.5f).FontColor(GrisTexto));
+             .PaddingVertical(6).PaddingHorizontal(8)
+             .DefaultTextStyle(t => t.FontSize(12).FontColor(GrisTexto));
 
     public static void PieDePagina(IContainer contenedor)
     {
         contenedor.AlignCenter().Text(t =>
         {
-            t.DefaultTextStyle(s => s.FontSize(8).FontColor(GrisSuave));
+            t.DefaultTextStyle(s => s.FontSize(9.5f).FontColor(GrisSuave));
             t.Span("Generado el ");
             t.Span($"{DateTime.Now:dd/MM/yyyy HH:mm}");
             t.Span(" · Página ");

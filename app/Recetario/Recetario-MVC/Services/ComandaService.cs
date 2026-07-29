@@ -23,6 +23,10 @@ public class ComandaService : IComandaService
     private sealed record IngredienteEfectivo(
         int IdIngrediente, string Nombre, decimal Cantidad, int IdUnidad, string Unidad);
 
+    /// <summary>Ingrediente que entra por una modificación, no por la receta.</summary>
+    private sealed record IngredienteExterno(
+        int IdIngrediente, string Descripcion, int IdUnidad, string Unidad);
+
     // ================= Catálogo y previsualización =================
 
     public Task<List<RecetaCatalogoItem>> ListarCatalogoAsync(string? busqueda, int? idClasificacion)
@@ -325,6 +329,7 @@ public class ComandaService : IComandaService
 
         var baseIngredientes = await ObtenerIngredientesBaseAsync(item.IdReceta);
         var factor = comensales / (decimal)item.PorcionesBase;
+        var reemplazos = await ObtenerIngredientesDeModificacionesAsync(item);
 
         foreach (var mod in item.Modificaciones)
         {
@@ -332,15 +337,17 @@ public class ComandaService : IComandaService
                 ? baseIngredientes.FirstOrDefault(b => b.IdIngrediente == idO)
                 : null;
 
-            var cantidad = ResolverCantidad(mod, original, factor);
-            if (cantidad <= 0)
+            var reemplazo = mod.IdIngredienteReemplazo is int idR && reemplazos.TryGetValue(idR, out var r)
+                ? r
+                : null;
+
+            // La modificación se guarda en la unidad del ingrediente que entra
+            var idUnidad = reemplazo?.IdUnidad ?? original?.IdUnidad;
+            if (idUnidad is null)
                 continue;
 
-            var idUnidad = mod.IdIngredienteReemplazo is int idR
-                ? (await _context.Ingredientes.FindAsync(idR))?.IdUnidad ?? original?.IdUnidad
-                : original?.IdUnidad;
-
-            if (idUnidad is null)
+            var cantidad = ResolverCantidad(mod, original, factor, reemplazo?.Unidad);
+            if (cantidad <= 0)
                 continue;
 
             _context.Modificaciones.Add(new Modificacion
@@ -357,15 +364,44 @@ public class ComandaService : IComandaService
 
     /// <summary>
     /// Cantidad de una modificación: la explícita si el cocinero la ingresó
-    /// (adición, o sustitución entre unidades distintas) o, si no, la que el
-    /// ingrediente original tiene en la receta ya escalada.
+    /// (adición) o, si no, la que el ingrediente original tiene en la receta
+    /// escalada, convertida a la unidad del reemplazo si hace falta.
     /// </summary>
-    private static decimal ResolverCantidad(ModificacionCarrito mod, IngredienteBase? original, decimal factor)
+    private static decimal ResolverCantidad(
+        ModificacionCarrito mod, IngredienteBase? original, decimal factor, string? unidadDestino)
     {
         if (mod.Cantidad is decimal explicita)
             return Math.Round(explicita, 4);
 
-        return original is null ? 0m : Math.Round(original.CantBruta * factor, 4);
+        if (original is null)
+            return 0m;
+
+        var escalada = Math.Round(original.CantBruta * factor, 4);
+
+        return unidadDestino is null
+            ? escalada
+            : Unidades.Convertir(escalada, original.Unidad, unidadDestino) ?? escalada;
+    }
+
+    /// <summary>Ingredientes que entran por una modificación (reemplazos y agregados).</summary>
+    private async Task<Dictionary<int, IngredienteExterno>> ObtenerIngredientesDeModificacionesAsync(
+        params CarritoItem[] items)
+    {
+        var ids = items
+            .SelectMany(i => i.Modificaciones)
+            .Where(m => m.IdIngredienteReemplazo.HasValue)
+            .Select(m => m.IdIngredienteReemplazo!.Value)
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+            return new Dictionary<int, IngredienteExterno>();
+
+        return await _context.Ingredientes
+            .Where(i => ids.Contains(i.IdIngrediente))
+            .Select(i => new IngredienteExterno(
+                i.IdIngrediente, i.Descripcion, i.IdUnidad, i.Unidad.Abreviatura))
+            .ToDictionaryAsync(i => i.IdIngrediente);
     }
 
     private Task<List<IngredienteBase>> ObtenerIngredientesBaseAsync(int idReceta)
@@ -392,17 +428,7 @@ public class ComandaService : IComandaService
         var resultado = new Dictionary<int, List<IngredienteEfectivo>>();
 
         // Ingredientes que aparecen solo por modificaciones (reemplazos y agregados)
-        var idsExtra = carrito.Items
-            .SelectMany(i => i.Modificaciones)
-            .Where(m => m.IdIngredienteReemplazo.HasValue)
-            .Select(m => m.IdIngredienteReemplazo!.Value)
-            .Distinct()
-            .ToList();
-
-        var extras = await _context.Ingredientes
-            .Where(i => idsExtra.Contains(i.IdIngrediente))
-            .Select(i => new { i.IdIngrediente, i.Descripcion, i.IdUnidad, Unidad = i.Unidad.Abreviatura })
-            .ToDictionaryAsync(i => i.IdIngrediente);
+        var extras = await ObtenerIngredientesDeModificacionesAsync(carrito.Items.ToArray());
 
         foreach (var item in carrito.Items)
         {
@@ -425,16 +451,20 @@ public class ComandaService : IComandaService
                 }
 
                 // Eliminación: el ingrediente no se usa ni se descuenta.
-                // Sustitución: en su lugar entra el reemplazo, con la misma cantidad
-                // salvo que el cocinero haya indicado otra.
+                // Sustitución: en su lugar entra el reemplazo con la misma cantidad,
+                // convertida si se mide en otra unidad de la misma familia.
                 if (mod.Tipo == TipoModificacion.Sustitucion &&
                     mod.IdIngredienteReemplazo is int idR &&
                     extras.TryGetValue(idR, out var reemplazo))
                 {
+                    var cantidadReemplazo = mod.Cantidad is decimal c
+                        ? Math.Round(c, 4)
+                        : Unidades.Convertir(cantidad, ing.Unidad, reemplazo.Unidad) ?? cantidad;
+
                     efectivos.Add(new IngredienteEfectivo(
                         reemplazo.IdIngrediente,
                         reemplazo.Descripcion,
-                        mod.Cantidad is decimal c ? Math.Round(c, 4) : cantidad,
+                        cantidadReemplazo,
                         reemplazo.IdUnidad,
                         reemplazo.Unidad));
                 }

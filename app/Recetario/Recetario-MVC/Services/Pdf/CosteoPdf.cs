@@ -17,7 +17,7 @@ public static class CosteoPdf
             {
                 pagina.Size(PageSizes.A4);
                 pagina.Margin(40);
-                pagina.DefaultTextStyle(t => t.FontFamily("Segoe UI").FontSize(10).FontColor(EstiloPdf.GrisTexto));
+                pagina.DefaultTextStyle(t => t.FontFamily("Segoe UI").FontSize(12).FontColor(EstiloPdf.GrisTexto));
 
                 pagina.Header().Element(e => EstiloPdf.Encabezado(e,
                     "Informe de costeo",
@@ -29,11 +29,11 @@ public static class CosteoPdf
 
                     columna.Item().Text(t =>
                     {
-                        t.Span(costeo.Receta).FontSize(14).Bold();
-                        t.Span($"  ({costeo.Codigo})").FontSize(10).FontColor(EstiloPdf.GrisSuave);
+                        t.Span(costeo.Receta).FontSize(16).Bold();
+                        t.Span($"  ({costeo.Codigo})").FontSize(12).FontColor(EstiloPdf.GrisSuave);
                     });
                     columna.Item().Text($"Costeo para {costeo.Porciones} porciones")
-                        .FontSize(10).FontColor(EstiloPdf.GrisSuave);
+                        .FontSize(12).FontColor(EstiloPdf.GrisSuave);
 
                     columna.Item().Table(tabla =>
                     {
@@ -67,9 +67,9 @@ public static class CosteoPdf
                     {
                         totales.Spacing(2);
                         totales.Item().Text($"Costo total:  $ {costeo.CostoTotal:N2}")
-                            .FontSize(12).Bold().FontColor(EstiloPdf.AzulOscuro);
+                            .FontSize(14).Bold().FontColor(EstiloPdf.AzulOscuro);
                         totales.Item().Text($"Costo por porción:  $ {costeo.CostoUnitario:N2}")
-                            .FontSize(11).SemiBold().FontColor(EstiloPdf.Azul);
+                            .FontSize(13).SemiBold().FontColor(EstiloPdf.Azul);
                     });
                 });
 

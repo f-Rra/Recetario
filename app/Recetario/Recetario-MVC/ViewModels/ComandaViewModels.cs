@@ -53,10 +53,12 @@ public class ModificacionItem
     public string Descripcion => Tipo switch
     {
         TipoModificacion.Sustitucion =>
-            $"Sustituir {IngredienteOriginal} por {IngredienteReemplazo} ({Cantidad:N2} {Unidad})",
+            $"Sustituir {IngredienteOriginal} por {IngredienteReemplazo} ({Medida})",
         TipoModificacion.Adicion =>
-            $"Agregar {IngredienteReemplazo} ({Cantidad:N2} {Unidad})",
+            $"Agregar {IngredienteReemplazo} ({Medida})",
         _ =>
-            $"Quitar {IngredienteOriginal} ({Cantidad:N2} {Unidad})"
+            $"Quitar {IngredienteOriginal} ({Medida})"
     };
+
+    private string Medida => Helpers.FormatoCantidad.Formatear(Cantidad, Unidad);
 }

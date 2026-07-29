@@ -45,7 +45,8 @@ public class ModificacionCarrito
     public string Descripcion => Tipo switch
     {
         TipoModificacion.Sustitucion => $"Sustituir {NombreOriginal} por {NombreReemplazo}",
-        TipoModificacion.Adicion => $"Agregar {NombreReemplazo} ({Cantidad:N2} {Unidad})",
+        TipoModificacion.Adicion =>
+            $"Agregar {NombreReemplazo} ({Helpers.FormatoCantidad.Formatear(Cantidad ?? 0, Unidad ?? "")})",
         _ => $"Quitar {NombreOriginal}"
     };
 }

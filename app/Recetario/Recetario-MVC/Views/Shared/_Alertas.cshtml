@@ -1,9 +1,37 @@
-@* Alertas globales desde TempData; las llena cualquier controller *@
-@if (TempData["Exito"] is string exito)
-{
-    <div class="alert alert-success py-2">@exito</div>
+@*
+    Avisos de la app. Aparecen flotando en una esquina y se van solos, sin
+    tapar la pantalla ni empujar el contenido.
+*@
+@{
+    var exito = TempData["Exito"] as string;
+    var error = TempData["Error"] as string;
+    var mensaje = exito ?? error;
+    var esExito = exito is not null;
+
+    // Los errores suelen ser más largos (faltantes de stock): más tiempo en pantalla
+    var segundos = esExito ? 4000 : 8000;
 }
-@if (TempData["Error"] is string error)
+
+@if (mensaje is not null)
 {
-    <div class="alert alert-danger py-2">@error</div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toastAviso" class="toast toast-aviso @(esExito ? "exito" : "error")"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="@segundos">
+            <div class="toast-body d-flex align-items-start gap-2">
+                @if (esExito)
+                {
+                    <i class="bi bi-check-circle-fill" style="color: #1E8A54;"></i>
+                }
+                else
+                {
+                    <i class="bi bi-exclamation-triangle-fill" style="color: var(--sx-rojo);"></i>
+                }
+                <span class="flex-grow-1">@mensaje</span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="toast"
+                        aria-label="Cerrar"></button>
+            </div>
+        </div>
+    </div>
+
+    @* Lo muestra el layout, apenas termina de cargar Bootstrap *@
 }

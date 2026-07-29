@@ -105,7 +105,10 @@
             </div>
             <div class="panel-cuerpo">
                 <div id="panelIngredientes">
-                    <p class="text-muted small mb-0">Elegí una receta del catálogo para ver qué lleva.</p>
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-basket2" style="font-size: 24px; color: var(--sx-celeste);"></i>
+                        <p class="mb-0 mt-2 small">Elegí una receta</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -192,7 +195,7 @@
                                     <td>
                                         @if (item.Modificaciones.Count == 0)
                                         {
-                                            <span class="text-muted small">sin modificaciones</span>
+                                            <span class="text-muted">—</span>
                                         }
                                         else
                                         {
@@ -233,9 +236,6 @@
                 }
             </div>
 
-            <div class="panel-pie text-muted small">
-                Al generar se registra la comanda, se descuenta el stock y se descarga el PDF.
-            </div>
         </div>
     </div>
 </div>
@@ -268,9 +268,6 @@
                     <div class="mb-3 d-none" id="grupoOriginal">
                         <label class="form-label" for="modalOriginal">Ingrediente de la receta</label>
                         <select name="IdIngredienteOriginal" id="modalOriginal" class="form-select"></select>
-                        <div class="form-text d-none" id="ayudaHereda">
-                            Se toma la cantidad que ya tiene en la receta.
-                        </div>
                     </div>
 
                     <div class="mb-3 d-none" id="grupoReemplazo">
@@ -294,7 +291,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Agregar modificación</button>
+                    <button type="submit" class="btn btn-primary">Modificar receta</button>
                 </div>
             </form>
         </div>
@@ -304,7 +301,19 @@
 @section Scripts {
     <script>
         const ingredientesPorReceta = @Html.Raw(ingredientesJson);
+        const todosLosIngredientes = @Html.Raw(ViewBag.IngredientesJson);
         const comensalesActuales = @Model.Carrito.Comensales;
+
+        // Solo se puede sustituir entre unidades de la misma familia:
+        // la cantidad se convierte sola (kg con g, L con ml)
+        const familiaDeUnidad = { kg: "masa", g: "masa", l: "volumen", ml: "volumen" };
+
+        function unidadesEquivalentes(a, b) {
+            const x = (a || "").toLowerCase();
+            const y = (b || "").toLowerCase();
+            if (x === y) return true;
+            return familiaDeUnidad[x] !== undefined && familiaDeUnidad[x] === familiaDeUnidad[y];
+        }
 
         // ---- Previsualización de ingredientes al elegir una receta ----
         document.querySelectorAll(".fila-receta").forEach(fila => {
@@ -340,7 +349,7 @@
             const datos = await respuesta.json();
             document.getElementById("tituloIngredientes").textContent = datos.receta;
             document.getElementById("subtituloIngredientes").textContent =
-                `para ${datos.comensales} ${datos.comensales === 1 ? "comensal" : "comensales"}`;
+                `${datos.comensales} ${datos.comensales === 1 ? "comensal" : "comensales"}`;
 
             if (datos.ingredientes.length === 0) {
                 panel.innerHTML = '<p class="text-muted small mb-0">La receta no tiene ingredientes cargados.</p>';
@@ -383,12 +392,31 @@
                 .map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`)
                 .join("");
 
-            document.getElementById("modalReemplazo").value = "";
             document.getElementById("modalCantidad").value = "";
             actualizarCampos();
         });
 
         document.getElementById("modalTipo").addEventListener("change", actualizarCampos);
+        document.getElementById("modalOriginal").addEventListener("change", cargarReemplazos);
+
+        /// Al sustituir, solo se ofrecen ingredientes en una unidad equivalente
+        function cargarReemplazos() {
+            const esSustitucion = document.getElementById("modalTipo").value
+                === "@((int)TipoModificacion.Sustitucion)";
+            const idOriginal = parseInt(document.getElementById("modalOriginal").value, 10);
+            const receta = ingredientesPorReceta[document.getElementById("modalIdReceta").value] || [];
+            const original = receta.find(i => i.id === idOriginal);
+
+            const candidatos = todosLosIngredientes.filter(i => {
+                if (!esSustitucion) return true;
+                if (!original) return true;
+                return i.id !== original.id && unidadesEquivalentes(original.unidad, i.unidad);
+            });
+
+            const select = document.getElementById("modalReemplazo");
+            select.innerHTML = '<option value="">Elegí un ingrediente…</option>' +
+                candidatos.map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`).join("");
+        }
 
         function actualizarCampos() {
             const tipo = document.getElementById("modalTipo").value;
@@ -401,11 +429,11 @@
             // Sustituir y quitar heredan la cantidad del ingrediente original:
             // el cocinero no tiene que calcular nada
             mostrar("grupoCantidad", adicion);
-            mostrar("ayudaHereda", sustitucion || eliminacion);
 
             document.getElementById("etiquetaReemplazo").textContent =
                 sustitucion ? "Reemplazar por" : "Ingrediente a agregar";
             document.getElementById("modalCantidad").required = adicion;
+            cargarReemplazos();
         }
 
         function mostrar(id, visible) {
@@ -439,8 +467,17 @@
         @if (ViewBag.HayPdfPendiente == true)
         {
             <text>
-            // La comanda recién generada: se descarga el PDF y la pantalla ya quedó limpia
-            window.location = "@Url.Action("DescargarPdf")";
+            // La comanda recién generada: se baja el PDF con un enlace temporal.
+            // Tocar window.location cancelaría el ciclo de vida de la página y
+            // se perdía el aviso flotante.
+            (function () {
+                const enlace = document.createElement("a");
+                enlace.href = "@Url.Action("DescargarPdf")";
+                enlace.download = "";
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+            })();
             </text>
         }
     </script>

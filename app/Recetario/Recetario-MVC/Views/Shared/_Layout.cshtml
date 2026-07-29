@@ -12,7 +12,6 @@
         ? await UserManager.GetUserAsync(User)
         : null;
     var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
-    var rol = esAdmin ? DbSeeder.RolAdmin : (User.IsInRole(DbSeeder.RolCocina) ? DbSeeder.RolCocina : "");
 }
 <!DOCTYPE html>
 <html lang="es">
@@ -115,10 +114,6 @@
         <div class="main-area">
             <header class="topbar">
                 <h1>@ViewData["Title"]</h1>
-                <div class="usuario-info">
-                    Conectado como <b>@(usuario?.NombreCompleto ?? "—")</b>@(rol.Length > 0 ? $" ({rol})" : "")
-                    · <a asp-controller="Acceso" asp-action="CambiarPassword">Cambiar contraseña</a>
-                </div>
             </header>
 
             <main role="main" class="contenido">
@@ -131,6 +126,16 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // El aviso se muestra acá, antes de los scripts de cada página: si una
+        // dispara una descarga, el toast ya está en pantalla
+        (function () {
+            var aviso = document.getElementById("toastAviso");
+            if (aviso) new bootstrap.Toast(aviso).show();
+        })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
