@@ -20,3 +20,12 @@ public enum TipoModificacion
     Adicion = 2,
     Eliminacion = 3
 }
+
+/// <summary>
+/// Dónde se guarda cada ingrediente: bodega lo seco, cámara lo refrigerado.
+/// </summary>
+public enum Deposito
+{
+    Bodega = 1,
+    Camara = 2
+}

@@ -14,12 +14,23 @@
     </div>
 </div>
 
-<div class="mb-3">
-    <label asp-for="IdUnidad" class="form-label"><span class="req text-danger">*</span> Unidad</label>
-    <select asp-for="IdUnidad" asp-items="ViewBag.Unidades" class="form-select">
-        <option value="">Elegí una unidad…</option>
-    </select>
-    <span asp-validation-for="IdUnidad" class="text-danger"></span>
+<div class="row">
+    <div class="col mb-3">
+        <label asp-for="IdUnidad" class="form-label"><span class="req text-danger">*</span> Unidad</label>
+        <select asp-for="IdUnidad" asp-items="ViewBag.Unidades" class="form-select">
+            <option value="">Elegí una unidad…</option>
+        </select>
+        <span asp-validation-for="IdUnidad" class="text-danger"></span>
+    </div>
+    <div class="col mb-3">
+        <label asp-for="Deposito" class="form-label"><span class="req text-danger">*</span> Depósito</label>
+        <select asp-for="Deposito" class="form-select">
+            <option value="">Elegí dónde se guarda…</option>
+            <option value="@((int)RecetarioMVC.Models.Deposito.Bodega)">Bodega — secos</option>
+            <option value="@((int)RecetarioMVC.Models.Deposito.Camara)">Cámara — refrigerados, frutas y verduras</option>
+        </select>
+        <span asp-validation-for="Deposito" class="text-danger"></span>
+    </div>
 </div>
 
 @* El stock actual se maneja distinto en alta y edición: lo renderiza cada vista *@

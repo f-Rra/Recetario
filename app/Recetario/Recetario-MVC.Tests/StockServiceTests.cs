@@ -147,6 +147,117 @@ public class StockServiceTests
         Assert.All(soloEntradas, m => Assert.Equal(TipoMovimiento.Entrada, m.Tipo));
     }
 
+    // ---------- Inventario por depósito (guía 17) ----------
+
+    /// <summary>Agrega un refrigerado, para tener uno en cada depósito.</summary>
+    private static void AgregarIngredienteDeCamara(ApplicationDbContext context)
+    {
+        context.Ingredientes.Add(new Ingrediente
+        {
+            IdIngrediente = 2,
+            Codigo = "ING002",
+            Descripcion = "Leche",
+            IdUnidad = 1,
+            Deposito = Deposito.Camara,
+            StockActual = 20m
+        });
+        context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task Inventario_TraeSoloLosIngredientesDelDeposito()
+    {
+        using var context = CrearContexto();
+        AgregarIngredienteDeCamara(context);
+        var servicio = new StockService(context);
+
+        var bodega = await servicio.ObtenerInventarioAsync(Deposito.Bodega);
+        var camara = await servicio.ObtenerInventarioAsync(Deposito.Camara);
+
+        Assert.Equal("Harina 000", Assert.Single(bodega.Ingredientes).Ingrediente);
+        Assert.Equal("Leche", Assert.Single(camara.Ingredientes).Ingrediente);
+    }
+
+    [Fact]
+    public async Task Inventario_AjustaSoloLoContadoYDejaElRestoIntacto()
+    {
+        using var context = CrearContexto();
+        AgregarIngredienteDeCamara(context);
+        context.Ingredientes.Add(new Ingrediente
+        {
+            IdIngrediente = 3,
+            Codigo = "ING003",
+            Descripcion = "Arroz",
+            IdUnidad = 1,
+            Deposito = Deposito.Bodega,
+            StockActual = 8m
+        });
+        context.SaveChanges();
+        var servicio = new StockService(context);
+
+        var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
+        {
+            new() { IdIngrediente = 1, Contado = 7.5m },  // se contó: cambia
+            new() { IdIngrediente = 3, Contado = null }   // no se contó: no se toca
+        }, "u1");
+
+        Assert.Equal(1, ajustados);
+        Assert.Equal(7.5m, (await context.Ingredientes.FindAsync(1))!.StockActual);
+        Assert.Equal(8m, (await context.Ingredientes.FindAsync(3))!.StockActual);
+        Assert.Equal(20m, (await context.Ingredientes.FindAsync(2))!.StockActual); // el de cámara
+    }
+
+    [Fact]
+    public async Task Inventario_LoQueYaCoincide_NoGeneraMovimiento()
+    {
+        using var context = CrearContexto();
+        var servicio = new StockService(context);
+
+        // El stock del escenario base es 10: contar 10 no es un ajuste
+        var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
+        {
+            new() { IdIngrediente = 1, Contado = 10m }
+        }, "u1");
+
+        Assert.Equal(0, ajustados);
+        Assert.Empty(context.MovimientosStock);
+    }
+
+    [Fact]
+    public async Task Inventario_RegistraCadaDiferenciaComoAjusteConSuObservacion()
+    {
+        using var context = CrearContexto();
+        var servicio = new StockService(context);
+
+        await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
+        {
+            new() { IdIngrediente = 1, Contado = 3m }
+        }, "u1");
+
+        var movimiento = await context.MovimientosStock.SingleAsync();
+        Assert.Equal(TipoMovimiento.Ajuste, movimiento.Tipo);
+        Assert.Equal(3m, movimiento.Cantidad);
+        Assert.Equal("Inventario de bodega", movimiento.Observaciones);
+        Assert.Equal("u1", movimiento.UsuarioId);
+    }
+
+    [Fact]
+    public async Task Inventario_NoAjustaIngredientesDeOtroDeposito()
+    {
+        using var context = CrearContexto();
+        AgregarIngredienteDeCamara(context);
+        var servicio = new StockService(context);
+
+        // Se manda el de cámara pero se está contando bodega
+        var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
+        {
+            new() { IdIngrediente = 2, Contado = 1m }
+        }, "u1");
+
+        Assert.Equal(0, ajustados);
+        Assert.Equal(20m, (await context.Ingredientes.FindAsync(2))!.StockActual);
+    }
+
     [Fact]
     public async Task AltaDeIngredienteConStockInicial_GeneraElMovimientoAuditado()
     {
@@ -157,6 +268,7 @@ public class StockServiceTests
         {
             Descripcion = "Tomate perita",
             IdUnidad = 1,
+            Deposito = Deposito.Camara,
             StockActual = 7m,
             StockMinimo = 2m
         }, "u1");

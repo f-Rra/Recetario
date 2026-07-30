@@ -55,6 +55,31 @@ public class StockController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = DbSeeder.RolAdmin)]
+    public async Task<IActionResult> Inventario(Deposito deposito = Deposito.Bodega)
+    {
+        return View(await _stock.ObtenerInventarioAsync(deposito));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = DbSeeder.RolAdmin)]
+    public async Task<IActionResult> Inventario(InventarioViewModel modelo)
+    {
+        var ajustados = await _stock.GuardarInventarioAsync(
+            modelo.Deposito, modelo.Ingredientes, _userManager.GetUserId(User)!);
+
+        TempData[ajustados > 0 ? "Exito" : "Error"] = ajustados switch
+        {
+            0 => "No se ajustó nada: las cantidades cargadas coinciden con el sistema.",
+            1 => "Inventario guardado: se ajustó 1 ingrediente.",
+            _ => $"Inventario guardado: se ajustaron {ajustados} ingredientes."
+        };
+
+        return RedirectToAction(nameof(Inventario), new { deposito = modelo.Deposito });
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Historial(int? ingrediente, TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta)
     {
         var modelo = new HistorialFiltrosViewModel

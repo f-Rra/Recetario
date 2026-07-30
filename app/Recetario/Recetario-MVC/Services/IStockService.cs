@@ -15,4 +15,15 @@ public interface IStockService
     /// <summary>Historial con filtros, más reciente primero (últimos 100).</summary>
     Task<List<MovimientoHistorialItem>> HistorialAsync(
         int? idIngrediente, Models.TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta);
+
+    /// <summary>Ingredientes de un depósito para hacer el conteo físico.</summary>
+    Task<InventarioViewModel> ObtenerInventarioAsync(Models.Deposito deposito);
+
+    /// <summary>
+    /// Aplica el conteo: cada cantidad distinta a la del sistema genera un ajuste.
+    /// Las que vienen en blanco no se tocan.
+    /// </summary>
+    /// <returns>Cuántos ingredientes se ajustaron.</returns>
+    Task<int> GuardarInventarioAsync(
+        Models.Deposito deposito, List<InventarioItem> conteo, string usuarioId);
 }

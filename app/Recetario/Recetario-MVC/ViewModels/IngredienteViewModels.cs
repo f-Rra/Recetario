@@ -18,6 +18,10 @@ public class IngredienteFormViewModel
     [Display(Name = "Unidad")]
     public int? IdUnidad { get; set; }
 
+    [Required(ErrorMessage = "Elegí dónde se guarda.")]
+    [Display(Name = "Depósito")]
+    public Models.Deposito? Deposito { get; set; }
+
     [Range(0, 999999, ErrorMessage = "El stock no puede ser negativo.")]
     [Display(Name = "Stock actual")]
     public decimal StockActual { get; set; }
@@ -32,6 +36,7 @@ public class IngredienteListaItem
     public int IdIngrediente { get; set; }
     public string Codigo { get; set; } = string.Empty;
     public string Descripcion { get; set; } = string.Empty;
+    public Models.Deposito Deposito { get; set; }
     public string Unidad { get; set; } = string.Empty;
     public decimal StockActual { get; set; }
     public decimal StockMinimo { get; set; }

@@ -42,3 +42,25 @@ public class HistorialFiltrosViewModel
     public DateOnly? Hasta { get; set; }
     public List<MovimientoHistorialItem> Movimientos { get; set; } = new();
 }
+
+// ---------- Inventario por depósito ----------
+
+public class InventarioViewModel
+{
+    public Deposito Deposito { get; set; }
+    public List<InventarioItem> Ingredientes { get; set; } = new();
+}
+
+public class InventarioItem
+{
+    public int IdIngrediente { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Ingrediente { get; set; } = string.Empty;
+    public string Unidad { get; set; } = string.Empty;
+
+    /// <summary>Lo que dice el sistema.</summary>
+    public decimal StockActual { get; set; }
+
+    /// <summary>Lo que se contó. En blanco significa "no lo conté": no se toca.</summary>
+    public decimal? Contado { get; set; }
+}

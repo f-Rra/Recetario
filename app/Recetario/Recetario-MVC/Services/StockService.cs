@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RecetarioMVC.Data;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.Models;
 using RecetarioMVC.ViewModels;
 
@@ -62,6 +63,79 @@ public class StockService : IStockService
         });
 
         return null;
+    }
+
+    public async Task<InventarioViewModel> ObtenerInventarioAsync(Deposito deposito)
+    {
+        return new InventarioViewModel
+        {
+            Deposito = deposito,
+            Ingredientes = await _context.Ingredientes
+                .Where(i => i.Deposito == deposito)
+                .OrderBy(i => i.Descripcion)
+                .Select(i => new InventarioItem
+                {
+                    IdIngrediente = i.IdIngrediente,
+                    Codigo = i.Codigo,
+                    Ingrediente = i.Descripcion,
+                    Unidad = i.Unidad.Abreviatura,
+                    StockActual = i.StockActual
+                })
+                .ToListAsync()
+        };
+    }
+
+    public async Task<int> GuardarInventarioAsync(
+        Deposito deposito, List<InventarioItem> conteo, string usuarioId)
+    {
+        var contados = conteo
+            .Where(c => c.Contado.HasValue && c.Contado.Value >= 0)
+            .ToDictionary(c => c.IdIngrediente, c => Math.Round(c.Contado!.Value, 4));
+
+        if (contados.Count == 0)
+            return 0;
+
+        var ids = contados.Keys.ToList();
+        var ingredientes = await _context.Ingredientes
+            .Where(i => i.Deposito == deposito && ids.Contains(i.IdIngrediente))
+            .ToListAsync();
+
+        var ajustados = 0;
+        var estrategia = _context.Database.CreateExecutionStrategy();
+
+        await estrategia.ExecuteAsync(async () =>
+        {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            ajustados = 0;
+
+            foreach (var ingrediente in ingredientes)
+            {
+                var contado = contados[ingrediente.IdIngrediente];
+
+                // Lo que ya coincide con el sistema no genera movimiento
+                if (contado == ingrediente.StockActual)
+                    continue;
+
+                _context.MovimientosStock.Add(new MovimientoStock
+                {
+                    IdIngrediente = ingrediente.IdIngrediente,
+                    Tipo = TipoMovimiento.Ajuste,
+                    Cantidad = contado,
+                    IdUnidad = ingrediente.IdUnidad,
+                    Fecha = DateTime.Now,
+                    UsuarioId = usuarioId,
+                    Observaciones = $"Inventario de {NombreDeposito.De(deposito).ToLowerInvariant()}"
+                });
+
+                ingrediente.StockActual = contado;
+                ajustados++;
+            }
+
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        });
+
+        return ajustados;
     }
 
     public async Task<List<MovimientoHistorialItem>> HistorialAsync(

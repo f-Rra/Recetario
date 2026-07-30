@@ -1,0 +1,87 @@
+@model InventarioViewModel
+@using RecetarioMVC.Models
+@{
+    ViewData["Title"] = $"Inventario de {NombreDeposito.De(Model.Deposito).ToLower()}";
+    var otro = Model.Deposito == Deposito.Bodega ? Deposito.Camara : Deposito.Bodega;
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <a asp-action="Index" class="text-decoration-none">
+        <i class="bi bi-arrow-left"></i> Volver a stock
+    </a>
+    <a asp-action="Inventario" asp-route-deposito="@otro" class="btn btn-outline-primary btn-sm">
+        Contar @NombreDeposito.De(otro).ToLower()
+    </a>
+</div>
+
+<form asp-action="Inventario" method="post">
+    <input type="hidden" asp-for="Deposito" />
+
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Ingredientes.Count == 0)
+            {
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-box-seam" style="font-size: 26px; color: var(--sx-celeste);"></i>
+                    <p class="mb-0 mt-2">No hay ingredientes en @NombreDeposito.De(Model.Deposito).ToLower().</p>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small mb-3">
+                    Cargá lo que contaste. Lo que dejes en blanco queda como está,
+                    así podés contar de a partes.
+                </p>
+
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Ingrediente</th>
+                            <th class="num">Según el sistema</th>
+                            <th style="width: 190px;">Contado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < Model.Ingredientes.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    @Model.Ingredientes[i].Ingrediente
+                                    <span class="text-muted small">· @Model.Ingredientes[i].Codigo</span>
+                                    <input type="hidden" asp-for="Ingredientes[i].IdIngrediente" />
+                                </td>
+                                <td class="num text-muted">
+                                    @FormatoCantidad.Formatear(Model.Ingredientes[i].StockActual,
+                                                               Model.Ingredientes[i].Unidad)
+                                </td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input asp-for="Ingredientes[i].Contado" class="form-control"
+                                               placeholder="sin contar" />
+                                        <span class="input-group-text">@Model.Ingredientes[i].Unidad</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        @if (Model.Ingredientes.Count > 0)
+        {
+            <div class="card-body border-top d-flex justify-content-between align-items-center">
+                <span class="text-muted small">
+                    Cada diferencia queda registrada como un ajuste en el historial.
+                </span>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-clipboard-check"></i> Guardar inventario
+                </button>
+            </div>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

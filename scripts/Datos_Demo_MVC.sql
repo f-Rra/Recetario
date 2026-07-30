@@ -213,6 +213,28 @@ INSERT INTO Procedimientos (IdReceta, NroPaso, Descripcion) VALUES
 (6, 3, N'Rectificar con sal y pimienta.');
 GO
 
+/* ---------- Depósitos (guía 17) ----------
+   Bodega guarda lo seco y cámara lo refrigerado: lácteos, carnes, huevos y
+   todas las frutas y verduras (incluidas papas, cebolla y ajo). El default de
+   la columna deja todo en bodega, así que solo se reasigna la cámara. */
+UPDATE Ingredientes SET Deposito = 2
+WHERE Codigo IN ('ING001',  -- Lechuga
+                 'ING003',  -- Supremas de pollo
+                 'ING004',  -- Queso parmesano
+                 'ING005',  -- Leche
+                 'ING006',  -- Ajo
+                 'ING010',  -- Papas
+                 'ING011',  -- Puerros
+                 'ING012',  -- Cebolla
+                 'ING016',  -- Manteca
+                 'ING019',  -- Morrón
+                 'ING020',  -- Apio
+                 'ING022',  -- Manzanas
+                 'ING024',  -- Huevos
+                 'ING026',  -- Zanahorias
+                 'ING027'); -- Perejil
+GO
+
 /* ---------- Stock dimensionado para probar ----------
    Los valores de arriba vienen del sistema viejo y alcanzan para pocas
    porciones. Para poder generar varias comandas grandes sin quedarse sin

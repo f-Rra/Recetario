@@ -31,6 +31,7 @@ public class IngredienteService : IIngredienteService
                 i.IdIngrediente,
                 i.Codigo,
                 i.Descripcion,
+                i.Deposito,
                 Unidad = i.Unidad.Abreviatura,
                 i.StockActual,
                 i.StockMinimo
@@ -42,6 +43,7 @@ public class IngredienteService : IIngredienteService
             IdIngrediente = i.IdIngrediente,
             Codigo = i.Codigo,
             Descripcion = i.Descripcion,
+            Deposito = i.Deposito,
             Unidad = i.Unidad,
             StockActual = i.StockActual,
             StockMinimo = i.StockMinimo,
@@ -59,6 +61,7 @@ public class IngredienteService : IIngredienteService
                 Codigo = i.Codigo,
                 Descripcion = i.Descripcion,
                 IdUnidad = i.IdUnidad,
+                Deposito = i.Deposito,
                 StockActual = i.StockActual,
                 StockMinimo = i.StockMinimo
             })
@@ -92,6 +95,7 @@ public class IngredienteService : IIngredienteService
             Codigo = await GenerarCodigoAsync(),
             Descripcion = modelo.Descripcion.Trim(),
             IdUnidad = modelo.IdUnidad!.Value,
+            Deposito = modelo.Deposito!.Value,
             StockActual = modelo.StockActual,
             StockMinimo = modelo.StockMinimo
         };
@@ -124,6 +128,7 @@ public class IngredienteService : IIngredienteService
 
         ingrediente.Descripcion = modelo.Descripcion.Trim();
         ingrediente.IdUnidad = modelo.IdUnidad!.Value;
+        ingrediente.Deposito = modelo.Deposito!.Value;
         // StockActual no se toca: solo se mueve por movimientos auditados (guía 12)
         ingrediente.StockMinimo = modelo.StockMinimo;
         await _context.SaveChangesAsync();
