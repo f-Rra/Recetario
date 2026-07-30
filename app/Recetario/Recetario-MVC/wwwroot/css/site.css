@@ -252,6 +252,12 @@ html, body {
   text-align: right;
 }
 
+/* Una columna numérica termina pegada a la que sigue: se le da aire */
+th.num + th,
+td.num + td {
+  padding-left: 24px;
+}
+
 /* Formularios: foco celeste, asterisco rojo en obligatorios */
 .form-control:focus,
 .form-select:focus {

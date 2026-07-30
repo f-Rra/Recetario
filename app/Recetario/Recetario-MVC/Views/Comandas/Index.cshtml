@@ -65,8 +65,8 @@
                         <th class="num">Comensales</th>
                         <th>Responsable</th>
                         <th>Generada por</th>
-                        <th class="num">Modif.</th>
-                        <th class="text-end"></th>
+                        <th class="text-center">Modificaciones</th>
+                        <th class="text-end" style="width: 110px;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,7 +80,7 @@
                             <td class="num">@item.Porciones</td>
                             <td class="text-muted">@item.Responsable</td>
                             <td class="text-muted">@item.Usuario</td>
-                            <td class="num">
+                            <td class="text-center">
                                 @if (item.CantidadModificaciones > 0)
                                 {
                                     <span class="badge rounded-pill badge-estado-bajo">@item.CantidadModificaciones</span>

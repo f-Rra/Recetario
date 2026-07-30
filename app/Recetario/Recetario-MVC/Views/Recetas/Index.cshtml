@@ -48,8 +48,8 @@
                         <th>Clasificación</th>
                         <th class="num">Porciones</th>
                         <th class="num">Ingredientes</th>
-                        <th>Estado</th>
-                        <th class="text-end"></th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end" style="width: 130px;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,7 +61,7 @@
                             <td>@item.Clasificacion</td>
                             <td class="num">@item.PorcionesBase</td>
                             <td class="num">@item.CantidadIngredientes</td>
-                            <td>
+                            <td class="text-center">
                                 @if (item.Activo)
                                 {
                                     <span class="badge rounded-pill badge-estado-ok">Activa</span>
