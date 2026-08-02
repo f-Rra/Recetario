@@ -38,7 +38,9 @@ public class ComandasController : Controller
             IdClasificacion = clasificacion,
             Catalogo = await _comandas.ListarCatalogoAsync(busqueda, clasificacion),
             Carrito = carrito,
-            Responsables = await _comandas.ResolverResponsablesAsync(carrito)
+            Responsables = await _comandas.ResolverResponsablesAsync(carrito),
+            // Se avisa mientras se arma, no al apretar generar
+            Revision = await _comandas.RevisarAsync(carrito)
         };
 
         foreach (var item in carrito.Items)
@@ -209,7 +211,8 @@ public class ComandasController : Controller
 
         if (resultado.Faltantes.Count > 0)
         {
-            TempData["Error"] = "No hay stock suficiente: " + string.Join(" ", resultado.Faltantes);
+            TempData["Error"] = "No hay stock suficiente: " +
+                string.Join(" ", resultado.Faltantes.Select(f => f.Descripcion));
             return RedirectToAction(nameof(Comandera));
         }
 

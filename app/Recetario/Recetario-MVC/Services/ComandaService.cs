@@ -29,17 +29,23 @@ public class ComandaService : IComandaService
 
     // ================= Catálogo y previsualización =================
 
-    public Task<List<RecetaCatalogoItem>> ListarCatalogoAsync(string? busqueda, int? idClasificacion)
+    public async Task<List<RecetaCatalogoItem>> ListarCatalogoAsync(string? busqueda, int? idClasificacion)
     {
+        var texto = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim();
         var query = _context.Recetas.Where(r => r.Activo);
 
-        if (!string.IsNullOrWhiteSpace(busqueda))
-            query = query.Where(r => r.Nombre.Contains(busqueda) || r.Codigo.Contains(busqueda));
+        // El buscador mira también los ingredientes: "lechuga" trae las recetas
+        // que la llevan, útil para darle salida a lo que está por vencerse
+        if (texto is not null)
+            query = query.Where(r =>
+                r.Nombre.Contains(texto) ||
+                r.Codigo.Contains(texto) ||
+                r.Ingredientes.Any(ir => ir.Ingrediente.Descripcion.Contains(texto)));
 
         if (idClasificacion.HasValue)
             query = query.Where(r => r.IdClasificacion == idClasificacion.Value);
 
-        return query
+        var catalogo = await query
             .OrderBy(r => r.Clasificacion.Nombre).ThenBy(r => r.Nombre)
             .Select(r => new RecetaCatalogoItem
             {
@@ -47,9 +53,41 @@ public class ComandaService : IComandaService
                 Codigo = r.Codigo,
                 Nombre = r.Nombre,
                 Clasificacion = r.Clasificacion.Nombre,
-                PorcionesBase = r.PorcionesBase
+                PorcionesBase = r.PorcionesBase,
+                CantidadIngredientes = r.Ingredientes.Count,
+                CantidadPasos = r.Procedimientos.Count
             })
             .ToListAsync();
+
+        if (texto is not null)
+            await ExplicarCoincidenciasAsync(catalogo, texto);
+
+        return catalogo;
+    }
+
+    /// <summary>
+    /// Aclara con qué ingrediente coincidió cada receta que no matcheó por
+    /// nombre ni por código: sin eso, aparecen recetas sin motivo aparente.
+    /// </summary>
+    private async Task ExplicarCoincidenciasAsync(List<RecetaCatalogoItem> catalogo, string texto)
+    {
+        var sinMotivo = catalogo
+            .Where(r => !r.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) &&
+                        !r.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (sinMotivo.Count == 0)
+            return;
+
+        var ids = sinMotivo.Select(r => r.IdReceta).ToList();
+        var coincidencias = await _context.IngredientesReceta
+            .Where(ir => ids.Contains(ir.IdReceta) && ir.Ingrediente.Descripcion.Contains(texto))
+            .Select(ir => new { ir.IdReceta, ir.Ingrediente.Descripcion })
+            .ToListAsync();
+
+        foreach (var receta in sinMotivo)
+            receta.IngredienteCoincidente = coincidencias
+                .FirstOrDefault(c => c.IdReceta == receta.IdReceta)?.Descripcion;
     }
 
     public async Task<IngredientesPreviewViewModel?> ObtenerIngredientesPreviewAsync(int idReceta, int comensales)
@@ -491,8 +529,57 @@ public class ComandaService : IComandaService
         return resultado;
     }
 
+    // ================= Revisión previa =================
+
+    /// <summary>
+    /// Lo mismo que revisa <see cref="GenerarAsync"/>, pero sin generar nada:
+    /// así el cocinero se entera de los problemas mientras arma el pedido y no
+    /// después de apretar el botón.
+    /// </summary>
+    public async Task<RevisionComanda> RevisarAsync(CarritoComanda carrito)
+    {
+        var revision = new RevisionComanda();
+        if (carrito.EstaVacio || carrito.Comensales <= 0)
+            return revision;
+
+        var ingredientesPorReceta = await CalcularEfectivosPorRecetaAsync(carrito);
+        revision.Faltantes = await ValidarStockAsync(ingredientesPorReceta);
+        revision.Incompletas = await BuscarIncompletasAsync(carrito);
+        return revision;
+    }
+
+    /// <summary>
+    /// Recetas del carrito a las que les falta contenido. No bloquean: una
+    /// receta sin procedimiento se cocina igual, pero conviene saberlo antes
+    /// de imprimir la comanda.
+    /// </summary>
+    private async Task<List<string>> BuscarIncompletasAsync(CarritoComanda carrito)
+    {
+        var ids = carrito.Items.Select(i => i.IdReceta).ToList();
+
+        var recetas = await _context.Recetas
+            .Where(r => ids.Contains(r.IdReceta))
+            .Select(r => new
+            {
+                r.Nombre,
+                Ingredientes = r.Ingredientes.Count,
+                Pasos = r.Procedimientos.Count
+            })
+            .ToListAsync();
+
+        return recetas
+            .Where(r => r.Ingredientes == 0 || r.Pasos == 0)
+            .Select(r => (r.Ingredientes, r.Pasos) switch
+            {
+                (0, 0) => $"{r.Nombre} no tiene ingredientes ni procedimiento cargados.",
+                (0, _) => $"{r.Nombre} no tiene ingredientes cargados.",
+                _ => $"{r.Nombre} no tiene procedimiento cargado."
+            })
+            .ToList();
+    }
+
     /// <summary>Suma lo requerido por todas las recetas y lo compara con el stock.</summary>
-    private async Task<List<string>> ValidarStockAsync(
+    private async Task<List<FaltanteStock>> ValidarStockAsync(
         Dictionary<int, List<IngredienteEfectivo>> ingredientesPorReceta)
     {
         var requerido = ingredientesPorReceta.Values
@@ -510,19 +597,24 @@ public class ComandaService : IComandaService
             .Where(i => ids.Contains(i.IdIngrediente))
             .ToDictionaryAsync(i => i.IdIngrediente, i => i.StockActual);
 
-        var faltantes = new List<string>();
+        var faltantes = new List<FaltanteStock>();
         foreach (var (id, datos) in requerido)
         {
             var disponible = stocks.GetValueOrDefault(id, 0m);
             if (disponible < datos.Cantidad)
             {
-                faltantes.Add(
-                    $"{datos.Nombre}: se necesitan {datos.Cantidad:N2} {datos.Unidad} " +
-                    $"y hay {disponible:N2} {datos.Unidad}.");
+                faltantes.Add(new FaltanteStock
+                {
+                    IdIngrediente = id,
+                    Ingrediente = datos.Nombre,
+                    Necesario = datos.Cantidad,
+                    Disponible = disponible,
+                    Unidad = datos.Unidad
+                });
             }
         }
 
-        return faltantes;
+        return faltantes.OrderBy(f => f.Ingrediente).ToList();
     }
 
     // ================= Consulta =================

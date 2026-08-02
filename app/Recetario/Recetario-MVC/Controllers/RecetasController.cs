@@ -18,12 +18,14 @@ public class RecetasController : Controller
         _recetas = recetas;
     }
 
-    public async Task<IActionResult> Index(string? busqueda, int? clasificacion)
+    public async Task<IActionResult> Index(string? busqueda, int? clasificacion, int? ingrediente)
     {
         ViewData["Busqueda"] = busqueda;
         ViewData["Clasificacion"] = clasificacion;
+        ViewData["Ingrediente"] = ingrediente;
         await CargarClasificacionesAsync(clasificacion);
-        return View(await _recetas.ListarAsync(busqueda, clasificacion));
+        await CargarIngredientesAsync(ingrediente);
+        return View(await _recetas.ListarAsync(busqueda, clasificacion, ingrediente));
     }
 
     [HttpGet]
@@ -181,6 +183,15 @@ public class RecetasController : Controller
         ViewBag.Clasificaciones = clasificaciones
             .Select(c => new SelectListItem(c.Nombre, c.IdClasificacion.ToString(),
                 c.IdClasificacion == seleccionada))
+            .ToList();
+    }
+
+    private async Task CargarIngredientesAsync(int? seleccionado)
+    {
+        var ingredientes = await _recetas.ListarIngredientesAsync();
+        ViewBag.Ingredientes = ingredientes
+            .Select(i => new SelectListItem(i.Descripcion, i.IdIngrediente.ToString(),
+                i.IdIngrediente == seleccionado))
             .ToList();
     }
 

@@ -16,7 +16,8 @@ public class RecetaService : IRecetaService
         _context = context;
     }
 
-    public async Task<List<RecetaListaItem>> ListarAsync(string? busqueda, int? idClasificacion)
+    public async Task<List<RecetaListaItem>> ListarAsync(
+        string? busqueda, int? idClasificacion, int? idIngrediente = null)
     {
         var query = _context.Recetas.AsQueryable();
 
@@ -25,6 +26,11 @@ public class RecetaService : IRecetaService
 
         if (idClasificacion.HasValue)
             query = query.Where(r => r.IdClasificacion == idClasificacion.Value);
+
+        // "¿Qué recetas llevan lechuga?": sirve para darle salida a lo que
+        // está por vencerse o para saber qué se ve afectado si falta algo
+        if (idIngrediente.HasValue)
+            query = query.Where(r => r.Ingredientes.Any(ir => ir.IdIngrediente == idIngrediente.Value));
 
         return await query
             .OrderBy(r => r.Nombre)
@@ -36,6 +42,7 @@ public class RecetaService : IRecetaService
                 Clasificacion = r.Clasificacion.Nombre,
                 PorcionesBase = r.PorcionesBase,
                 CantidadIngredientes = r.Ingredientes.Count,
+                CantidadPasos = r.Procedimientos.Count,
                 Activo = r.Activo
             })
             .ToListAsync();

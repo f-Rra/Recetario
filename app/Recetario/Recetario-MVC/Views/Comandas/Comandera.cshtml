@@ -30,7 +30,7 @@
 
             <div class="p-2 border-bottom d-flex gap-2 flex-shrink-0">
                 <input type="search" name="busqueda" form="formFiltros" value="@Model.Busqueda"
-                       class="form-control form-control-sm" placeholder="Buscar receta…" />
+                       class="form-control form-control-sm" placeholder="Buscar receta o ingrediente…" />
                 <select name="clasificacion" form="formFiltros" class="form-select form-select-sm flex-shrink-0"
                         style="width: 225px;" onchange="this.form.submit()">
                     <option value="">Todas las clasificaciones</option>
@@ -78,6 +78,15 @@
                                         {
                                             <i class="bi bi-check-circle-fill ms-1"
                                                style="color: var(--sx-celeste);" title="En la comanda"></i>
+                                        }
+                                        @if (!receta.Completa)
+                                        {
+                                            <i class="bi bi-exclamation-triangle-fill icono-incompleta ms-1"
+                                               title="@receta.Advertencia"></i>
+                                        }
+                                        @if (receta.IngredienteCoincidente is not null)
+                                        {
+                                            <div class="coincidencia">lleva @receta.IngredienteCoincidente</div>
                                         }
                                     </td>
                                     <td class="text-muted">@receta.Clasificacion</td>
@@ -134,6 +143,19 @@
                         <input type="number" min="1" id="comensales" name="comensales" value="@Model.Carrito.Comensales"
                                class="form-control form-control-sm text-center fw-semibold" style="width: 76px;" />
                     </form>
+
+                    @* El problema se ve mientras se arma, no al apretar generar *@
+                    @if (Model.Revision.Faltantes.Count > 0)
+                    {
+                        <button type="button" class="aviso-faltantes" data-bs-toggle="modal"
+                                data-bs-target="#modalGenerar" title="Ver el detalle">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            @Model.Revision.Faltantes.Count
+                            @(Model.Revision.Faltantes.Count == 1
+                                ? "ingrediente no alcanza"
+                                : "ingredientes no alcanzan")
+                        </button>
+                    }
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
@@ -150,11 +172,11 @@
                     }
                     else
                     {
-                        <form asp-action="Generar" method="post">
-                            <button type="submit" class="btn btn-generar btn-sm">
-                                <i class="bi bi-file-earmark-pdf"></i> Generar comanda
-                            </button>
-                        </form>
+                        @* Descontar el stock no se deshace: confirma primero *@
+                        <button type="button" class="btn btn-generar btn-sm"
+                                data-bs-toggle="modal" data-bs-target="#modalGenerar">
+                            <i class="bi bi-file-earmark-pdf"></i> Generar comanda
+                        </button>
                     }
                 </div>
             </div>
@@ -242,6 +264,115 @@
 
 @* Formulario de filtros: vive fuera del form de agregar para no anidarlos *@
 <form method="get" id="formFiltros"></form>
+
+@* ============ Modal de confirmación ============ *@
+@if (!Model.Carrito.EstaVacio)
+{
+    <div class="modal fade" id="modalGenerar" tabindex="-1" aria-hidden="true">
+        @* Scrollable: con muchos faltantes el botón de cerrar tiene que seguir a la vista *@
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Generar comanda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        <b>@Model.Carrito.Items.Count</b>
+                        @(Model.Carrito.Items.Count == 1 ? "receta" : "recetas") para
+                        <b>@Model.Carrito.Comensales</b>
+                        @(Model.Carrito.Comensales == 1 ? "comensal" : "comensales").
+                    </p>
+
+                    <ul class="lista-resumen">
+                        @foreach (var item in Model.Carrito.Items)
+                        {
+                            <li>
+                                @item.Nombre
+                                <span class="text-muted">· @item.Clasificacion</span>
+                                @if (item.Modificaciones.Count > 0)
+                                {
+                                    <span class="text-muted">
+                                        · @item.Modificaciones.Count
+                                        @(item.Modificaciones.Count == 1 ? "modificación" : "modificaciones")
+                                    </span>
+                                }
+                            </li>
+                        }
+                    </ul>
+
+                    @if (Model.Revision.Faltantes.Count > 0)
+                    {
+                        <div class="bloque-faltantes">
+                            <div class="titulo">
+                                <i class="bi bi-exclamation-triangle-fill"></i> No hay stock suficiente
+                            </div>
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Ingrediente</th>
+                                        <th class="num">Se necesita</th>
+                                        <th class="num">Hay</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var faltante in Model.Revision.Faltantes)
+                                    {
+                                        <tr>
+                                            <td>@faltante.Ingrediente</td>
+                                            <td class="num">@faltante.NecesarioTexto</td>
+                                            <td class="num fw-semibold">@faltante.DisponibleTexto</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <div class="pie">
+                                Bajá los comensales, sustituí el ingrediente o cargá stock antes de generar.
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Revision.Incompletas.Count > 0)
+                    {
+                        <div class="bloque-incompletas">
+                            @foreach (var aviso in Model.Revision.Incompletas)
+                            {
+                                <div><i class="bi bi-exclamation-triangle-fill"></i> @aviso</div>
+                            }
+                        </div>
+                    }
+
+                    @if (Model.Revision.SePuedeGenerar)
+                    {
+                        <p class="text-muted small mb-0">
+                            Se descuenta el stock de los ingredientes y se descarga el PDF.
+                            La comanda queda registrada.
+                        </p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (Model.Revision.SePuedeGenerar)
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <form asp-action="Generar" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-generar">
+                                <i class="bi bi-file-earmark-pdf"></i> Generar comanda
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @* ============ Modal de modificación ============ *@
 <div class="modal fade" id="modalModificar" tabindex="-1" aria-hidden="true">

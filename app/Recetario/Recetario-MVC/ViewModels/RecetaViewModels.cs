@@ -10,7 +10,19 @@ public class RecetaListaItem
     public string Clasificacion { get; set; } = string.Empty;
     public int PorcionesBase { get; set; }
     public int CantidadIngredientes { get; set; }
+    public int CantidadPasos { get; set; }
     public bool Activo { get; set; }
+
+    public bool Completa => CantidadIngredientes > 0 && CantidadPasos > 0;
+
+    /// <summary>Qué le falta a la receta, para el título del aviso.</summary>
+    public string Advertencia => (CantidadIngredientes, CantidadPasos) switch
+    {
+        (0, 0) => "No tiene ingredientes ni procedimiento cargados",
+        (0, _) => "No tiene ingredientes cargados",
+        (_, 0) => "No tiene procedimiento cargado",
+        _ => string.Empty
+    };
 }
 
 public class RecetaFormViewModel

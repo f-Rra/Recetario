@@ -189,8 +189,7 @@ public class ComandaServiceTests
         var resultado = await servicio.GenerarAsync(Carrito(200, ItemNoquis()), "u1");
 
         Assert.False(resultado.Ok);
-        Assert.Single(resultado.Faltantes);
-        Assert.Contains("Harina 000", resultado.Faltantes[0]);
+        Assert.Equal("Harina 000", Assert.Single(resultado.Faltantes).Ingrediente);
         Assert.Empty(context.Comandas);
         Assert.Empty(context.MovimientosStock);
         Assert.Equal(10m, (await context.Ingredientes.FindAsync(Harina))!.StockActual);
@@ -267,6 +266,142 @@ public class ComandaServiceTests
         Assert.Equal(1.25m, alcanza!.Ingredientes.Single().Cantidad);
         Assert.True(alcanza.Ingredientes.Single().Alcanza);
         Assert.False(noAlcanza!.Ingredientes.Single().Alcanza);
+    }
+
+    // ---------- Revisión previa (guía 18) ----------
+
+    [Fact]
+    public async Task Revisar_AvisaElFaltanteSinTocarNada()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context);
+
+        // 200 comensales sobre base 6 → 20,83 kg de harina y solo hay 10
+        var revision = await servicio.RevisarAsync(Carrito(200, ItemNoquis()));
+
+        Assert.False(revision.SePuedeGenerar);
+        var faltante = Assert.Single(revision.Faltantes);
+        Assert.Equal("Harina 000", faltante.Ingrediente);
+        Assert.Equal(10m, faltante.Disponible);
+        Assert.True(faltante.Necesario > faltante.Disponible);
+        Assert.Empty(context.Comandas);
+        Assert.Empty(context.MovimientosStock);
+    }
+
+    [Fact]
+    public async Task Revisar_ConStockSuficiente_NoAvisaFaltantes()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context);
+
+        var revision = await servicio.RevisarAsync(Carrito(12, ItemNoquis()));
+
+        Assert.True(revision.SePuedeGenerar);
+        Assert.Empty(revision.Faltantes);
+    }
+
+    [Fact]
+    public async Task Revisar_SumaElMismoIngredienteEntreRecetas()
+    {
+        using var context = CrearContexto();
+        // La guarnición también lleva harina: por separado alcanza, juntas no
+        context.IngredientesReceta.Add(new IngredienteReceta
+        {
+            IdReceta = Decoracion,
+            IdIngrediente = Harina,
+            CantNeta = 0.5m,
+            Rendimiento = 100m,
+            CantBruta = 0.5m,
+            IdUnidad = 1
+        });
+        context.SaveChanges();
+        var servicio = new ComandaService(context);
+
+        // 60 comensales: 6,25 kg de los ñoquis + 5 kg de la guarnición = 11,25 > 10
+        var soloNoquis = await servicio.RevisarAsync(Carrito(60, ItemNoquis()));
+        var juntas = await servicio.RevisarAsync(Carrito(60, ItemNoquis(), ItemDecoracion()));
+
+        Assert.True(soloNoquis.SePuedeGenerar);
+        Assert.False(juntas.SePuedeGenerar);
+        Assert.Equal(11.25m, Assert.Single(juntas.Faltantes).Necesario);
+    }
+
+    [Fact]
+    public async Task Revisar_CarritoVacio_NoAvisaNada()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context);
+
+        var revision = await servicio.RevisarAsync(Carrito(200));
+
+        Assert.True(revision.SePuedeGenerar);
+        Assert.Empty(revision.Incompletas);
+    }
+
+    [Fact]
+    public async Task Revisar_MarcaLasRecetasIncompletasSinBloquear()
+    {
+        using var context = CrearContexto();
+        // Los ñoquis quedan completos; la guarnición sigue sin procedimiento
+        context.Procedimientos.Add(new Procedimiento
+        {
+            IdProcedimiento = 1,
+            IdReceta = Noquis,
+            NroPaso = 1,
+            Descripcion = "Hervir hasta que floten."
+        });
+        context.SaveChanges();
+        var servicio = new ComandaService(context);
+
+        var revision = await servicio.RevisarAsync(Carrito(6, ItemNoquis(), ItemDecoracion()));
+
+        // Avisa, pero no impide generar: el faltante es lo único que bloquea
+        Assert.True(revision.SePuedeGenerar);
+        var aviso = Assert.Single(revision.Incompletas);
+        Assert.Contains("Guarnición", aviso);
+        Assert.Contains("procedimiento", aviso);
+    }
+
+    [Fact]
+    public async Task ListarCatalogo_BuscaTambienPorIngrediente()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context);
+
+        var porIngrediente = await servicio.ListarCatalogoAsync("Perejil", null);
+        var porNombre = await servicio.ListarCatalogoAsync("Ñoq", null);
+
+        // La guarnición aparece por lo que lleva, y se aclara cuál fue
+        var guarnicion = Assert.Single(porIngrediente);
+        Assert.Equal("Guarnición", guarnicion.Nombre);
+        Assert.Equal("Perejil", guarnicion.IngredienteCoincidente);
+
+        // Cuando coincide por nombre no hace falta explicar nada
+        Assert.Null(Assert.Single(porNombre).IngredienteCoincidente);
+    }
+
+    [Fact]
+    public async Task ListarCatalogo_TraeLosConteosParaMarcarLasIncompletas()
+    {
+        using var context = CrearContexto();
+        context.Procedimientos.Add(new Procedimiento
+        {
+            IdProcedimiento = 1,
+            IdReceta = Noquis,
+            NroPaso = 1,
+            Descripcion = "Hervir hasta que floten."
+        });
+        context.SaveChanges();
+        var servicio = new ComandaService(context);
+
+        var catalogo = await servicio.ListarCatalogoAsync(null, null);
+
+        var noquis = catalogo.Single(r => r.IdReceta == Noquis);
+        var guarnicion = catalogo.Single(r => r.IdReceta == Decoracion);
+
+        Assert.True(noquis.Completa);
+        Assert.False(guarnicion.Completa);
+        Assert.Equal("No tiene procedimiento cargado", guarnicion.Advertencia);
     }
 
     [Fact]

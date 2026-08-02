@@ -23,6 +23,12 @@ public interface IComandaService
     Task<Dictionary<int, string>> ResolverResponsablesAsync(CarritoComanda carrito);
 
     /// <summary>
+    /// Faltantes de stock y recetas incompletas del pedido tal como está, sin
+    /// generarlo: es lo que se avisa mientras se arma la comanda.
+    /// </summary>
+    Task<RevisionComanda> RevisarAsync(CarritoComanda carrito);
+
+    /// <summary>
     /// Registra el pedido completo: una comanda por receta, sus modificaciones y
     /// el descuento de stock, y devuelve el PDF. Bloquea si falta stock.
     /// </summary>

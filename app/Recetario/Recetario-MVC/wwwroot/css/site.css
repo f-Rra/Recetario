@@ -10,6 +10,8 @@
   --sx-celeste: #68A8D0;
   --sx-celeste-claro: #EAF3F9;
   --sx-rojo: #E01820;
+  /* Para lo que avisa sin bloquear: ni el azul del sistema ni el rojo del error */
+  --sx-ambar: #B26A00;
   --sx-gris-fondo: #F5F7F9;
   --sx-gris-texto: #2B3A45;
   --sx-gris-suave: #6C7A85;
@@ -482,6 +484,97 @@ td.num + td {
    no repetida en cada celda */
 .fila-receta.seleccionada > td:first-child {
   box-shadow: inset 3px 0 0 var(--sx-azul);
+}
+
+/* ---------- Avisos previos a generar (guía 18) ---------- */
+
+/* Sobre el azul del encabezado, el faltante tiene que leerse como problema
+   sin gritar: rojo apagado, del mismo tamaño que el resto de la barra */
+.aviso-faltantes {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(224, 24, 32, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.aviso-faltantes:hover {
+  background: rgba(224, 24, 32, 0.32);
+}
+
+/* Receta a la que le falta contenido: avisa, no bloquea */
+.icono-incompleta {
+  color: var(--sx-ambar);
+  font-size: 12px;
+}
+
+/* Por qué apareció una receta al buscar por ingrediente */
+.coincidencia {
+  font-size: 11.5px;
+  color: var(--sx-gris-suave);
+  margin-top: 1px;
+}
+
+.coincidencia::before {
+  content: "\f52a"; /* bi-search */
+  font-family: bootstrap-icons;
+  font-size: 9px;
+  margin-right: 4px;
+}
+
+/* Resumen de lo que se va a generar */
+.lista-resumen {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+}
+
+.lista-resumen li {
+  padding: 5px 0;
+  border-bottom: 1px solid #EDF1F4;
+}
+
+.lista-resumen li:last-child {
+  border-bottom: none;
+}
+
+.bloque-faltantes {
+  background: #FCE9EA;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.bloque-faltantes .titulo {
+  color: var(--sx-rojo);
+  font-weight: 650;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.bloque-faltantes table {
+  --bs-table-bg: transparent;
+  font-size: 13px;
+}
+
+.bloque-faltantes .pie {
+  font-size: 12px;
+  color: var(--sx-gris-suave);
+  margin-top: 8px;
+}
+
+.bloque-incompletas {
+  background: #FFF4E5;
+  color: var(--sx-ambar);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
 }
 
 /* Modificación dentro de la fila de comanda */

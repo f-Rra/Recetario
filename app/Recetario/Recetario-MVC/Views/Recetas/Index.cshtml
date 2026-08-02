@@ -17,6 +17,15 @@
                 <option value="@c.Value" selected="@c.Selected">@c.Text</option>
             }
         </select>
+        @* "¿Qué recetas llevan lechuga?", para darle salida a lo que hay *@
+        <select name="ingrediente" class="form-select filtro-select"
+                title="Recetas que llevan un ingrediente" onchange="this.form.submit()">
+            <option value="">Cualquier ingrediente</option>
+            @foreach (var i in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Ingredientes)
+            {
+                <option value="@i.Value" selected="@i.Selected">@i.Text</option>
+            }
+        </select>
         <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
     </form>
     @if (esAdmin)
@@ -32,7 +41,8 @@
             <div class="text-center text-muted py-4">
                 <i class="bi bi-journal-text" style="font-size: 28px; color: var(--sx-celeste);"></i>
                 <p class="mb-0 mt-2">
-                    @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"]) && ViewData["Clasificacion"] is null
+                    @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"]) &&
+                      ViewData["Clasificacion"] is null && ViewData["Ingrediente"] is null
                         ? "Todavía no hay recetas cargadas."
                         : "No se encontraron recetas con esos filtros.")
                 </p>
@@ -57,7 +67,14 @@
                     {
                         <tr>
                             <td>@item.Codigo</td>
-                            <td>@item.Nombre</td>
+                            <td>
+                                @item.Nombre
+                                @if (!item.Completa)
+                                {
+                                    <i class="bi bi-exclamation-triangle-fill icono-incompleta ms-1"
+                                       title="@item.Advertencia"></i>
+                                }
+                            </td>
                             <td>@item.Clasificacion</td>
                             <td class="num">@item.PorcionesBase</td>
                             <td class="num">@item.CantidadIngredientes</td>

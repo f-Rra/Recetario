@@ -65,6 +65,9 @@ public class ComanderaViewModel
 
     /// <summary>Ingredientes de cada receta del carrito, para los selects del modal.</summary>
     public Dictionary<int, List<IngredienteEscaladoItem>> IngredientesPorItem { get; set; } = new();
+
+    /// <summary>Lo que anda mal en el pedido tal como está, antes de generarlo.</summary>
+    public RevisionComanda Revision { get; set; } = new();
 }
 
 public class RecetaCatalogoItem
@@ -75,6 +78,26 @@ public class RecetaCatalogoItem
     public string Clasificacion { get; set; } = string.Empty;
     public int PorcionesBase { get; set; }
     public bool EnCarrito { get; set; }
+
+    public int CantidadIngredientes { get; set; }
+    public int CantidadPasos { get; set; }
+
+    /// <summary>
+    /// Ingrediente por el que la receta apareció en la búsqueda, cuando no
+    /// coincidió por nombre ni por código. Null si coincidió por lo obvio.
+    /// </summary>
+    public string? IngredienteCoincidente { get; set; }
+
+    public bool Completa => CantidadIngredientes > 0 && CantidadPasos > 0;
+
+    /// <summary>Qué le falta a la receta, para el título del aviso.</summary>
+    public string Advertencia => (CantidadIngredientes, CantidadPasos) switch
+    {
+        (0, 0) => "No tiene ingredientes ni procedimiento cargados",
+        (0, _) => "No tiene ingredientes cargados",
+        (_, 0) => "No tiene procedimiento cargado",
+        _ => string.Empty
+    };
 }
 
 /// <summary>Ingrediente de la receta seleccionada, escalado a los comensales.</summary>
@@ -118,6 +141,39 @@ public class ModificacionComanderaForm
     public decimal? Cantidad { get; set; }
 }
 
+// ---------- Revisión previa ----------
+
+/// <summary>Ingrediente que no alcanza para el pedido tal como está armado.</summary>
+public class FaltanteStock
+{
+    public int IdIngrediente { get; set; }
+    public string Ingrediente { get; set; } = string.Empty;
+    public decimal Necesario { get; set; }
+    public decimal Disponible { get; set; }
+    public string Unidad { get; set; } = string.Empty;
+
+    public string NecesarioTexto => Helpers.FormatoCantidad.Formatear(Necesario, Unidad);
+    public string DisponibleTexto => Helpers.FormatoCantidad.Formatear(Disponible, Unidad);
+
+    public string Descripcion => $"{Ingrediente}: se necesitan {NecesarioTexto} y hay {DisponibleTexto}.";
+}
+
+/// <summary>
+/// Lo que le pasa al pedido antes de generarlo. Se calcula al pintar la
+/// comandera para avisar mientras se arma, y es lo mismo que revisa
+/// <c>GenerarAsync</c> al confirmar.
+/// </summary>
+public class RevisionComanda
+{
+    /// <summary>Ingredientes cuyo stock no alcanza: mientras haya alguno no se puede generar.</summary>
+    public List<FaltanteStock> Faltantes { get; set; } = new();
+
+    /// <summary>Recetas del carrito sin ingredientes o sin procedimiento: avisan, no bloquean.</summary>
+    public List<string> Incompletas { get; set; } = new();
+
+    public bool SePuedeGenerar => Faltantes.Count == 0;
+}
+
 /// <summary>Resultado de generar el pedido.</summary>
 public class ResultadoGeneracion
 {
@@ -129,7 +185,7 @@ public class ResultadoGeneracion
     public string? Error { get; set; }
 
     /// <summary>Ingredientes cuyo stock no alcanza; si hay alguno, no se generó nada.</summary>
-    public List<string> Faltantes { get; set; } = new();
+    public List<FaltanteStock> Faltantes { get; set; } = new();
 
     public bool Ok => Error is null && Faltantes.Count == 0;
 }
