@@ -16,23 +16,23 @@ public class RecetaService : IRecetaService
         _context = context;
     }
 
-    public async Task<List<RecetaListaItem>> ListarAsync(
-        string? busqueda, int? idClasificacion, int? idIngrediente = null)
+    public async Task<List<RecetaListaItem>> ListarAsync(string? busqueda, int? idClasificacion)
     {
+        var texto = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim();
         var query = _context.Recetas.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(busqueda))
-            query = query.Where(r => r.Codigo.Contains(busqueda) || r.Nombre.Contains(busqueda));
+        // Un solo buscador para todo: "¿qué recetas llevan lechuga?" se
+        // responde escribiendo el ingrediente, igual que en la comandera
+        if (texto is not null)
+            query = query.Where(r =>
+                r.Codigo.Contains(texto) ||
+                r.Nombre.Contains(texto) ||
+                r.Ingredientes.Any(ir => ir.Ingrediente.Descripcion.Contains(texto)));
 
         if (idClasificacion.HasValue)
             query = query.Where(r => r.IdClasificacion == idClasificacion.Value);
 
-        // "¿Qué recetas llevan lechuga?": sirve para darle salida a lo que
-        // está por vencerse o para saber qué se ve afectado si falta algo
-        if (idIngrediente.HasValue)
-            query = query.Where(r => r.Ingredientes.Any(ir => ir.IdIngrediente == idIngrediente.Value));
-
-        return await query
+        var recetas = await query
             .OrderBy(r => r.Nombre)
             .Select(r => new RecetaListaItem
             {
@@ -46,6 +46,11 @@ public class RecetaService : IRecetaService
                 Activo = r.Activo
             })
             .ToListAsync();
+
+        if (texto is not null)
+            await CoincidenciaPorIngrediente.ResolverAsync(_context, recetas, texto);
+
+        return recetas;
     }
 
     public async Task<RecetaDetalleViewModel?> ObtenerDetalleAsync(int id)

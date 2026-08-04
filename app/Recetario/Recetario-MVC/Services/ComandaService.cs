@@ -61,34 +61,9 @@ public class ComandaService : IComandaService
             .ToListAsync();
 
         if (texto is not null)
-            await ExplicarCoincidenciasAsync(catalogo, texto);
+            await CoincidenciaPorIngrediente.ResolverAsync(_context, catalogo, texto);
 
         return catalogo;
-    }
-
-    /// <summary>
-    /// Aclara con qué ingrediente coincidió cada receta que no matcheó por
-    /// nombre ni por código: sin eso, aparecen recetas sin motivo aparente.
-    /// </summary>
-    private async Task ExplicarCoincidenciasAsync(List<RecetaCatalogoItem> catalogo, string texto)
-    {
-        var sinMotivo = catalogo
-            .Where(r => !r.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) &&
-                        !r.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        if (sinMotivo.Count == 0)
-            return;
-
-        var ids = sinMotivo.Select(r => r.IdReceta).ToList();
-        var coincidencias = await _context.IngredientesReceta
-            .Where(ir => ids.Contains(ir.IdReceta) && ir.Ingrediente.Descripcion.Contains(texto))
-            .Select(ir => new { ir.IdReceta, ir.Ingrediente.Descripcion })
-            .ToListAsync();
-
-        foreach (var receta in sinMotivo)
-            receta.IngredienteCoincidente = coincidencias
-                .FirstOrDefault(c => c.IdReceta == receta.IdReceta)?.Descripcion;
     }
 
     public async Task<IngredientesPreviewViewModel?> ObtenerIngredientesPreviewAsync(int idReceta, int comensales)

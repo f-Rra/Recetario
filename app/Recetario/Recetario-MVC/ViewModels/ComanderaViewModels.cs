@@ -70,7 +70,19 @@ public class ComanderaViewModel
     public RevisionComanda Revision { get; set; } = new();
 }
 
-public class RecetaCatalogoItem
+/// <summary>
+/// Receta que salió de una búsqueda y puede necesitar explicar por qué
+/// apareció. La implementan el catálogo de la comandera y el listado.
+/// </summary>
+public interface IRecetaBuscada
+{
+    int IdReceta { get; }
+    string Nombre { get; }
+    string Codigo { get; }
+    string? IngredienteCoincidente { get; set; }
+}
+
+public class RecetaCatalogoItem : IRecetaBuscada
 {
     public int IdReceta { get; set; }
     public string Codigo { get; set; } = string.Empty;

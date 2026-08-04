@@ -17,16 +17,16 @@
 
     @* ==================== Catálogo ==================== *@
     <div>
-        <div class="cmd-filtros">
-            <form method="get" class="cmd-busca" role="search">
+        <div class="filtros-cocina">
+            <form method="get" class="busca-cocina" role="search">
                 <input type="hidden" name="clasificacion" value="@Model.IdClasificacion" />
                 <input type="search" name="busqueda" value="@Model.Busqueda"
                        class="form-control form-control-sm" placeholder="Buscar…" />
-                <button type="submit" class="btn btn-primary btn-sm cmd-lupa" title="Buscar">
+                <button type="submit" class="btn btn-primary btn-sm lupa-cocina" title="Buscar">
                     <i class="bi bi-search"></i>
                 </button>
             </form>
-            <div class="cmd-chips">
+            <div class="chips-cocina">
                 <a href="@Url.Action("Comandera", new { busqueda = Model.Busqueda })"
                    class="@(Model.IdClasificacion is null ? "activa" : "")">Todas</a>
                 @foreach (var c in clasificaciones)

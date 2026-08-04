@@ -337,9 +337,10 @@ td.num + td {
   align-items: start;
 }
 
-/* Buscador y clasificaciones en una misma fila, siempre: si las píldoras
-   no entran, scrollean de costado en vez de bajar de línea */
-.cmd-filtros {
+/* Fila de filtros de cocina: buscador y clasificaciones siempre en la misma
+   línea. Si las píldoras no entran, scrollean de costado en vez de bajar.
+   La comparten la comandera y el listado de recetas. */
+.filtros-cocina {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -347,22 +348,22 @@ td.num + td {
   margin-bottom: 14px;
 }
 
-.cmd-busca {
+.busca-cocina {
   display: flex;
   gap: 8px;
   flex: 0 0 240px;
 }
 
-.cmd-busca input {
+.busca-cocina input {
   border-radius: 999px;
   padding-left: 16px;
 }
 
-.cmd-lupa {
+.lupa-cocina {
   border-radius: 999px;
 }
 
-.cmd-chips {
+.chips-cocina {
   display: flex;
   gap: 8px;
   flex-wrap: nowrap;
@@ -372,15 +373,12 @@ td.num + td {
   scrollbar-width: none;
 }
 
-.cmd-chips::-webkit-scrollbar {
+.chips-cocina::-webkit-scrollbar {
   display: none;
 }
 
-.cmd-chips a {
+.chips-cocina a {
   flex-shrink: 0;
-}
-
-.cmd-chips a {
   background: #fff;
   border: 1px solid #D8E2EA;
   border-radius: 999px;
@@ -390,12 +388,12 @@ td.num + td {
   text-decoration: none;
 }
 
-.cmd-chips a:hover {
+.chips-cocina a:hover {
   border-color: var(--sx-azul);
   color: var(--sx-azul);
 }
 
-.cmd-chips a.activa {
+.chips-cocina a.activa {
   background: var(--sx-azul-oscuro);
   border-color: var(--sx-azul-oscuro);
   color: #fff;
@@ -900,6 +898,93 @@ td.num + td {
 
 @media (max-width: 767px) {
   .dtc-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Listado de recetas en fichas (guía 22) ---------- */
+
+.fch-grilla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fch {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.07);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.fch.inactiva {
+  opacity: 0.62;
+}
+
+/* Aviso de receta incompleta, arriba a la derecha de la ficha */
+.fch-cinta {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: #FFF4E5;
+  color: var(--sx-ambar);
+  font-size: 10.5px;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-weight: 600;
+}
+
+.fch-sector {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--sx-azul);
+  font-weight: 700;
+  margin-bottom: 4px;
+  /* deja lugar a la cinta para que no se pisen */
+  padding-right: 110px;
+}
+
+.fch-nombre {
+  font-weight: 650;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.fch-meta {
+  color: var(--sx-gris-suave);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.fch-lleva {
+  align-self: flex-start;
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 2px 9px;
+  margin-top: 8px;
+}
+
+/* Pegadas abajo: con fichas de distinto alto los botones quedan alineados */
+.fch-acciones {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+@media (max-width: 1199px) {
+  .fch-grilla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .fch-grilla {
     grid-template-columns: 1fr;
   }
 }

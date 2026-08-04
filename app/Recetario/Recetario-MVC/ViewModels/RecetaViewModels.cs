@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RecetarioMVC.ViewModels;
 
-public class RecetaListaItem
+public class RecetaListaItem : IRecetaBuscada
 {
     public int IdReceta { get; set; }
     public string Codigo { get; set; } = string.Empty;
@@ -13,6 +13,12 @@ public class RecetaListaItem
     public int CantidadPasos { get; set; }
     public bool Activo { get; set; }
 
+    /// <summary>
+    /// Ingrediente por el que la receta apareció en la búsqueda, cuando no
+    /// coincidió por nombre ni por código.
+    /// </summary>
+    public string? IngredienteCoincidente { get; set; }
+
     public bool Completa => CantidadIngredientes > 0 && CantidadPasos > 0;
 
     /// <summary>Qué le falta a la receta, para el título del aviso.</summary>
@@ -21,6 +27,15 @@ public class RecetaListaItem
         (0, 0) => "No tiene ingredientes ni procedimiento cargados",
         (0, _) => "No tiene ingredientes cargados",
         (_, 0) => "No tiene procedimiento cargado",
+        _ => string.Empty
+    };
+
+    /// <summary>Lo mismo, en dos palabras: entra en la cinta de la ficha.</summary>
+    public string AdvertenciaCorta => (CantidadIngredientes, CantidadPasos) switch
+    {
+        (0, 0) => "sin ingredientes ni pasos",
+        (0, _) => "sin ingredientes",
+        (_, 0) => "sin procedimiento",
         _ => string.Empty
     };
 }

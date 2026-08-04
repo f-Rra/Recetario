@@ -1,6 +1,6 @@
 # Guía 22 — Rediseño: listado de recetas
 
-> **Estado:** pendiente
+> **Estado:** completada
 
 ## Objetivo
 

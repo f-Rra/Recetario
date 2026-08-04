@@ -5,8 +5,11 @@ namespace RecetarioMVC.Services;
 
 public interface IRecetaService
 {
-    /// <summary>Listado filtrable por texto, clasificación y por ingrediente que la receta lleve.</summary>
-    Task<List<RecetaListaItem>> ListarAsync(string? busqueda, int? idClasificacion, int? idIngrediente = null);
+    /// <summary>
+    /// Listado filtrable por clasificación y por un texto que se compara
+    /// contra código, nombre y los ingredientes que la receta lleva.
+    /// </summary>
+    Task<List<RecetaListaItem>> ListarAsync(string? busqueda, int? idClasificacion);
     Task<RecetaDetalleViewModel?> ObtenerDetalleAsync(int id);
     Task<RecetaFormViewModel?> ObtenerFormAsync(int id);
     Task<List<Clasificacion>> ListarClasificacionesAsync();

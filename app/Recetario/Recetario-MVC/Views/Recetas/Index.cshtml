@@ -3,120 +3,104 @@
 @{
     ViewData["Title"] = "Recetas";
     var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
+    var busqueda = (string?)ViewData["Busqueda"];
+    var clasificacion = (int?)ViewData["Clasificacion"];
+    var clasificaciones = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <form method="get" class="d-flex gap-2" role="search">
-        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control filtro-busqueda"
-               placeholder="Buscar por código o nombre…" />
-        <select name="clasificacion" class="form-select filtro-select"
-                onchange="this.form.submit()">
-            <option value="">Todas las clasificaciones</option>
-            @foreach (var c in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones)
-            {
-                <option value="@c.Value" selected="@c.Selected">@c.Text</option>
-            }
-        </select>
-        @* "¿Qué recetas llevan lechuga?", para darle salida a lo que hay *@
-        <select name="ingrediente" class="form-select filtro-select"
-                title="Recetas que llevan un ingrediente" onchange="this.form.submit()">
-            <option value="">Cualquier ingrediente</option>
-            @foreach (var i in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Ingredientes)
-            {
-                <option value="@i.Value" selected="@i.Selected">@i.Text</option>
-            }
-        </select>
-        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+<div class="filtros-cocina">
+    <form method="get" class="busca-cocina" role="search">
+        <input type="hidden" name="clasificacion" value="@clasificacion" />
+        <input type="search" name="busqueda" value="@busqueda"
+               class="form-control form-control-sm" placeholder="Buscar…" />
+        <button type="submit" class="btn btn-primary btn-sm lupa-cocina" title="Buscar">
+            <i class="bi bi-search"></i>
+        </button>
     </form>
+
+    <div class="chips-cocina">
+        <a href="@Url.Action("Index", new { busqueda })"
+           class="@(clasificacion is null ? "activa" : "")">Todas</a>
+        @foreach (var c in clasificaciones)
+        {
+            <a href="@Url.Action("Index", new { busqueda, clasificacion = c.Value })"
+               class="@(c.Selected ? "activa" : "")">@c.Text</a>
+        }
+    </div>
+
     @if (esAdmin)
     {
-        <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nueva receta</a>
+        <a asp-action="Crear" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0">
+            <i class="bi bi-plus-lg"></i> Nueva receta
+        </a>
     }
 </div>
 
-<div class="card">
-    <div class="card-body">
-        @if (Model.Count == 0)
+@if (Model.Count == 0)
+{
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-journal-text" style="font-size: 28px; color: var(--sx-celeste);"></i>
+        <p class="mb-0 mt-2">
+            @(string.IsNullOrWhiteSpace(busqueda) && clasificacion is null
+                ? "Todavía no hay recetas cargadas."
+                : "No se encontraron recetas con esos filtros.")
+        </p>
+    </div>
+}
+else
+{
+    <div class="fch-grilla">
+        @foreach (var item in Model)
         {
-            <div class="text-center text-muted py-4">
-                <i class="bi bi-journal-text" style="font-size: 28px; color: var(--sx-celeste);"></i>
-                <p class="mb-0 mt-2">
-                    @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"]) &&
-                      ViewData["Clasificacion"] is null && ViewData["Ingrediente"] is null
-                        ? "Todavía no hay recetas cargadas."
-                        : "No se encontraron recetas con esos filtros.")
-                </p>
+            <div class="fch @(item.Activo ? "" : "inactiva")">
+                @if (!item.Completa)
+                {
+                    <span class="fch-cinta" title="@item.Advertencia">@item.AdvertenciaCorta</span>
+                }
+
+                <div class="fch-sector">@item.Clasificacion.ToUpperInvariant()</div>
+                <div class="fch-nombre">@item.Nombre</div>
+                <div class="fch-meta">
+                    @item.CantidadIngredientes @(item.CantidadIngredientes == 1 ? "ingrediente" : "ingredientes")
+                    @if (item.CantidadPasos > 0)
+                    {
+                        <text>· @item.CantidadPasos @(item.CantidadPasos == 1 ? "paso" : "pasos")</text>
+                    }
+                    @if (!item.Activo)
+                    {
+                        <text>· inactiva</text>
+                    }
+                </div>
+
+                @if (item.IngredienteCoincidente is not null)
+                {
+                    <span class="fch-lleva">lleva @item.IngredienteCoincidente</span>
+                }
+
+                <div class="fch-acciones">
+                    <a asp-action="Detalle" asp-route-id="@item.IdReceta"
+                       class="btn btn-outline-primary btn-sm rounded-pill px-3">Ver receta</a>
+                    @if (esAdmin)
+                    {
+                        <a asp-controller="Costos" asp-action="Costear" asp-route-id="@item.IdReceta"
+                           class="btn btn-outline-primary btn-sm" title="Costear">
+                            <i class="bi bi-currency-dollar"></i>
+                        </a>
+                        <a asp-action="Editar" asp-route-id="@item.IdReceta"
+                           class="btn btn-outline-primary btn-sm" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                data-id="@item.IdReceta" data-nombre="@item.Nombre">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
+                </div>
             </div>
         }
-        else
-        {
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Clasificación</th>
-                        <th class="num">Porciones</th>
-                        <th class="num">Ingredientes</th>
-                        <th class="text-center">Estado</th>
-                        <th class="text-end" style="width: 130px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td>@item.Codigo</td>
-                            <td>
-                                @item.Nombre
-                                @if (!item.Completa)
-                                {
-                                    <i class="bi bi-exclamation-triangle-fill icono-incompleta ms-1"
-                                       title="@item.Advertencia"></i>
-                                }
-                            </td>
-                            <td>@item.Clasificacion</td>
-                            <td class="num">@item.PorcionesBase</td>
-                            <td class="num">@item.CantidadIngredientes</td>
-                            <td class="text-center">
-                                @if (item.Activo)
-                                {
-                                    <span class="badge rounded-pill badge-estado-ok">Activa</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill text-bg-secondary">Inactiva</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <a asp-action="Detalle" asp-route-id="@item.IdReceta"
-                                   class="btn btn-sm btn-outline-primary" title="Ver detalle">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if (esAdmin)
-                                {
-                                    <a asp-controller="Costos" asp-action="Costear" asp-route-id="@item.IdReceta"
-                                       class="btn btn-sm btn-outline-primary" title="Costear">
-                                        <i class="bi bi-currency-dollar"></i>
-                                    </a>
-                                    <a asp-action="Editar" asp-route-id="@item.IdReceta"
-                                       class="btn btn-sm btn-outline-primary" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
-                                            data-bs-toggle="modal" data-bs-target="#modalEliminar"
-                                            data-id="@item.IdReceta" data-nombre="@item.Nombre">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
     </div>
-</div>
+}
 
 @if (esAdmin)
 {
