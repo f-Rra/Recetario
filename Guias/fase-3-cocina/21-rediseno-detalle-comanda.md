@@ -1,6 +1,6 @@
 # Guía 21 — Rediseño: detalle de comanda
 
-> **Estado:** pendiente
+> **Estado:** completada
 
 ## Objetivo
 

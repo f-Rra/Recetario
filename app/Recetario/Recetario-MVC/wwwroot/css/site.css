@@ -773,6 +773,137 @@ td.num + td {
   white-space: nowrap;
 }
 
+/* ---------- Detalle de comanda (guía 21) ---------- */
+
+.dtc-volver {
+  color: var(--sx-azul);
+  font-size: 12.5px;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.dtc-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.07);
+}
+
+.dtc-titulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.dtc-titulo .nombre {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.dtc-titulo .meta {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.dtc-numero {
+  text-align: center;
+  padding: 0 10px;
+}
+
+.dtc-numero b {
+  font-size: 30px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+.dtc-numero span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--sx-gris-suave);
+}
+
+/* Ingredientes a la izquierda; modificaciones y procedimiento a la derecha */
+.dtc-columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 12px;
+  align-items: start;
+  max-width: 980px;
+}
+
+.dtc-tarjeta {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+}
+
+.dtc-tarjeta h4 {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--sx-azul-oscuro);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+/* La misma columna con puntos de guía del ticket (guía 19) */
+.dtc-lista div {
+  display: flex;
+  padding: 3.5px 0;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dtc-lista .pts {
+  flex: 1;
+  border-bottom: 1px dotted #B9C9D4;
+  margin: 0 8px 4px;
+}
+
+.dtc-mod {
+  display: inline-block;
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  border-radius: 999px;
+  font-size: 12px;
+  padding: 3px 12px;
+  margin: 0 6px 6px 0;
+}
+
+.dtc-paso {
+  display: flex;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 13.5px;
+}
+
+.dtc-paso i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 650;
+  font-style: normal;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .dtc-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* La acción que cierra el trabajo: verde para que destaque sobre el azul */
 .btn-generar {
   --bs-btn-bg: #1E8A54;
