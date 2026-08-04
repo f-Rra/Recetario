@@ -643,7 +643,20 @@ public class ComandaService : IComandaService
                 Porciones = c.Porciones,
                 Responsable = c.Persona.Nombre + " " + c.Persona.Apellido,
                 Usuario = c.Usuario.Nombre + " " + c.Usuario.Apellido,
-                CantidadModificaciones = c.Modificaciones.Count
+                CantidadModificaciones = c.Modificaciones.Count,
+                // Con una sola modificación la columna muestra el texto en vez
+                // del conteo, así no hay que abrir el detalle para saber cuál fue
+                PrimeraModificacion = c.Modificaciones
+                    .OrderBy(m => m.IdModificacion)
+                    .Select(m => new ModificacionItem
+                    {
+                        Tipo = m.Tipo,
+                        IngredienteOriginal = m.IngredienteOriginal!.Descripcion,
+                        IngredienteReemplazo = m.IngredienteReemplazo!.Descripcion,
+                        Cantidad = m.Cantidad,
+                        Unidad = m.Unidad.Abreviatura
+                    })
+                    .FirstOrDefault()
             })
             .ToListAsync();
     }

@@ -1,6 +1,6 @@
 # Guía 20 — Rediseño: historial de comandas
 
-> **Estado:** pendiente
+> **Estado:** completada
 
 ## Objetivo
 

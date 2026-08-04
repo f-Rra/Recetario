@@ -7,103 +7,111 @@
     var esHoy = desde == hoy && hasta == hoy;
 }
 
-<div class="d-flex justify-content-between align-items-end mb-3 gap-3 flex-wrap">
-    <form method="get" class="d-flex gap-2 align-items-end">
-        <div>
-            <label for="desde" class="form-label mb-1 small fw-semibold">Desde</label>
-            <input type="date" id="desde" name="desde" value="@desde?.ToString("yyyy-MM-dd")"
-                   class="form-control form-control-sm" style="width: 160px;" />
-        </div>
-        <div>
-            <label for="hasta" class="form-label mb-1 small fw-semibold">Hasta</label>
-            <input type="date" id="hasta" name="hasta" value="@hasta?.ToString("yyyy-MM-dd")"
-                   class="form-control form-control-sm" style="width: 160px;" />
-        </div>
-        <div>
-            <label for="receta" class="form-label mb-1 small fw-semibold">Receta</label>
-            <select id="receta" name="receta" asp-items="ViewBag.Recetas"
-                    class="form-select form-select-sm" style="width: 220px;">
-                <option value="">Todas</option>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary btn-sm">
-            <i class="bi bi-search"></i> Filtrar
-        </button>
+<div class="hst-filtros">
+    <span class="hst-chip">
+        <b>@Model.Count</b> @(Model.Count == 1 ? "comanda" : "comandas")
+    </span>
+
+    <span class="flex-grow-1"></span>
+
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+        <input type="date" name="desde" value="@desde?.ToString("yyyy-MM-dd")"
+               class="form-control form-control-sm hst-filtro" aria-label="Desde" />
+        <input type="date" name="hasta" value="@hasta?.ToString("yyyy-MM-dd")"
+               class="form-control form-control-sm hst-filtro" aria-label="Hasta" />
+        <select name="receta" asp-items="ViewBag.Recetas"
+                class="form-select form-select-sm hst-filtro" style="width: 210px;" aria-label="Receta">
+            <option value="">Todas las recetas</option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Filtrar</button>
         @if (!esHoy)
         {
-            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Hoy</a>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Hoy</a>
         }
     </form>
 
-    <a asp-action="Comandera" class="btn btn-primary">
+    <a asp-action="Comandera" class="btn btn-primary btn-sm rounded-pill px-3">
         <i class="bi bi-plus-lg"></i> Nueva comanda
     </a>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        @if (Model.Count == 0)
-        {
-            <div class="text-center text-muted py-4">
-                <i class="bi bi-receipt" style="font-size: 28px; color: var(--sx-celeste);"></i>
-                <p class="mb-0 mt-2">
-                    @(esHoy
-                        ? "Todavía no hay comandas hoy."
-                        : "No hay comandas con esos filtros.")
-                </p>
-            </div>
-        }
-        else
-        {
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Fecha</th>
-                        <th>Receta</th>
-                        <th>Sector</th>
-                        <th class="num">Comensales</th>
-                        <th>Responsable</th>
-                        <th>Generada por</th>
-                        <th class="text-center">Modificaciones</th>
-                        <th class="text-end" style="width: 110px;"></th>
+@if (Model.Count == 0)
+{
+    <div class="hst-card">
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-receipt" style="font-size: 28px; color: var(--sx-celeste);"></i>
+            <p class="mb-0 mt-2">
+                @(esHoy ? "Todavía no hay comandas hoy." : "No hay comandas con esos filtros.")
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="hst-card">
+        <table class="hst-tabla">
+            <thead>
+                <tr>
+                    <th>RECETA</th>
+                    <th>SECTOR</th>
+                    <th class="num">PORCIONES</th>
+                    <th>RESPONSABLE</th>
+                    <th class="text-center">MODIFICACIONES</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var grupo in Model.GroupBy(c => c.Fecha))
+                {
+                    <tr class="hst-dia">
+                        <td colspan="6">@grupo.Key.ToString("dddd d 'de' MMMM").ToUpperInvariant()</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
+                    @foreach (var item in grupo)
                     {
-                        <tr>
-                            <td class="text-muted">@item.IdComanda</td>
-                            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                            <td class="fw-semibold">@item.Receta</td>
+                        @* La fila entera abre el detalle: no hace falta un botón Ver *@
+                        <tr class="hst-fila" data-href="@Url.Action("Detalle", new { id = item.IdComanda })">
+                            <td class="hst-receta">
+                                <a asp-action="Detalle" asp-route-id="@item.IdComanda">@item.Receta</a>
+                            </td>
                             <td class="text-muted">@item.Clasificacion</td>
                             <td class="num">@item.Porciones</td>
                             <td class="text-muted">@item.Responsable</td>
-                            <td class="text-muted">@item.Usuario</td>
                             <td class="text-center">
-                                @if (item.CantidadModificaciones > 0)
+                                @if (item.CantidadModificaciones == 0)
                                 {
-                                    <span class="badge rounded-pill badge-estado-bajo">@item.CantidadModificaciones</span>
+                                    <span class="text-muted">—</span>
+                                }
+                                else if (item.CantidadModificaciones == 1 && item.PrimeraModificacion is not null)
+                                {
+                                    <span class="hst-mod">@item.PrimeraModificacion.Resumen</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted">—</span>
+                                    <span class="hst-mod">@item.CantidadModificaciones modificaciones</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <a asp-action="Pdf" asp-route-id="@item.IdComanda" target="_blank"
-                                   class="btn btn-sm btn-outline-primary" title="Reimprimir PDF">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                </a>
-                                <a asp-action="Detalle" asp-route-id="@item.IdComanda"
-                                   class="btn btn-sm btn-outline-primary" title="Ver detalle">
-                                    <i class="bi bi-eye"></i>
+                                   class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Reimprimir PDF">
+                                    PDF
                                 </a>
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        }
+                }
+            </tbody>
+        </table>
     </div>
-</div>
+}
+
+@section Scripts {
+    <script>
+        // La fila lleva al detalle, salvo que se toque un enlace o botón
+        document.querySelectorAll(".hst-fila").forEach(fila => {
+            fila.addEventListener("click", evento => {
+                if (evento.target.closest("a, button")) return;
+                window.location = fila.dataset.href;
+            });
+        });
+    </script>
+}
