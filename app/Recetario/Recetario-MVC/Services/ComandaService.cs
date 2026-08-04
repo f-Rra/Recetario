@@ -53,6 +53,7 @@ public class ComandaService : IComandaService
                 Codigo = r.Codigo,
                 Nombre = r.Nombre,
                 Clasificacion = r.Clasificacion.Nombre,
+                IdClasificacion = r.IdClasificacion,
                 PorcionesBase = r.PorcionesBase,
                 CantidadIngredientes = r.Ingredientes.Count,
                 CantidadPasos = r.Procedimientos.Count

@@ -4,6 +4,8 @@
 @{
     ViewData["Title"] = "Comanda de cocina";
 
+    var clasificaciones = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones;
+
     // Ingredientes de cada receta del carrito, para los selects del modal
     var ingredientesJson = JsonSerializer.Serialize(
         Model.IngredientesPorItem.ToDictionary(
@@ -11,259 +13,171 @@
             par => par.Value.Select(i => new { id = i.IdIngrediente, nombre = i.Ingrediente, unidad = i.Unidad })));
 }
 
-<div class="comandera-tablero">
+<div class="cmd-pantalla">
 
-    @* ==================== Arriba: elegir ==================== *@
-    <div class="fila-superior">
-
-        @* ---------- Catálogo ---------- *@
-        <form asp-action="AgregarAlCarrito" method="post" id="formCatalogo"
-              class="panel-comandera" style="width: 58%;">
-            <input type="hidden" name="comensales" id="comensalesCatalogo" value="@Model.Carrito.Comensales" />
-
-            <div class="panel-encabezado">
-                <span>Catálogo de recetas</span>
-                <span class="titulo-secundario">
-                    @Model.Catalogo.Count @(Model.Catalogo.Count == 1 ? "activa" : "activas")
-                </span>
-            </div>
-
-            <div class="p-2 border-bottom d-flex gap-2 flex-shrink-0">
-                <input type="search" name="busqueda" form="formFiltros" value="@Model.Busqueda"
-                       class="form-control form-control-sm" placeholder="Buscar receta o ingrediente…" />
-                <select name="clasificacion" form="formFiltros" class="form-select form-select-sm flex-shrink-0"
-                        style="width: 225px;" onchange="this.form.submit()">
-                    <option value="">Todas las clasificaciones</option>
-                    @foreach (var c in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones)
-                    {
-                        <option value="@c.Value" selected="@c.Selected">@c.Text</option>
-                    }
-                </select>
-                <button type="submit" form="formFiltros" class="btn btn-outline-primary btn-sm flex-shrink-0">
+    @* ==================== Catálogo ==================== *@
+    <div>
+        <div class="cmd-filtros">
+            <form method="get" class="cmd-busca" role="search">
+                <input type="hidden" name="clasificacion" value="@Model.IdClasificacion" />
+                <input type="search" name="busqueda" value="@Model.Busqueda"
+                       class="form-control form-control-sm" placeholder="Buscar…" />
+                <button type="submit" class="btn btn-primary btn-sm cmd-lupa" title="Buscar">
                     <i class="bi bi-search"></i>
                 </button>
-            </div>
-
-            <div class="panel-cuerpo sin-espaciado">
-                @if (Model.Catalogo.Count == 0)
+            </form>
+            <div class="cmd-chips">
+                <a href="@Url.Action("Comandera", new { busqueda = Model.Busqueda })"
+                   class="@(Model.IdClasificacion is null ? "activa" : "")">Todas</a>
+                @foreach (var c in clasificaciones)
                 {
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-journal-text" style="font-size: 26px; color: var(--sx-celeste);"></i>
-                        <p class="mb-0 mt-2 small">No hay recetas activas con esos filtros.</p>
-                    </div>
+                    <a href="@Url.Action("Comandera", new { busqueda = Model.Busqueda, clasificacion = c.Value })"
+                       class="@(c.Selected ? "activa" : "")">@c.Text</a>
                 }
-                else
-                {
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 36px;"></th>
-                                <th>Receta</th>
-                                <th>Clasificación</th>
-                                <th class="num" style="width: 62px;">Base</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var receta in Model.Catalogo)
-                            {
-                                <tr class="fila-receta" data-id="@receta.IdReceta" style="cursor: pointer;">
-                                    <td>
-                                        <input class="form-check-input" type="checkbox" name="seleccion"
-                                               value="@receta.IdReceta" disabled="@receta.EnCarrito"
-                                               title="@(receta.EnCarrito ? "Ya está en la comanda" : "Seleccionar")" />
-                                    </td>
-                                    <td>
-                                        @receta.Nombre
-                                        @if (receta.EnCarrito)
-                                        {
-                                            <i class="bi bi-check-circle-fill ms-1"
-                                               style="color: var(--sx-celeste);" title="En la comanda"></i>
-                                        }
-                                        @if (!receta.Completa)
-                                        {
-                                            <i class="bi bi-exclamation-triangle-fill icono-incompleta ms-1"
-                                               title="@receta.Advertencia"></i>
-                                        }
-                                        @if (receta.IngredienteCoincidente is not null)
-                                        {
-                                            <div class="coincidencia">lleva @receta.IngredienteCoincidente</div>
-                                        }
-                                    </td>
-                                    <td class="text-muted">@receta.Clasificacion</td>
-                                    <td class="num text-muted">@receta.PorcionesBase</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-            </div>
-
-            <div class="panel-pie d-flex justify-content-between align-items-center">
-                <span class="text-muted small">Seleccioná una o varias recetas</span>
-                <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg"></i> <span id="textoBotonAgregar">Agregar receta</span>
-                </button>
-            </div>
-        </form>
-
-        @* ---------- Ingredientes de la receta elegida ---------- *@
-        <div class="panel-comandera flex-grow-1">
-            <div class="panel-encabezado">
-                <span id="tituloIngredientes">Ingredientes</span>
-                <span class="titulo-secundario" id="subtituloIngredientes"></span>
-            </div>
-            <div class="panel-cuerpo">
-                <div id="panelIngredientes">
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-basket2" style="font-size: 24px; color: var(--sx-celeste);"></i>
-                        <p class="mb-0 mt-2 small">Elegí una receta</p>
-                    </div>
-                </div>
             </div>
         </div>
-    </div>
 
-    @* ==================== Abajo: la comanda ==================== *@
-    <div class="fila-inferior">
-        <div class="panel-comandera ajustado">
-            <div class="panel-encabezado principal">
-                <div class="d-flex align-items-center gap-3">
-                    <span>
-                        Comanda
-                        <span class="titulo-secundario">
-                            · @Model.Carrito.Items.Count @(Model.Carrito.Items.Count == 1 ? "receta" : "recetas")
-                        </span>
-                    </span>
-
-                    <span class="separador"></span>
-
-                    <form asp-action="ActualizarComensales" method="post"
-                          class="d-flex align-items-center gap-2" id="formComensales">
-                        <label for="comensales" class="form-label mb-0 small flex-shrink-0">Comensales</label>
-                        <input type="number" min="1" id="comensales" name="comensales" value="@Model.Carrito.Comensales"
-                               class="form-control form-control-sm text-center fw-semibold" style="width: 76px;" />
-                    </form>
-
-                    @* El problema se ve mientras se arma, no al apretar generar *@
-                    @if (Model.Revision.Faltantes.Count > 0)
+        @if (Model.Catalogo.Count == 0)
+        {
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-journal-text" style="font-size: 26px; color: var(--sx-celeste);"></i>
+                <p class="mb-0 mt-2 small">No hay recetas activas con esos filtros.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var receta in Model.Catalogo)
+            {
+                <div class="cmd-card" data-id="@receta.IdReceta">
+                    <div class="cmd-info">
+                        <div class="cmd-nombre">
+                            @receta.Nombre
+                            @if (receta.IngredienteCoincidente is not null)
+                            {
+                                <span class="cmd-lleva">· lleva @receta.IngredienteCoincidente</span>
+                            }
+                        </div>
+                        <div class="cmd-meta">
+                            <span class="cmd-dot d@(receta.IdClasificacion % 4)"></span>@receta.Clasificacion
+                            · @receta.CantidadIngredientes @(receta.CantidadIngredientes == 1 ? "ingrediente" : "ingredientes")
+                            @if (!receta.Completa)
+                            {
+                                <span class="advertencia">· ⚠ @receta.Advertencia.ToLowerInvariant()</span>
+                            }
+                        </div>
+                    </div>
+                    @if (receta.EnCarrito)
                     {
-                        <button type="button" class="aviso-faltantes" data-bs-toggle="modal"
-                                data-bs-target="#modalGenerar" title="Ver el detalle">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            @Model.Revision.Faltantes.Count
-                            @(Model.Revision.Faltantes.Count == 1
-                                ? "ingrediente no alcanza"
-                                : "ingredientes no alcanzan")
-                        </button>
-                    }
-                </div>
-
-                <div class="d-flex align-items-center gap-3">
-                    <a asp-action="Index" class="text-decoration-none small" title="Comandas ya generadas">
-                        <i class="bi bi-clock-history"></i> Historial
-                    </a>
-
-                    @if (Model.Carrito.EstaVacio)
-                    {
-                        <button type="button" class="btn btn-generar btn-sm" disabled
-                                title="Agregá al menos una receta">
-                            <i class="bi bi-file-earmark-pdf"></i> Generar comanda
-                        </button>
+                        <button type="button" class="cmd-agregar ya" disabled title="Ya está en la comanda">✓</button>
                     }
                     else
                     {
-                        @* Descontar el stock no se deshace: confirma primero *@
-                        <button type="button" class="btn btn-generar btn-sm"
-                                data-bs-toggle="modal" data-bs-target="#modalGenerar">
-                            <i class="bi bi-file-earmark-pdf"></i> Generar comanda
-                        </button>
+                        <form asp-action="AgregarAlCarrito" method="post">
+                            <input type="hidden" name="comensales" value="@Model.Carrito.Comensales" />
+                            <input type="hidden" name="seleccion" value="@receta.IdReceta" />
+                            <button type="submit" class="cmd-agregar" title="Agregar a la comanda">+</button>
+                        </form>
                     }
                 </div>
-            </div>
-
-            <div class="panel-cuerpo sin-espaciado">
-                @if (Model.Carrito.EstaVacio)
-                {
-                    <div class="text-center text-muted py-4">
-                        <i class="bi bi-basket" style="font-size: 24px; color: var(--sx-celeste);"></i>
-                        <p class="mb-0 mt-2 small">
-                            La comanda está vacía. Seleccioná recetas del catálogo y agregalas.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Receta</th>
-                                <th>Sector</th>
-                                <th>Responsable</th>
-                                <th>Modificaciones</th>
-                                <th class="text-end" style="width: 110px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.Carrito.Items)
-                            {
-                                <tr>
-                                    <td class="fw-semibold">@item.Nombre</td>
-                                    <td class="text-muted">@item.Clasificacion</td>
-                                    <td class="text-muted">
-                                        @(Model.Responsables.TryGetValue(item.IdReceta, out var resp)
-                                            ? resp
-                                            : "sin responsable")
-                                    </td>
-                                    <td>
-                                        @if (item.Modificaciones.Count == 0)
-                                        {
-                                            <span class="text-muted">—</span>
-                                        }
-                                        else
-                                        {
-                                            @for (var i = 0; i < item.Modificaciones.Count; i++)
-                                            {
-                                                <span class="chip-modificacion">
-                                                    @item.Modificaciones[i].Descripcion
-                                                    <form asp-action="QuitarModificacion" method="post" class="d-inline">
-                                                        <input type="hidden" name="idReceta" value="@item.IdReceta" />
-                                                        <input type="hidden" name="indice" value="@i" />
-                                                        <button type="submit" title="Quitar modificación">
-                                                            <i class="bi bi-x-circle-fill"></i>
-                                                        </button>
-                                                    </form>
-                                                </span>
-                                            }
-                                        }
-                                    </td>
-                                    <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-primary btn-modificar"
-                                                data-bs-toggle="modal" data-bs-target="#modalModificar"
-                                                data-id="@item.IdReceta" data-nombre="@item.Nombre"
-                                                title="Modificar ingredientes">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <form asp-action="QuitarDelCarrito" method="post" class="d-inline">
-                                            <input type="hidden" name="idReceta" value="@item.IdReceta" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    title="Quitar de la comanda">
-                                                <i class="bi bi-x-lg"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-            </div>
-
-        </div>
+            }
+        }
     </div>
-</div>
 
-@* Formulario de filtros: vive fuera del form de agregar para no anidarlos *@
-<form method="get" id="formFiltros"></form>
+    @* ==================== El ticket ==================== *@
+    <aside class="cmd-ticket">
+        <h2>COMANDA</h2>
+        <div class="cmd-fecha">@DateTime.Now.ToString("dddd d 'de' MMMM · HH:mm")</div>
+        <hr class="cmd-guiones">
+
+        @if (Model.Carrito.EstaVacio)
+        {
+            <p class="cmd-vacia">Todavía no hay recetas: agregalas del catálogo con el +.</p>
+        }
+        else
+        {
+            @foreach (var item in Model.Carrito.Items)
+            {
+                <div class="cmd-item">
+                    <div class="cmd-item-nombre">@item.Nombre</div>
+                    <div class="cmd-item-linea">
+                        <span>
+                            @item.Clasificacion ·
+                            @(Model.Responsables.TryGetValue(item.IdReceta, out var resp) ? resp : "sin responsable")
+                        </span>
+                        <span class="cmd-item-acciones">
+                            <button type="button" class="btn-modificar" title="Modificar ingredientes"
+                                    data-bs-toggle="modal" data-bs-target="#modalModificar"
+                                    data-id="@item.IdReceta" data-nombre="@item.Nombre">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form asp-action="QuitarDelCarrito" method="post" class="d-inline">
+                                <input type="hidden" name="idReceta" value="@item.IdReceta" />
+                                <button type="submit" title="Quitar de la comanda"><i class="bi bi-x-lg"></i></button>
+                            </form>
+                        </span>
+                    </div>
+                    @for (var i = 0; i < item.Modificaciones.Count; i++)
+                    {
+                        <span class="cmd-mod">
+                            @item.Modificaciones[i].Descripcion
+                            <form asp-action="QuitarModificacion" method="post" class="d-inline">
+                                <input type="hidden" name="idReceta" value="@item.IdReceta" />
+                                <input type="hidden" name="indice" value="@i" />
+                                <button type="submit" title="Quitar modificación"><i class="bi bi-x-circle-fill"></i></button>
+                            </form>
+                        </span>
+                    }
+                </div>
+            }
+        }
+
+        <hr class="cmd-guiones">
+
+        <form asp-action="ActualizarComensales" method="post" id="formComensales" class="cmd-comensales">
+            <span class="etiqueta">Comensales</span>
+            <span class="cmd-stepper">
+                <button type="button" data-paso="-1" aria-label="Menos comensales">−</button>
+                <input type="number" min="1" id="comensales" name="comensales" value="@Model.Carrito.Comensales" />
+                <button type="button" data-paso="1" aria-label="Más comensales">+</button>
+            </span>
+        </form>
+
+        @if (Model.Revision.Faltantes.Count > 0)
+        {
+            <hr class="cmd-guiones">
+            @foreach (var faltante in Model.Revision.Faltantes)
+            {
+                <div class="cmd-falta">
+                    <span>⚠ Falta @faltante.Ingrediente</span>
+                    <span>@faltante.NecesarioTexto <small>(hay @faltante.DisponibleTexto)</small></span>
+                </div>
+            }
+        }
+
+        <hr class="cmd-guiones">
+
+        @if (Model.Carrito.EstaVacio)
+        {
+            <button type="button" class="btn btn-generar w-100" disabled title="Agregá al menos una receta">
+                <i class="bi bi-file-earmark-pdf"></i> Generar comanda
+            </button>
+        }
+        else
+        {
+            @* Descontar el stock no se deshace: confirma primero *@
+            <button type="button" class="btn btn-generar w-100"
+                    data-bs-toggle="modal" data-bs-target="#modalGenerar">
+                <i class="bi bi-file-earmark-pdf"></i> Generar comanda
+            </button>
+        }
+
+        <div class="cmd-historial">
+            <a asp-action="Index" class="text-decoration-none">
+                <i class="bi bi-clock-history"></i> Historial de comandas
+            </a>
+        </div>
+    </aside>
+</div>
 
 @* ============ Modal de confirmación ============ *@
 @if (!Model.Carrito.EstaVacio)
@@ -446,67 +360,46 @@
             return familiaDeUnidad[x] !== undefined && familiaDeUnidad[x] === familiaDeUnidad[y];
         }
 
-        // ---- Previsualización de ingredientes al elegir una receta ----
-        document.querySelectorAll(".fila-receta").forEach(fila => {
-            fila.addEventListener("click", evento => {
-                if (evento.target.type === "checkbox") return;
-                seleccionarReceta(fila);
+        // ---- Tocar una tarjeta despliega sus ingredientes ----
+        document.querySelectorAll(".cmd-card").forEach(card => {
+            card.addEventListener("click", evento => {
+                if (evento.target.closest("form, button, .cmd-ing")) return;
+                alternarIngredientes(card);
             });
         });
 
-        // ---- El botón de agregar acompaña a lo seleccionado ----
-        const casillas = document.querySelectorAll('input[name="seleccion"]');
-        casillas.forEach(casilla => casilla.addEventListener("change", actualizarBotonAgregar));
+        async function alternarIngredientes(card) {
+            const estabaAbierta = card.classList.contains("abierta");
+            document.querySelectorAll(".cmd-card.abierta").forEach(otra => {
+                otra.classList.remove("abierta");
+                otra.querySelector(".cmd-ing")?.remove();
+            });
+            if (estabaAbierta) return;
 
-        function actualizarBotonAgregar() {
-            const marcadas = [...casillas].filter(c => c.checked).length;
-            document.getElementById("textoBotonAgregar").textContent =
-                marcadas > 1 ? "Agregar recetas" : "Agregar receta";
-        }
+            card.classList.add("abierta");
+            const panel = document.createElement("div");
+            panel.className = "cmd-ing";
+            panel.innerHTML = '<span class="text-muted">Cargando…</span>';
+            card.appendChild(panel);
 
-        async function seleccionarReceta(fila) {
-            document.querySelectorAll(".fila-receta").forEach(f => f.classList.remove("seleccionada"));
-            fila.classList.add("seleccionada");
-
-            const panel = document.getElementById("panelIngredientes");
-            panel.innerHTML = '<p class="text-muted small mb-0">Cargando…</p>';
-
-            const respuesta = await fetch(`@Url.Action("IngredientesReceta")?id=${fila.dataset.id}&comensales=${comensalesActuales}`);
+            const respuesta = await fetch(`@Url.Action("IngredientesReceta")?id=${card.dataset.id}&comensales=${comensalesActuales}`);
             if (!respuesta.ok) {
-                panel.innerHTML = '<p class="text-danger small mb-0">No se pudieron cargar los ingredientes.</p>';
+                panel.innerHTML = '<span class="text-danger">No se pudieron cargar los ingredientes.</span>';
                 return;
             }
 
             const datos = await respuesta.json();
-            document.getElementById("tituloIngredientes").textContent = datos.receta;
-            document.getElementById("subtituloIngredientes").textContent =
-                `${datos.comensales} ${datos.comensales === 1 ? "comensal" : "comensales"}`;
-
             if (datos.ingredientes.length === 0) {
-                panel.innerHTML = '<p class="text-muted small mb-0">La receta no tiene ingredientes cargados.</p>';
+                panel.innerHTML = '<span class="text-muted">La receta no tiene ingredientes cargados.</span>';
                 return;
             }
 
-            panel.innerHTML = `
-                <table class="table table-sm align-middle mb-0">
-                    <tbody>
-                        ${datos.ingredientes.map(i => `
-                            <tr>
-                                <td>${i.ingrediente}${badgeStock(i)}</td>
-                                <td class="num text-nowrap">${i.cantidadTexto}</td>
-                            </tr>`).join("")}
-                    </tbody>
-                </table>`;
-        }
-
-        function badgeStock(ingrediente) {
-            if (!ingrediente.alcanza)
-                return ' <span class="badge rounded-pill badge-estado-critico">No alcanza</span>';
-            if (ingrediente.estado === "Crítico")
-                return ' <span class="badge rounded-pill badge-estado-critico">Crítico</span>';
-            if (ingrediente.estado === "Bajo")
-                return ' <span class="badge rounded-pill badge-estado-bajo">Bajo</span>';
-            return "";
+            panel.innerHTML = datos.ingredientes.map(i => `
+                <div class="fila${i.alcanza ? "" : " falta"}">
+                    <span>${i.ingrediente}${i.alcanza ? "" : " ⚠"}</span>
+                    <span class="pts"></span>
+                    <span>${i.cantidadTexto}</span>
+                </div>`).join("");
         }
 
         // ---- Modal de modificación ----
@@ -571,12 +464,16 @@
             document.getElementById(id).classList.toggle("d-none", !visible);
         }
 
-        // ---- Comensales: se aplican solos, sin botón ----
+        // ---- Comensales: el contador aplica solo, sin botón ----
         const campoComensales = document.getElementById("comensales");
+        const formComensales = document.getElementById("formComensales");
 
-        campoComensales.addEventListener("input", evento => {
-            // El catálogo viaja con el mismo valor al agregar recetas
-            document.getElementById("comensalesCatalogo").value = evento.target.value;
+        document.querySelectorAll(".cmd-stepper button").forEach(boton => {
+            boton.addEventListener("click", () => {
+                const actual = parseInt(campoComensales.value, 10) || comensalesActuales;
+                campoComensales.value = Math.max(1, actual + parseInt(boton.dataset.paso, 10));
+                formComensales.submit();
+            });
         });
 
         // "change" salta al salir del campo o al apretar Enter: no recarga
@@ -586,13 +483,12 @@
 
             if (Number.isInteger(valor) && valor > 0) {
                 if (valor !== comensalesActuales)
-                    document.getElementById("formComensales").submit();
+                    formComensales.submit();
                 return;
             }
 
             // Valor vacío o inválido: se vuelve al anterior sin molestar
             campoComensales.value = comensalesActuales;
-            document.getElementById("comensalesCatalogo").value = comensalesActuales;
         });
 
         @if (ViewBag.HayPdfPendiente == true)

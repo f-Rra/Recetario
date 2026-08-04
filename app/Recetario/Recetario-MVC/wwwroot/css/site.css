@@ -326,107 +326,362 @@ td.num + td {
   color: var(--sx-rojo);
 }
 
-/* ---------- Comandera de cocina (guía 15) ---------- */
+/* ---------- Comandera: catálogo y ticket (guía 19) ---------- */
 
-/* Tablero: arriba se elige (catálogo + ingredientes), abajo la comanda
-   ocupa todo el ancho. Cada panel tiene su propio scroll, así la vista
-   queda estable al filtrar o agregar recetas. */
-.comandera-tablero {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  height: calc(100vh - 150px);
-  min-height: 580px;
+/* minmax(0, …): sin el piso de min-content, así las píldoras scrollean
+   adentro de su fila en lugar de empujar el ticket fuera de la pantalla */
+.cmd-pantalla {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 20px;
+  align-items: start;
 }
 
-/* El tablero toma exactamente el alto libre, así una alerta arriba no
-   empuja la pantalla y genera scroll. Si el navegador no soporta :has,
-   queda el alto calculado de arriba, que también funciona. */
-.contenido:has(> .comandera-tablero) {
-  display: flex;
-  flex-direction: column;
-}
-
-.contenido:has(> .comandera-tablero) .comandera-tablero {
-  flex: 1;
-  height: auto;
-  min-height: 460px;
-}
-
-/* El catálogo se queda con todo el espacio disponible; la comanda ocupa
-   solo lo que necesita (rara vez más de 3 recetas) y scrollea si crece */
-.comandera-tablero .fila-superior {
-  display: flex;
-  gap: 14px;
-  flex: 1 1 auto;
-  min-height: 280px;
-}
-
-.comandera-tablero .fila-inferior {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-
-.panel-comandera {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
-  overflow: hidden;
-}
-
-.panel-comandera.ajustado {
-  height: auto;
-  max-height: 330px;
-}
-
-.panel-comandera .panel-encabezado {
-  background: var(--sx-celeste-claro);
-  color: var(--sx-azul-oscuro);
-  font-weight: 650;
-  font-size: 13px;
-  padding: 10px 14px;
+/* Buscador y clasificaciones en una misma fila, siempre: si las píldoras
+   no entran, scrollean de costado en vez de bajar de línea */
+.cmd-filtros {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin-bottom: 14px;
+}
+
+.cmd-busca {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 240px;
+}
+
+.cmd-busca input {
+  border-radius: 999px;
+  padding-left: 16px;
+}
+
+.cmd-lupa {
+  border-radius: 999px;
+}
+
+.cmd-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-width: 0;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.cmd-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.cmd-chips a {
   flex-shrink: 0;
 }
 
-.panel-comandera .panel-encabezado .titulo-secundario {
-  font-weight: 400;
+.cmd-chips a {
+  background: #fff;
+  border: 1px solid #D8E2EA;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12.5px;
   color: var(--sx-gris-suave);
+  text-decoration: none;
 }
 
-/* La comanda es lo principal de la pantalla: encabezado en azul pleno */
-.panel-comandera .panel-encabezado.principal {
+.cmd-chips a:hover {
+  border-color: var(--sx-azul);
+  color: var(--sx-azul);
+}
+
+.cmd-chips a.activa {
   background: var(--sx-azul-oscuro);
+  border-color: var(--sx-azul-oscuro);
   color: #fff;
+}
+
+/* Tarjetas del catálogo: tocarlas despliega los ingredientes */
+.cmd-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(16, 60, 90, 0.06);
+  flex-wrap: wrap;
+  cursor: pointer;
+}
+
+.cmd-card.abierta {
+  border-color: var(--sx-celeste);
+}
+
+.cmd-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cmd-nombre {
+  font-weight: 600;
+  color: var(--sx-azul);
+}
+
+.cmd-lleva {
+  font-weight: 400;
+  font-size: 11.5px;
+}
+
+.cmd-meta {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+}
+
+.cmd-meta .advertencia {
+  color: var(--sx-ambar);
+}
+
+.cmd-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: var(--sx-azul);
+}
+
+.cmd-dot.d1 { background: var(--sx-celeste); }
+.cmd-dot.d2 { background: var(--sx-azul-oscuro); }
+.cmd-dot.d3 { background: #5093BD; }
+
+.cmd-agregar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sx-azul);
+  color: var(--sx-azul);
+  background: #fff;
+  font-size: 19px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cmd-agregar:hover:not(:disabled) {
+  background: var(--sx-celeste-claro);
+}
+
+.cmd-agregar.ya {
+  background: var(--sx-azul);
+  color: #fff;
+  font-size: 15px;
+}
+
+/* Ingredientes de la tarjeta abierta: una columna con puntos de guía */
+.cmd-ing {
+  flex-basis: 100%;
+  border-top: 1px solid #EDF1F4;
+  margin-top: 4px;
+  padding-top: 8px;
+  font-size: 12.5px;
+  cursor: default;
+}
+
+.cmd-ing .fila {
+  display: flex;
+  padding: 2.5px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmd-ing .pts {
+  flex: 1;
+  border-bottom: 1px dotted #C9D6DE;
+  margin: 0 8px 4px;
+}
+
+.cmd-ing .falta {
+  color: var(--sx-rojo);
+}
+
+/* El ticket: la comanda que se está armando */
+.cmd-ticket {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 10px rgba(16, 60, 90, 0.08);
+  position: sticky;
+  top: 20px;
+}
+
+.cmd-ticket h2 {
+  text-align: center;
   font-size: 14px;
-  padding: 10px 16px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: var(--sx-azul-oscuro);
+  margin: 0;
 }
 
-.panel-comandera .panel-encabezado.principal .titulo-secundario,
-.panel-comandera .panel-encabezado.principal label {
-  color: rgba(255, 255, 255, 0.75);
+.cmd-fecha {
+  text-align: center;
+  color: var(--sx-gris-suave);
+  font-size: 11.5px;
+  margin-top: 2px;
 }
 
-.panel-comandera .panel-encabezado.principal a {
-  color: rgba(255, 255, 255, 0.85);
+.cmd-guiones {
+  border: 0;
+  border-top: 1.5px dashed #B9C9D4;
+  opacity: 1;
+  margin: 12px 0;
 }
 
-.panel-comandera .panel-encabezado.principal a:hover {
-  color: #fff;
+.cmd-vacia {
+  color: var(--sx-gris-suave);
+  font-size: 13px;
+  text-align: center;
+  margin: 4px 0;
 }
 
-/* Separador entre el título de la comanda y los comensales */
-.panel-encabezado.principal .separador {
-  width: 1px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.28);
+.cmd-item {
+  margin-bottom: 10px;
+}
+
+.cmd-item-nombre {
+  font-weight: 650;
+  color: var(--sx-azul);
+}
+
+.cmd-item-linea {
+  color: var(--sx-gris-suave);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cmd-item-acciones {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.cmd-item-acciones button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--sx-azul);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.cmd-item-acciones button:hover {
+  color: var(--sx-azul-oscuro);
+}
+
+/* Modificación pendiente dentro del ticket */
+.cmd-mod {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  font-size: 11.5px;
+  border-radius: 6px;
+  padding: 2px 9px;
+  margin: 4px 4px 0 0;
+}
+
+.cmd-mod button {
+  background: none;
+  border: 0;
+  padding: 0;
+  line-height: 1;
+  color: var(--sx-azul-oscuro);
+  opacity: 0.55;
+}
+
+.cmd-mod button:hover {
+  opacity: 1;
+  color: var(--sx-rojo);
+}
+
+.cmd-comensales {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cmd-comensales .etiqueta {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cmd-stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #D8E2EA;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cmd-stepper button {
+  width: 34px;
+  height: 32px;
+  border: 0;
+  background: var(--sx-gris-fondo);
+  font-size: 16px;
+  color: var(--sx-azul-oscuro);
+}
+
+.cmd-stepper input {
+  width: 56px;
+  text-align: center;
+  border: 0;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.cmd-stepper input::-webkit-outer-spin-button,
+.cmd-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Los faltantes viven en el ticket, en rojo sin negrita */
+.cmd-falta {
+  color: var(--sx-rojo);
+  font-size: 12.5px;
+  padding: 2.5px 0;
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmd-falta small {
+  color: #B44A50;
+}
+
+.cmd-historial {
+  text-align: center;
+  font-size: 12.5px;
+  margin-top: 12px;
+}
+
+/* En pantallas angostas el ticket baja debajo del catálogo */
+@media (max-width: 991px) {
+  .cmd-pantalla {
+    grid-template-columns: 1fr;
+  }
+
+  .cmd-ticket {
+    position: static;
+  }
 }
 
 /* La acción que cierra el trabajo: verde para que destaque sobre el azul */
@@ -447,84 +702,12 @@ td.num + td {
   font-weight: 600;
 }
 
-.panel-comandera .panel-cuerpo {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px;
-}
-
-.panel-comandera .panel-cuerpo.sin-espaciado {
-  padding: 0;
-}
-
-.panel-comandera .panel-pie {
-  border-top: 1px solid #EDF1F4;
-  padding: 10px 14px;
-  flex-shrink: 0;
-}
-
-/* Encabezado de tabla fijo mientras se scrollea el catálogo */
-.panel-comandera table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-/* Aire entre el borde de la fila y la casilla de selección */
-.panel-comandera table th:first-child,
-.panel-comandera table td:first-child {
-  padding-left: 14px;
-}
-
-.fila-receta.seleccionada > * {
-  background-color: var(--sx-celeste-claro) !important;
-}
-
-/* La barra de selección va solo en el borde izquierdo de la fila,
-   no repetida en cada celda */
-.fila-receta.seleccionada > td:first-child {
-  box-shadow: inset 3px 0 0 var(--sx-azul);
-}
-
 /* ---------- Avisos previos a generar (guía 18) ---------- */
-
-/* Sobre el azul del encabezado, el faltante tiene que leerse como problema
-   sin gritar: rojo apagado, del mismo tamaño que el resto de la barra */
-.aviso-faltantes {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(224, 24, 32, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
-  border-radius: 20px;
-  padding: 3px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.aviso-faltantes:hover {
-  background: rgba(224, 24, 32, 0.32);
-}
 
 /* Receta a la que le falta contenido: avisa, no bloquea */
 .icono-incompleta {
   color: var(--sx-ambar);
   font-size: 12px;
-}
-
-/* Por qué apareció una receta al buscar por ingrediente */
-.coincidencia {
-  font-size: 11.5px;
-  color: var(--sx-gris-suave);
-  margin-top: 1px;
-}
-
-.coincidencia::before {
-  content: "\f52a"; /* bi-search */
-  font-family: bootstrap-icons;
-  font-size: 9px;
-  margin-right: 4px;
 }
 
 /* Resumen de lo que se va a generar */
@@ -575,33 +758,6 @@ td.num + td {
   padding: 10px 14px;
   margin-bottom: 12px;
   font-size: 13px;
-}
-
-/* Modificación dentro de la fila de comanda */
-.chip-modificacion {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--sx-celeste-claro);
-  color: var(--sx-azul-oscuro);
-  border-radius: 20px;
-  padding: 2px 6px 2px 10px;
-  font-size: 12px;
-  margin: 2px 4px 2px 0;
-}
-
-.chip-modificacion button {
-  background: none;
-  border: none;
-  padding: 0;
-  line-height: 1;
-  color: var(--sx-azul-oscuro);
-  opacity: 0.55;
-}
-
-.chip-modificacion button:hover {
-  opacity: 1;
-  color: var(--sx-rojo);
 }
 
 /* Cards de métricas para dashboards (guía 06) */

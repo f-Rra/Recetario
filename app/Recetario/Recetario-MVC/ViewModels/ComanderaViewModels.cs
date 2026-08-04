@@ -76,6 +76,10 @@ public class RecetaCatalogoItem
     public string Codigo { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
     public string Clasificacion { get; set; } = string.Empty;
+
+    /// <summary>Para el punto de color por sector en el catálogo.</summary>
+    public int IdClasificacion { get; set; }
+
     public int PorcionesBase { get; set; }
     public bool EnCarrito { get; set; }
 
