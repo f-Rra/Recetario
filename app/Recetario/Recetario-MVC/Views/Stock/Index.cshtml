@@ -6,125 +6,100 @@
     ViewData["Title"] = "Stock";
     // Cocina consulta el stock; registrar movimientos es de Admin
     var puedeMover = User.IsInRole(DbSeeder.RolAdmin);
+    var busqueda = (string?)ViewData["Busqueda"];
+    var estado = (string?)ViewData["Estado"];
 
-    var porDeposito = new[] { Deposito.Bodega, Deposito.Camara }
-        .Select(d => new
-        {
-            Deposito = d,
-            Items = Model.Where(i => i.Deposito == d).ToList()
-        })
-        .ToList();
+    var depositos = new[] { Deposito.Bodega, Deposito.Camara };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <form method="get" class="d-flex gap-2" role="search">
-        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control filtro-busqueda"
-               placeholder="Buscar ingrediente…" />
-        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+<div class="filtros-cocina">
+    <form method="get" class="busca-cocina" role="search">
+        <input type="hidden" name="estado" value="@estado" />
+        <input type="search" name="busqueda" value="@busqueda"
+               class="form-control form-control-sm" placeholder="Buscar…" />
+        <button type="submit" class="btn btn-primary btn-sm lupa-cocina" title="Buscar">
+            <i class="bi bi-search"></i>
+        </button>
     </form>
-    <div class="d-flex gap-2">
+
+    @* Lo urgente primero: filtra los dos depósitos a la vez *@
+    <div class="chips-cocina">
+        <a href="@Url.Action("Index", new { busqueda })"
+           class="@(estado is null ? "activa" : "")">Todos</a>
+        <a href="@Url.Action("Index", new { busqueda, estado = StockEstado.Bajo })"
+           class="@(estado == StockEstado.Bajo ? "activa" : "")">Bajos</a>
+        <a href="@Url.Action("Index", new { busqueda, estado = StockEstado.Critico })"
+           class="@(estado == StockEstado.Critico ? "activa" : "")">Críticos</a>
+    </div>
+
+    <div class="d-flex gap-2 ms-auto flex-shrink-0">
         @if (puedeMover)
         {
-            <a asp-action="Inventario" class="btn btn-outline-primary">
+            <a asp-action="Inventario" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                 <i class="bi bi-clipboard-check"></i> Hacer inventario
             </a>
         }
-        <a asp-action="Historial" class="btn btn-outline-primary">
-            <i class="bi bi-clock-history"></i> Historial de movimientos
+        <a asp-action="Historial" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-clock-history"></i> Movimientos
         </a>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        @* Una pestaña por depósito: bodega lo seco, cámara lo refrigerado *@
-        <ul class="nav nav-tabs mb-3" role="tablist">
-            @foreach (var grupo in porDeposito)
-            {
-                var id = grupo.Deposito.ToString().ToLower();
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link @(grupo.Deposito == Deposito.Bodega ? "active" : "")"
-                            data-bs-toggle="tab" data-bs-target="#panel-@id" type="button" role="tab">
-                        @NombreDeposito.De(grupo.Deposito)
-                        <span class="badge rounded-pill text-bg-light ms-1">@grupo.Items.Count</span>
-                    </button>
-                </li>
-            }
-        </ul>
+@* Los dos depósitos a la vista: no hay que cambiar de pestaña para comparar *@
+<div class="stk-depositos">
+    @foreach (var deposito in depositos)
+    {
+        var items = Model.Where(i => i.Deposito == deposito).ToList();
 
-        <div class="tab-content">
-            @foreach (var grupo in porDeposito)
-            {
-                var id = grupo.Deposito.ToString().ToLower();
-                <div class="tab-pane fade @(grupo.Deposito == Deposito.Bodega ? "show active" : "")"
-                     id="panel-@id" role="tabpanel">
+        <div class="stk-columna">
+            <h2>
+                @NombreDeposito.De(deposito).ToUpperInvariant()
+                <span>@items.Count @(items.Count == 1 ? "ingrediente" : "ingredientes")</span>
+            </h2>
 
-                    @if (grupo.Items.Count == 0)
-                    {
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-box-seam" style="font-size: 26px; color: var(--sx-celeste);"></i>
-                            <p class="mb-0 mt-2">
-                                @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"])
-                                    ? $"No hay ingredientes en {NombreDeposito.De(grupo.Deposito).ToLower()}."
-                                    : "Ninguno coincide con la búsqueda.")
-                            </p>
-                        </div>
-                    }
-                    else
-                    {
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Ingrediente</th>
-                                    <th class="num">Stock actual</th>
-                                    <th class="num">Stock mínimo</th>
-                                    <th class="text-center">Estado</th>
-                                    <th class="text-end" style="width: 150px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in grupo.Items)
-                                {
-                                    <tr>
-                                        <td>@item.Codigo</td>
-                                        <td>@item.Descripcion</td>
-                                        <td class="num">@FormatoCantidad.Formatear(item.StockActual, item.Unidad)</td>
-                                        <td class="num">@FormatoCantidad.Formatear(item.StockMinimo, item.Unidad)</td>
-                                        <td class="text-center">
-                                            @if (item.Estado == StockEstado.Critico)
-                                            {
-                                                <span class="badge rounded-pill badge-estado-critico">@item.Estado</span>
-                                            }
-                                            else if (item.Estado == StockEstado.Bajo)
-                                            {
-                                                <span class="badge rounded-pill badge-estado-bajo">@item.Estado</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge rounded-pill badge-estado-ok">@item.Estado</span>
-                                            }
-                                        </td>
-                                        <td class="text-end">
-                                            @if (puedeMover)
-                                            {
-                                                <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        data-bs-toggle="modal" data-bs-target="#modalMovimiento"
-                                                        data-id="@item.IdIngrediente" data-nombre="@item.Descripcion"
-                                                        data-unidad="@item.Unidad">
-                                                    <i class="bi bi-arrow-left-right"></i> Movimiento
-                                                </button>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
+            @if (items.Count == 0)
+            {
+                <div class="stk-vacio">
+                    @(string.IsNullOrWhiteSpace(busqueda) && estado is null
+                        ? $"No hay ingredientes en {NombreDeposito.De(deposito).ToLower()}."
+                        : "Ninguno coincide con los filtros.")
                 </div>
             }
+            else
+            {
+                @foreach (var item in items)
+                {
+                    <div class="stk-fila">
+                        <span class="nombre">@item.Descripcion</span>
+
+                        @* Solo se marca lo que necesita atención *@
+                        @if (item.Estado == StockEstado.Critico)
+                        {
+                            <span class="badge rounded-pill badge-estado-critico">Crítico</span>
+                        }
+                        else if (item.Estado == StockEstado.Bajo)
+                        {
+                            <span class="badge rounded-pill badge-estado-bajo">Bajo</span>
+                        }
+
+                        <span class="cantidad" title="Mínimo @FormatoCantidad.Formatear(item.StockMinimo, item.Unidad)">
+                            @FormatoCantidad.Formatear(item.StockActual, item.Unidad)
+                        </span>
+
+                        @if (puedeMover)
+                        {
+                            <button type="button" class="stk-mover"
+                                    data-bs-toggle="modal" data-bs-target="#modalMovimiento"
+                                    data-id="@item.IdIngrediente" data-nombre="@item.Descripcion"
+                                    data-unidad="@item.Unidad" title="Registrar movimiento">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            }
         </div>
-    </div>
+    }
 </div>
 
 @if (puedeMover)

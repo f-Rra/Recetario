@@ -989,6 +989,87 @@ td.num + td {
   }
 }
 
+/* ---------- Stock: los dos depósitos a la vista (guía 23) ---------- */
+
+.stk-depositos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.stk-columna h2 {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--sx-azul-oscuro);
+  font-weight: 700;
+  margin: 0 0 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.stk-columna h2 span {
+  color: var(--sx-gris-suave);
+  font-weight: 400;
+  letter-spacing: 0;
+  font-size: 12px;
+}
+
+.stk-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 9px 14px;
+  margin-bottom: 7px;
+  font-size: 13px;
+  box-shadow: 0 1px 2px rgba(16, 60, 90, 0.05);
+}
+
+.stk-fila .nombre {
+  font-weight: 600;
+}
+
+/* La cantidad empuja hacia la derecha: quedan todas alineadas entre sí,
+   tenga o no etiqueta el ingrediente */
+.stk-fila .cantidad {
+  margin-left: auto;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.stk-mover {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--sx-azul);
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.stk-mover:hover {
+  color: var(--sx-azul-oscuro);
+}
+
+.stk-vacio {
+  color: var(--sx-gris-suave);
+  font-size: 13px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 18px 14px;
+  text-align: center;
+}
+
+@media (max-width: 991px) {
+  .stk-depositos {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* La acción que cierra el trabajo: verde para que destaque sobre el azul */
 .btn-generar {
   --bs-btn-bg: #1E8A54;

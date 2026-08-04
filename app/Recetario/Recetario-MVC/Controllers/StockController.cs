@@ -27,10 +27,19 @@ public class StockController : Controller
         _userManager = userManager;
     }
 
-    public async Task<IActionResult> Index(string? busqueda)
+    public async Task<IActionResult> Index(string? busqueda, string? estado)
     {
         ViewData["Busqueda"] = busqueda;
-        return View(await _ingredientes.ListarAsync(busqueda));
+        ViewData["Estado"] = estado;
+
+        var ingredientes = await _ingredientes.ListarAsync(busqueda);
+
+        // El filtro por estado aplica a los dos depósitos a la vez: lo que
+        // interesa es qué hay que reponer, no dónde está guardado
+        if (!string.IsNullOrWhiteSpace(estado))
+            ingredientes = ingredientes.Where(i => i.Estado == estado).ToList();
+
+        return View(ingredientes);
     }
 
     [HttpPost]

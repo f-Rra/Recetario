@@ -1,6 +1,6 @@
 # Guía 23 — Rediseño: stock de ingredientes
 
-> **Estado:** pendiente
+> **Estado:** completada
 
 ## Objetivo
 
