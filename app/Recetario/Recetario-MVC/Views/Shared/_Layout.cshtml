@@ -112,12 +112,17 @@
         </aside>
 
         <div class="main-area">
-            <header class="topbar">
-                <h1>@ViewData["Title"]</h1>
-            </header>
-
             <main role="main" class="contenido">
                 <partial name="_Alertas" />
+
+                @* Ya no hay barra de título: el menú dice dónde estás y cada
+                   pantalla se presenta sola. Las que todavía necesitan un
+                   encabezado lo reciben acá, sobre el fondo, sin barra *@
+                @if (ViewData["SinTitulo"] is null)
+                {
+                    <h1 class="titulo-pantalla">@ViewData["Title"]</h1>
+                }
+
                 @RenderBody()
             </main>
         </div>

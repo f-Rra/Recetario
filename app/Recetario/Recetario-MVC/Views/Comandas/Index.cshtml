@@ -1,6 +1,7 @@
 @model List<ComandaListaItem>
 @{
     ViewData["Title"] = "Comandas";
+    ViewData["SinTitulo"] = true; // el chip con el total y los días alcanzan
     var desde = (DateOnly?)ViewData["Desde"];
     var hasta = (DateOnly?)ViewData["Hasta"];
     var hoy = DateOnly.FromDateTime(DateTime.Today);

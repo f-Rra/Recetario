@@ -4,6 +4,7 @@
 @using RecetarioMVC.Models
 @{
     ViewData["Title"] = "Stock";
+    ViewData["SinTitulo"] = true; // los títulos de bodega y cámara ubican solos
     // Cocina consulta el stock; registrar movimientos es de Admin
     var puedeMover = User.IsInRole(DbSeeder.RolAdmin);
     var busqueda = (string?)ViewData["Busqueda"];

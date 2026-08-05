@@ -145,7 +145,7 @@ html, body {
   color: #fff;
 }
 
-/* ---------- Main: topbar + contenido ---------- */
+/* ---------- Main: contenido ---------- */
 
 .main-area {
   flex: 1;
@@ -154,40 +154,17 @@ html, body {
   min-width: 0;
 }
 
-.topbar {
-  background: #fff;
-  padding: 14px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  border-bottom: 1px solid #E4EAEE;
-}
-
-.topbar .usuario-info {
-  text-align: right;
-}
-
-.topbar h1 {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 650;
-  color: var(--sx-gris-texto);
-}
-
-.topbar .usuario-info {
-  font-size: 13px;
-  color: var(--sx-gris-suave);
-}
-
-.topbar .usuario-info b {
-  color: var(--sx-gris-texto);
-  font-weight: 600;
-}
-
 .contenido {
   padding: 24px 28px;
   flex: 1;
+}
+
+/* Sin barra de título: el encabezado, cuando hace falta, va sobre el fondo */
+.titulo-pantalla {
+  margin: 0 0 18px;
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--sx-gris-texto);
 }
 
 /* ============ Componentes (Guía 01) ============ */
@@ -456,15 +433,19 @@ td.num + td {
 .cmd-dot.d2 { background: var(--sx-azul-oscuro); }
 .cmd-dot.d3 { background: #5093BD; }
 
+/* El glifo va centrado por la grilla, no por la línea de texto: con line-height
+   el "+" quedaba apoyado abajo del círculo */
 .cmd-agregar {
   width: 34px;
   height: 34px;
+  padding: 0;
   border-radius: 50%;
   border: 1.5px solid var(--sx-azul);
   color: var(--sx-azul);
   background: #fff;
-  font-size: 19px;
-  line-height: 1;
+  font-size: 14px;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
 }
 
@@ -475,7 +456,6 @@ td.num + td {
 .cmd-agregar.ya {
   background: var(--sx-azul);
   color: #fff;
-  font-size: 15px;
 }
 
 /* Ingredientes de la tarjeta abierta: una columna con puntos de guía */
@@ -616,6 +596,7 @@ td.num + td {
 .cmd-comensales .etiqueta {
   font-size: 13px;
   font-weight: 700;
+  color: var(--sx-gris-suave);
 }
 
 .cmd-stepper {
@@ -661,8 +642,9 @@ td.num + td {
   font-variant-numeric: tabular-nums;
 }
 
+/* Lo que hay es un dato de contexto, no parte del problema: va en gris */
 .cmd-falta small {
-  color: #B44A50;
+  color: var(--sx-gris-suave);
 }
 
 .cmd-historial {
@@ -769,6 +751,18 @@ td.num + td {
   font-size: 11.5px;
   padding: 3px 12px;
   white-space: nowrap;
+}
+
+/* Historial de movimientos: mismo lenguaje, pero la fila no lleva a ningún
+   lado, así que el ingrediente va en negro y la hora al lado (guía 25) */
+.hst-ingrediente {
+  font-weight: 600;
+}
+
+.hst-hora {
+  color: var(--sx-gris-suave);
+  font-size: 11.5px;
+  margin-left: 8px;
 }
 
 /* ---------- Detalle de comanda (guía 21) ---------- */

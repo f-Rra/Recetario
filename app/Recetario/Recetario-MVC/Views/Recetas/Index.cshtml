@@ -2,6 +2,7 @@
 @using RecetarioMVC.Data
 @{
     ViewData["Title"] = "Recetas";
+    ViewData["SinTitulo"] = true; // la grilla de fichas se lee sola
     var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
     var busqueda = (string?)ViewData["Busqueda"];
     var clasificacion = (int?)ViewData["Clasificacion"];

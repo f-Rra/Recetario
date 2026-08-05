@@ -4,78 +4,75 @@
     ViewData["Title"] = "Historial de movimientos";
 }
 
-<div class="mb-3">
-    <a asp-action="Index" class="text-decoration-none">
-        <i class="bi bi-arrow-left"></i> Volver a stock
-    </a>
+<a asp-action="Index" class="dtc-volver">
+    <i class="bi bi-arrow-left"></i> Volver a stock
+</a>
+
+<div class="hst-filtros">
+    <span class="hst-chip">
+        <b>@Model.Movimientos.Count</b>
+        @(Model.Movimientos.Count == 1 ? "movimiento" : "movimientos")
+    </span>
+
+    <span class="flex-grow-1"></span>
+
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+        <select name="ingrediente" asp-items="ViewBag.Ingredientes"
+                class="form-select form-select-sm hst-filtro" style="width: 210px;" aria-label="Ingrediente">
+            <option value="">Todos los ingredientes</option>
+        </select>
+        <select name="tipo" class="form-select form-select-sm hst-filtro" aria-label="Tipo">
+            <option value="">Todos los tipos</option>
+            <option value="@((int)TipoMovimiento.Entrada)" selected="@(Model.Tipo == TipoMovimiento.Entrada)">Entradas</option>
+            <option value="@((int)TipoMovimiento.Salida)" selected="@(Model.Tipo == TipoMovimiento.Salida)">Salidas</option>
+            <option value="@((int)TipoMovimiento.Ajuste)" selected="@(Model.Tipo == TipoMovimiento.Ajuste)">Ajustes</option>
+        </select>
+        <input type="date" name="desde" value="@Model.Desde?.ToString("yyyy-MM-dd")"
+               class="form-control form-control-sm hst-filtro" aria-label="Desde" />
+        <input type="date" name="hasta" value="@Model.Hasta?.ToString("yyyy-MM-dd")"
+               class="form-control form-control-sm hst-filtro" aria-label="Hasta" />
+        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Filtrar</button>
+        <a asp-action="Historial" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Limpiar</a>
+    </form>
 </div>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-3">
-                <label class="form-label" for="fIngrediente">Ingrediente</label>
-                <select name="ingrediente" id="fIngrediente" class="form-select form-select-sm"
-                        asp-items="ViewBag.Ingredientes">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="col-2">
-                <label class="form-label" for="fTipo">Tipo</label>
-                <select name="tipo" id="fTipo" class="form-select form-select-sm">
-                    <option value="">Todos</option>
-                    <option value="@((int)TipoMovimiento.Entrada)" selected="@(Model.Tipo == TipoMovimiento.Entrada)">Entrada</option>
-                    <option value="@((int)TipoMovimiento.Salida)" selected="@(Model.Tipo == TipoMovimiento.Salida)">Salida</option>
-                    <option value="@((int)TipoMovimiento.Ajuste)" selected="@(Model.Tipo == TipoMovimiento.Ajuste)">Ajuste</option>
-                </select>
-            </div>
-            <div class="col-2">
-                <label class="form-label" for="fDesde">Desde</label>
-                <input type="date" name="desde" id="fDesde" value="@Model.Desde?.ToString("yyyy-MM-dd")"
-                       class="form-control form-control-sm" />
-            </div>
-            <div class="col-2">
-                <label class="form-label" for="fHasta">Hasta</label>
-                <input type="date" name="hasta" id="fHasta" value="@Model.Hasta?.ToString("yyyy-MM-dd")"
-                       class="form-control form-control-sm" />
-            </div>
-            <div class="col-2">
-                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-                <a asp-action="Historial" class="btn btn-outline-secondary btn-sm">Limpiar</a>
-            </div>
-        </form>
+@if (Model.Movimientos.Count == 0)
+{
+    <div class="hst-card">
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-clock-history" style="font-size: 28px; color: var(--sx-celeste);"></i>
+            <p class="mb-0 mt-2">Sin movimientos con esos filtros.</p>
+        </div>
     </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        @if (Model.Movimientos.Count == 0)
-        {
-            <div class="text-center text-muted py-4">
-                <i class="bi bi-clock-history" style="font-size: 28px; color: var(--sx-celeste);"></i>
-                <p class="mb-0 mt-2">Sin movimientos con esos filtros.</p>
-            </div>
-        }
-        else
-        {
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Ingrediente</th>
-                        <th>Tipo</th>
-                        <th class="num">Cantidad</th>
-                        <th>Usuario</th>
-                        <th>Observaciones</th>
+}
+else
+{
+    <div class="hst-card">
+        <table class="hst-tabla">
+            <thead>
+                <tr>
+                    <th>INGREDIENTE</th>
+                    <th class="text-center">TIPO</th>
+                    <th class="num">CANTIDAD</th>
+                    <th>USUARIO</th>
+                    <th>OBSERVACIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                @* Agrupado por día, igual que el historial de comandas *@
+                @foreach (var dia in Model.Movimientos.GroupBy(m => m.Fecha.Date))
+                {
+                    <tr class="hst-dia">
+                        <td colspan="5">@dia.Key.ToString("dddd d 'de' MMMM").ToUpperInvariant()</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var m in Model.Movimientos)
+                    @foreach (var m in dia)
                     {
                         <tr>
-                            <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@m.Ingrediente</td>
                             <td>
+                                <span class="hst-ingrediente">@m.Ingrediente</span>
+                                <span class="hst-hora">@m.Fecha.ToString("HH:mm")</span>
+                            </td>
+                            <td class="text-center">
                                 @if (m.Tipo == TipoMovimiento.Entrada)
                                 {
                                     <span class="badge rounded-pill badge-estado-ok">Entrada</span>
@@ -94,12 +91,15 @@
                             <td class="text-muted">@(m.Observaciones ?? "—")</td>
                         </tr>
                     }
-                </tbody>
-            </table>
-            @if (Model.Movimientos.Count == 100)
-            {
-                <div class="form-text mt-2">Se muestran los últimos 100 movimientos: afiná los filtros para ver más atrás.</div>
-            }
-        }
+                }
+            </tbody>
+        </table>
     </div>
-</div>
+
+    @if (Model.Movimientos.Count == 100)
+    {
+        <div class="form-text mt-2">
+            Se muestran los últimos 100 movimientos: afiná los filtros para ver más atrás.
+        </div>
+    }
+}

@@ -1,6 +1,7 @@
 @model ComandaDetalleViewModel
 @{
     ViewData["Title"] = $"Comanda #{Model.IdComanda}";
+    ViewData["SinTitulo"] = true; // la cabecera ya lleva el nombre de la receta
 }
 
 <a asp-action="Index" class="dtc-volver">

@@ -3,6 +3,7 @@
 @using RecetarioMVC.Models
 @{
     ViewData["Title"] = "Comanda de cocina";
+    ViewData["SinTitulo"] = true; // el ticket y el catálogo se explican solos
 
     var clasificaciones = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones;
 
@@ -68,14 +69,18 @@
                     </div>
                     @if (receta.EnCarrito)
                     {
-                        <button type="button" class="cmd-agregar ya" disabled title="Ya está en la comanda">✓</button>
+                        <button type="button" class="cmd-agregar ya" disabled title="Ya está en la comanda">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
                     }
                     else
                     {
                         <form asp-action="AgregarAlCarrito" method="post">
                             <input type="hidden" name="comensales" value="@Model.Carrito.Comensales" />
                             <input type="hidden" name="seleccion" value="@receta.IdReceta" />
-                            <button type="submit" class="cmd-agregar" title="Agregar a la comanda">+</button>
+                            <button type="submit" class="cmd-agregar" title="Agregar a la comanda">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
                         </form>
                     }
                 </div>

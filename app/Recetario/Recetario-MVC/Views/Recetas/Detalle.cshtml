@@ -2,95 +2,77 @@
 @using RecetarioMVC.Data
 @{
     ViewData["Title"] = Model.Nombre;
+    ViewData["SinTitulo"] = true; // la cabecera ya lleva el nombre de la receta
+    var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
 }
 
-<div class="mb-3 d-flex justify-content-between align-items-center">
-    <a asp-action="Index" class="text-decoration-none">
-        <i class="bi bi-arrow-left"></i> Volver a recetas
-    </a>
-    @if (User.IsInRole(DbSeeder.RolAdmin))
-    {
-        <div class="d-flex gap-2">
-            <a asp-controller="Costos" asp-action="Costear" asp-route-id="@Model.IdReceta" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-currency-dollar"></i> Costear
-            </a>
-            <a asp-action="Editar" asp-route-id="@Model.IdReceta" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-pencil"></i> Editar
-            </a>
+<a asp-action="Index" class="dtc-volver">
+    <i class="bi bi-arrow-left"></i> Volver a recetas
+</a>
+
+<div class="dtc-cabecera">
+    <div class="dtc-titulo">
+        <div class="nombre">@Model.Nombre</div>
+        <div class="meta">
+            @Model.Codigo · @Model.Clasificacion
+            @if (!Model.Activo)
+            {
+                <span class="text-muted">· inactiva</span>
+            }
         </div>
+    </div>
+    <div class="dtc-numero">
+        <b>@Model.PorcionesBase</b>
+        <span>PORCIONES BASE</span>
+    </div>
+    @if (esAdmin)
+    {
+        <a asp-controller="Costos" asp-action="Costear" asp-route-id="@Model.IdReceta"
+           class="btn btn-outline-primary btn-sm rounded-pill px-3">Costear</a>
+        <a asp-action="Editar" asp-route-id="@Model.IdReceta"
+           class="btn btn-outline-primary btn-sm rounded-pill px-3">Editar</a>
     }
 </div>
 
-@* El nombre ya está arriba, en el título de la pantalla: acá van solo los datos *@
-<div class="card mb-3">
-    <div class="card-body py-3 d-flex align-items-center gap-2 flex-wrap">
-        <span class="text-muted">
-            @Model.Codigo · @Model.Clasificacion · @Model.PorcionesBase porciones base
-        </span>
-        @if (Model.Activo)
+<div class="dtc-columnas">
+    <div class="dtc-tarjeta">
+        <h4>INGREDIENTES</h4>
+        @if (Model.Ingredientes.Count == 0)
         {
-            <span class="badge rounded-pill badge-estado-ok">Activa</span>
+            <p class="text-muted mb-0">Sin ingredientes cargados.</p>
         }
         else
         {
-            <span class="badge rounded-pill text-bg-secondary">Inactiva</span>
+            @* La cantidad bruta: es la que hay que preparar y la que la comanda
+               escala a los comensales *@
+            <div class="dtc-lista">
+                @foreach (var ing in Model.Ingredientes)
+                {
+                    <div>
+                        <span>@ing.Ingrediente</span>
+                        <span class="pts"></span>
+                        <span>@FormatoCantidad.Formatear(ing.CantBruta, ing.Unidad)</span>
+                    </div>
+                }
+            </div>
         }
     </div>
-</div>
 
-<div class="row g-3">
-    <div class="col-lg-5">
-        <div class="card h-100">
-            <div class="card-body">
-                @if (Model.Ingredientes.Count == 0)
-                {
-                    <p class="text-muted mb-0">Sin ingredientes cargados.</p>
-                }
-                else
-                {
-                    @* Se muestra la cantidad bruta: es la que hay que preparar
-                       y la que usa la comanda al escalar la receta *@
-                    @* La tarjeta no lleva título: alcanza con los de las columnas *@
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Ingredientes</th>
-                                <th class="num">Cantidad</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var ing in Model.Ingredientes)
-                            {
-                                <tr>
-                                    <td>@ing.Ingrediente</td>
-                                    <td class="num">@FormatoCantidad.Formatear(ing.CantBruta, ing.Unidad)</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-7">
-        <div class="card h-100">
-            <div class="card-body">
-                <h3 class="h6 fw-semibold mb-3">Procedimiento</h3>
-                @if (Model.Pasos.Count == 0)
-                {
-                    <p class="text-muted mb-0">Sin pasos cargados.</p>
-                }
-                else
-                {
-                    <ol class="mb-0">
-                        @foreach (var paso in Model.Pasos)
-                        {
-                            <li class="mb-2">@paso.Descripcion</li>
-                        }
-                    </ol>
-                }
-            </div>
-        </div>
+    <div class="dtc-tarjeta">
+        <h4>PROCEDIMIENTO</h4>
+        @if (Model.Pasos.Count == 0)
+        {
+            <p class="text-muted mb-0">Sin pasos cargados.</p>
+        }
+        else
+        {
+            @foreach (var paso in Model.Pasos)
+            {
+                <div class="dtc-paso">
+                    <i>@paso.NroPaso</i>
+                    <span>@paso.Descripcion</span>
+                </div>
+            }
+        }
     </div>
 </div>
