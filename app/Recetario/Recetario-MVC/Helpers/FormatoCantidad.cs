@@ -20,6 +20,14 @@ public static class FormatoCantidad
         return Math.Round(cantidad, 2).ToString("#,0.##");
     }
 
+    /// <summary>
+    /// En qué unidad conviene leer una cantidad. Es pública porque el
+    /// redondeo (<see cref="RedondeoCocina"/>) aplica su regla sobre la unidad
+    /// que se muestra, no sobre la que está guardada.
+    /// </summary>
+    public static (decimal Valor, string Unidad) UnidadDeLectura(decimal cantidad, string unidad) =>
+        Convertir(cantidad, unidad);
+
     private static (decimal Valor, string Unidad) Convertir(decimal cantidad, string unidad)
     {
         var esCero = cantidad == 0;

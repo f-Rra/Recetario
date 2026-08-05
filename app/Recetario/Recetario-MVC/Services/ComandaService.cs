@@ -101,7 +101,8 @@ public class ComandaService : IComandaService
             Comensales = comensales,
             Ingredientes = ingredientes.Select(i =>
             {
-                var necesario = Math.Round(i.CantBruta * factor, 4);
+                // La misma cantidad que se va a descontar al generar
+                var necesario = RedondeoCocina.Redondear(i.CantBruta * factor, i.Unidad);
                 return new IngredientePreviewItem
                 {
                     IdIngrediente = i.IdIngrediente,
@@ -385,16 +386,19 @@ public class ComandaService : IComandaService
         ModificacionCarrito mod, IngredienteBase? original, decimal factor, string? unidadDestino)
     {
         if (mod.Cantidad is decimal explicita)
-            return Math.Round(explicita, 4);
+            return RedondeoCocina.Redondear(explicita, unidadDestino ?? original?.Unidad ?? string.Empty);
 
         if (original is null)
             return 0m;
 
-        var escalada = Math.Round(original.CantBruta * factor, 4);
+        var escalada = original.CantBruta * factor;
 
-        return unidadDestino is null
+        var enDestino = unidadDestino is null
             ? escalada
             : Unidades.Convertir(escalada, original.Unidad, unidadDestino) ?? escalada;
+
+        // La modificación guarda lo mismo que se descontó del stock
+        return RedondeoCocina.Redondear(enDestino, unidadDestino ?? original.Unidad);
     }
 
     /// <summary>Ingredientes que entran por una modificación (reemplazos y agregados).</summary>
@@ -452,7 +456,8 @@ public class ComandaService : IComandaService
 
             foreach (var ing in baseIngredientes)
             {
-                var cantidad = Math.Round(ing.CantBruta * factor, 4);
+                // Lo que sale del depósito: redondeado a una medida usable
+                var cantidad = RedondeoCocina.Redondear(ing.CantBruta * factor, ing.Unidad);
                 var mod = item.Modificaciones.FirstOrDefault(m =>
                     m.IdIngredienteOriginal == ing.IdIngrediente &&
                     m.Tipo != TipoModificacion.Adicion);
@@ -471,9 +476,9 @@ public class ComandaService : IComandaService
                     mod.IdIngredienteReemplazo is int idR &&
                     extras.TryGetValue(idR, out var reemplazo))
                 {
-                    var cantidadReemplazo = mod.Cantidad is decimal c
-                        ? Math.Round(c, 4)
-                        : Unidades.Convertir(cantidad, ing.Unidad, reemplazo.Unidad) ?? cantidad;
+                    var cantidadReemplazo = RedondeoCocina.Redondear(
+                        mod.Cantidad ?? Unidades.Convertir(cantidad, ing.Unidad, reemplazo.Unidad) ?? cantidad,
+                        reemplazo.Unidad);
 
                     efectivos.Add(new IngredienteEfectivo(
                         reemplazo.IdIngrediente,
@@ -493,7 +498,7 @@ public class ComandaService : IComandaService
                     efectivos.Add(new IngredienteEfectivo(
                         agregado.IdIngrediente,
                         agregado.Descripcion,
-                        Math.Round(cantidad, 4),
+                        RedondeoCocina.Redondear(cantidad, agregado.Unidad),
                         agregado.IdUnidad,
                         agregado.Unidad));
                 }
@@ -674,7 +679,9 @@ public class ComandaService : IComandaService
             {
                 IdIngrediente = x.IdIngrediente,
                 Ingrediente = x.Descripcion,
-                Cantidad = Math.Round(x.CantBruta * factor, 4),
+                // Se reescala desde la receta: hay que redondear igual que al
+                // generar, o el detalle mostraría otros números que el PDF
+                Cantidad = RedondeoCocina.Redondear(x.CantBruta * factor, x.Unidad),
                 Unidad = x.Unidad
             })
             .ToList();

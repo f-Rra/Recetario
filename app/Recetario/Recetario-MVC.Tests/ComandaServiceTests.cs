@@ -80,12 +80,12 @@ public class ComandaServiceTests
         using var context = CrearContexto();
         var servicio = new ComandaService(context);
 
-        // 12 comensales sobre base 6 → factor 2 → 1,25 kg de harina
+        // 12 comensales sobre base 6 → factor 2 → 1,25 kg, que redondea a 1,5 (guía 24)
         var resultado = await servicio.GenerarAsync(Carrito(12, ItemNoquis()), "u1");
 
         Assert.True(resultado.Ok);
         Assert.Single(resultado.IdsComandas);
-        Assert.Equal(8.75m, (await context.Ingredientes.FindAsync(Harina))!.StockActual);
+        Assert.Equal(8.5m, (await context.Ingredientes.FindAsync(Harina))!.StockActual);
     }
 
     [Fact]
@@ -263,7 +263,8 @@ public class ComandaServiceTests
         var alcanza = await servicio.ObtenerIngredientesPreviewAsync(Noquis, 12);
         var noAlcanza = await servicio.ObtenerIngredientesPreviewAsync(Noquis, 200);
 
-        Assert.Equal(1.25m, alcanza!.Ingredientes.Single().Cantidad);
+        // La previsualización muestra lo que se va a descontar: 1,25 → 1,5
+        Assert.Equal(1.5m, alcanza!.Ingredientes.Single().Cantidad);
         Assert.True(alcanza.Ingredientes.Single().Alcanza);
         Assert.False(noAlcanza!.Ingredientes.Single().Alcanza);
     }
@@ -317,13 +318,14 @@ public class ComandaServiceTests
         context.SaveChanges();
         var servicio = new ComandaService(context);
 
-        // 60 comensales: 6,25 kg de los ñoquis + 5 kg de la guarnición = 11,25 > 10
+        // 60 comensales: 6,25 kg de los ñoquis (redondean a 6,5) + 5 de la
+        // guarnición = 11,5 > 10
         var soloNoquis = await servicio.RevisarAsync(Carrito(60, ItemNoquis()));
         var juntas = await servicio.RevisarAsync(Carrito(60, ItemNoquis(), ItemDecoracion()));
 
         Assert.True(soloNoquis.SePuedeGenerar);
         Assert.False(juntas.SePuedeGenerar);
-        Assert.Equal(11.25m, Assert.Single(juntas.Faltantes).Necesario);
+        Assert.Equal(11.5m, Assert.Single(juntas.Faltantes).Necesario);
     }
 
     [Fact]
