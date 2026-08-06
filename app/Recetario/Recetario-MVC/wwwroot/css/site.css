@@ -1106,6 +1106,63 @@ td.num + td {
   padding: 3px 12px;
 }
 
+/* ---------- Usuarios: un bloque por rol (guía 31) ---------- */
+
+.usr-columnas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.usr-titulo {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--sx-azul-oscuro);
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.usr-titulo.sin-rol {
+  color: var(--sx-ambar);
+}
+
+.usr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 11px 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(16, 60, 90, 0.06);
+}
+
+/* Desactivado: sigue a la vista pero apagado, para poder reactivarlo */
+.usr.inactivo {
+  opacity: 0.6;
+}
+
+.usr .datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.usr .nombre {
+  font-weight: 600;
+}
+
+.usr .mail {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+}
+
+@media (max-width: 991px) {
+  .usr-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Responsables: una tarjeta por sector (guía 30) ---------- */
 
 .rsp-resumen {

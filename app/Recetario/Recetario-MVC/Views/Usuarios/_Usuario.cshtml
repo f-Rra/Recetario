@@ -1,0 +1,40 @@
+@model UsuarioListaViewModel
+@*
+    Un usuario dentro del bloque de su rol. El propio no se puede desactivar:
+    el botón directamente no está, en vez de fallar al apretarlo.
+*@
+
+<div class="usr @(Model.Activo ? "" : "inactivo")">
+    <div class="datos">
+        <div class="nombre">
+            @Model.NombreCompleto
+            @if (Model.EsUsuarioActual)
+            {
+                <span class="badge rounded-pill badge-estado-bajo">vos</span>
+            }
+        </div>
+        <div class="mail">
+            @Model.Email
+            @if (!Model.Activo)
+            {
+                <text>· inactivo</text>
+            }
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3"
+            data-bs-toggle="modal" data-bs-target="#modalPassword"
+            data-id="@Model.Id" data-nombre="@Model.NombreCompleto">
+        Contraseña
+    </button>
+
+    @if (!Model.EsUsuarioActual)
+    {
+        <form asp-action="CambiarEstado" asp-route-id="@Model.Id" method="post" class="d-inline">
+            <button type="submit"
+                    class="btn btn-sm rounded-pill px-3 @(Model.Activo ? "btn-outline-danger" : "btn-outline-success")">
+                @(Model.Activo ? "Desactivar" : "Reactivar")
+            </button>
+        </form>
+    }
+</div>
