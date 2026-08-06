@@ -1,71 +1,136 @@
-@model List<ProveedorListaItem>
+@model ProveedoresPaginaViewModel
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     ViewData["Title"] = "Proveedores";
+    ViewData["SinTitulo"] = true; // la grilla de fichas se lee sola
+
+    // El form de edición va con prefijo para no compartir los nombres de
+    // campo con el de alta, que está en la misma página
+    var datosEdicion = new ViewDataDictionary(ViewData);
+    datosEdicion.TemplateInfo.HtmlFieldPrefix = "Edicion";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <form method="get" class="d-flex gap-2" role="search">
-        <input type="search" name="busqueda" value="@ViewData["Busqueda"]" class="form-control filtro-busqueda"
-               placeholder="Buscar por nombre o contacto…" />
-        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+<div class="filtros-cocina">
+    <form method="get" class="busca-cocina" role="search">
+        <input type="search" name="busqueda" value="@Model.Busqueda"
+               class="form-control form-control-sm" placeholder="Buscar…" />
+        <button type="submit" class="btn btn-primary btn-sm lupa-cocina" title="Buscar">
+            <i class="bi bi-search"></i>
+        </button>
     </form>
-    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo proveedor</a>
+    <span class="mut-cocina">@Model.Lista.Count @(Model.Lista.Count == 1 ? "proveedor" : "proveedores")</span>
+    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0"
+            data-bs-toggle="modal" data-bs-target="#modalCrear">
+        <i class="bi bi-plus-lg"></i> Nuevo proveedor
+    </button>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        @if (Model.Count == 0)
+@if (Model.Lista.Count == 0)
+{
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-truck" style="font-size: 28px; color: var(--sx-celeste);"></i>
+        <p class="mb-0 mt-2">
+            @(string.IsNullOrWhiteSpace(Model.Busqueda)
+                ? "Todavía no hay proveedores cargados."
+                : "No se encontraron proveedores con esa búsqueda.")
+        </p>
+    </div>
+}
+else
+{
+    <div class="prv-grilla">
+        @foreach (var item in Model.Lista)
         {
-            <div class="text-center text-muted py-4">
-                <i class="bi bi-truck" style="font-size: 28px; color: var(--sx-celeste);"></i>
-                <p class="mb-0 mt-2">
-                    @(string.IsNullOrWhiteSpace((string?)ViewData["Busqueda"])
-                        ? "Todavía no hay proveedores cargados."
-                        : "No se encontraron proveedores con esa búsqueda.")
-                </p>
+            <div class="prv">
+                <div class="prv-nombre">@item.Nombre</div>
+                <div class="prv-contacto">
+                    @(string.IsNullOrWhiteSpace(item.Contacto) ? "Sin contacto cargado" : $"Contacto: {item.Contacto}")
+                </div>
+
+                @* Los datos que faltan se muestran igual, en gris: se ve de
+                   una qué proveedor está a medio cargar *@
+                <div class="prv-datos">
+                    <div class="@(string.IsNullOrWhiteSpace(item.Telefono) ? "vacio" : "")">
+                        <i class="bi bi-telephone"></i>
+                        @(item.Telefono ?? "sin teléfono")
+                    </div>
+                    <div class="@(string.IsNullOrWhiteSpace(item.Email) ? "vacio" : "")">
+                        <i class="bi bi-envelope"></i>
+                        @(item.Email ?? "sin email")
+                    </div>
+                    <div class="@(string.IsNullOrWhiteSpace(item.Direccion) ? "vacio" : "")">
+                        <i class="bi bi-geo-alt"></i>
+                        @(item.Direccion ?? "sin dirección")
+                    </div>
+                </div>
+
+                <div class="prv-pie">
+                    <span class="badge rounded-pill @(item.CantidadPrecios == 0 ? "badge-estado-bajo" : "badge-estado-ok")">
+                        @item.CantidadPrecios @(item.CantidadPrecios == 1 ? "precio" : "precios")
+                    </span>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 ms-auto btn-editar"
+                            data-bs-toggle="modal" data-bs-target="#modalEditar"
+                            data-id="@item.IdProveedor" data-nombre="@item.Nombre"
+                            data-contacto="@item.Contacto" data-telefono="@item.Telefono"
+                            data-email="@item.Email" data-direccion="@item.Direccion">
+                        Editar
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                            data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                            data-id="@item.IdProveedor" data-nombre="@item.Nombre">
+                        Eliminar
+                    </button>
+                </div>
             </div>
         }
-        else
-        {
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Contacto</th>
-                        <th>Teléfono</th>
-                        <th>Email</th>
-                        <th class="num">Precios</th>
-                        <th class="text-end"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@(item.Contacto ?? "—")</td>
-                            <td>@(item.Telefono ?? "—")</td>
-                            <td>@(item.Email ?? "—")</td>
-                            <td class="num">@item.CantidadPrecios</td>
-                            <td class="text-end">
-                                <a asp-action="Editar" asp-route-id="@item.IdProveedor"
-                                   class="btn btn-sm btn-outline-primary" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
-                                        data-bs-toggle="modal" data-bs-target="#modalEliminar"
-                                        data-id="@item.IdProveedor" data-nombre="@item.Nombre">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+    </div>
+}
+
+@* ============ Alta ============ *@
+<div class="modal fade" id="modalCrear" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Crear" method="post">
+                <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo proveedor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_Form" model="Model.Nuevo" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
+@* ============ Edición ============ *@
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Editar" method="post">
+                <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar · <span id="modalEditarNombre"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_Form" model="Model.Edicion" view-data="datosEdicion" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* ============ Eliminar ============ *@
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -80,6 +145,7 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <form asp-action="Eliminar" method="post" class="d-inline">
                     <input type="hidden" name="id" id="modalEliminarId" />
+                    <input type="hidden" name="busqueda" value="@Model.Busqueda" />
                     <button type="submit" class="btn btn-danger">Eliminar</button>
                 </form>
             </div>
@@ -88,11 +154,38 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
+        // Un solo modal de edición para todas las fichas: la que se toca le
+        // pasa sus datos. Al reabrirse por un error, el servidor ya los puso.
+        document.getElementById("modalEditar").addEventListener("show.bs.modal", function (evento) {
+            const boton = evento.relatedTarget;
+            if (!boton) return;
+
+            document.getElementById("modalEditarNombre").textContent = boton.dataset.nombre;
+            const poner = (campo, valor) => document.getElementById("Edicion_" + campo).value = valor || "";
+            poner("IdProveedor", boton.dataset.id);
+            poner("Nombre", boton.dataset.nombre);
+            poner("Contacto", boton.dataset.contacto);
+            poner("Telefono", boton.dataset.telefono);
+            poner("Email", boton.dataset.email);
+            poner("Direccion", boton.dataset.direccion);
+        });
+
         document.getElementById("modalEliminar").addEventListener("show.bs.modal", function (evento) {
             const boton = evento.relatedTarget;
+            if (!boton) return;
+
             document.getElementById("modalEliminarId").value = boton.dataset.id;
             document.getElementById("modalEliminarNombre").textContent = boton.dataset.nombre;
         });
     </script>
+    @if (Model.ModalAbierto is not null)
+    {
+        @* El formulario volvió con errores: se reabre donde estaba *@
+        <script>
+            document.getElementById("modalEditarNombre").textContent = "@Model.Edicion.Nombre";
+            new bootstrap.Modal(document.getElementById("@Model.ModalAbierto")).show();
+        </script>
+    }
 }

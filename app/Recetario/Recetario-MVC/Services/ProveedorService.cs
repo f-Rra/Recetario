@@ -31,6 +31,7 @@ public class ProveedorService : IProveedorService
                 Contacto = p.Contacto,
                 Telefono = p.Telefono,
                 Email = p.Email,
+                Direccion = p.Direccion,
                 CantidadPrecios = p.Precios.Count
             })
             .ToListAsync();

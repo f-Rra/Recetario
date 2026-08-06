@@ -6,6 +6,7 @@ using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
 
+// Una sola pantalla de fichas: las altas y ediciones son modales (guía 29)
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class ProveedoresController : Controller
 {
@@ -18,52 +19,51 @@ public class ProveedoresController : Controller
 
     public async Task<IActionResult> Index(string? busqueda)
     {
-        ViewData["Busqueda"] = busqueda;
-        return View(await _proveedores.ListarAsync(busqueda));
+        return View(await ArmarPaginaAsync(busqueda));
     }
-
-    [HttpGet]
-    public IActionResult Crear() => View(new ProveedorFormViewModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Crear(ProveedorFormViewModel modelo)
+    public async Task<IActionResult> Crear(ProveedorFormViewModel modelo, string? busqueda)
     {
         if (!ModelState.IsValid)
-            return View(modelo);
+        {
+            var pagina = await ArmarPaginaAsync(busqueda);
+            pagina.Nuevo = modelo;
+            pagina.ModalAbierto = "modalCrear";
+            return View(nameof(Index), pagina);
+        }
 
         await _proveedores.CrearAsync(modelo);
         TempData["Exito"] = $"Proveedor {modelo.Nombre.Trim()} creado.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { busqueda });
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Editar(int id)
-    {
-        var modelo = await _proveedores.ObtenerAsync(id);
-        if (modelo is null)
-            return NotFound();
-
-        return View(modelo);
-    }
-
+    // El prefijo separa este formulario del de alta: los dos modales viven en
+    // la misma página y, sin prefijo, un error de uno se pinta en el otro
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Editar(ProveedorFormViewModel modelo)
+    public async Task<IActionResult> Editar(
+        [Bind(Prefix = "Edicion")] ProveedorFormViewModel modelo, string? busqueda)
     {
         if (!ModelState.IsValid)
-            return View(modelo);
+        {
+            var pagina = await ArmarPaginaAsync(busqueda);
+            pagina.Edicion = modelo;
+            pagina.ModalAbierto = "modalEditar";
+            return View(nameof(Index), pagina);
+        }
 
         if (!await _proveedores.EditarAsync(modelo))
             return NotFound();
 
         TempData["Exito"] = $"Proveedor {modelo.Nombre.Trim()} actualizado.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { busqueda });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Eliminar(int id)
+    public async Task<IActionResult> Eliminar(int id, string? busqueda)
     {
         var error = await _proveedores.EliminarAsync(id);
         if (error is null)
@@ -71,6 +71,15 @@ public class ProveedoresController : Controller
         else
             TempData["Error"] = error;
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { busqueda });
+    }
+
+    private async Task<ProveedoresPaginaViewModel> ArmarPaginaAsync(string? busqueda)
+    {
+        return new ProveedoresPaginaViewModel
+        {
+            Busqueda = busqueda,
+            Lista = await _proveedores.ListarAsync(busqueda)
+        };
     }
 }

@@ -36,5 +36,22 @@ public class ProveedorListaItem
     public string? Contacto { get; set; }
     public string? Telefono { get; set; }
     public string? Email { get; set; }
+
+    /// <summary>La ficha la muestra, así que viaja con el listado.</summary>
+    public string? Direccion { get; set; }
+
     public int CantidadPrecios { get; set; }
+}
+
+/// <summary>La pantalla: las fichas y los formularios de sus modales.</summary>
+public class ProveedoresPaginaViewModel
+{
+    public string? Busqueda { get; set; }
+    public List<ProveedorListaItem> Lista { get; set; } = new();
+
+    public ProveedorFormViewModel Nuevo { get; set; } = new();
+    public ProveedorFormViewModel Edicion { get; set; } = new();
+
+    /// <summary>Se reabre el modal cuando el formulario vuelve con errores.</summary>
+    public string? ModalAbierto { get; set; }
 }
