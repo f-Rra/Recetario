@@ -35,13 +35,14 @@
             <nav class="sidebar-nav">
                 @if (esAdmin)
                 {
-                    <div class="nav-seccion">General</div>
+                    @* Lista plana: con ocho accesos, los rótulos de sección
+                       agregaban ruido sin ayudar a encontrar nada. Armar
+                       comandas es trabajo de cocina: el admin no lo necesita *@
+                    <div class="pt-2"></div>
                     <a class="nav-item-sx @(controllerActual == "Home" ? "activo" : "")"
                        asp-controller="Home" asp-action="Index">
                         <i class="bi bi-grid-1x2-fill"></i> Dashboard
                     </a>
-
-                    <div class="nav-seccion">Gestión</div>
                     <a class="nav-item-sx @(controllerActual == "Recetas" ? "activo" : "")"
                        asp-controller="Recetas" asp-action="Index">
                         <i class="bi bi-journal-text"></i> Recetas
@@ -54,12 +55,6 @@
                        asp-controller="Proveedores" asp-action="Index">
                         <i class="bi bi-truck"></i> Proveedores
                     </a>
-
-                    <div class="nav-seccion">Operación</div>
-                    <a class="nav-item-sx @(esComandera ? "activo" : "")"
-                       asp-controller="Comandas" asp-action="Comandera">
-                        <i class="bi bi-plus-square"></i> Nueva comanda
-                    </a>
                     <a class="nav-item-sx @(esHistorialComandas ? "activo" : "")"
                        asp-controller="Comandas" asp-action="Index">
                         <i class="bi bi-receipt"></i> Comandas
@@ -68,8 +63,6 @@
                        asp-controller="Stock" asp-action="Index">
                         <i class="bi bi-box-seam"></i> Stock
                     </a>
-
-                    <div class="nav-seccion">Sistema</div>
                     <a class="nav-item-sx @(controllerActual == "Responsables" ? "activo" : "")"
                        asp-controller="Responsables" asp-action="Index">
                         <i class="bi bi-person-badge"></i> Responsables
