@@ -2,10 +2,13 @@
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
 
+@* En el alta va en 0 y el servicio crea uno nuevo; en la edición dice a cuál *@
+<input asp-for="IdPersona" type="hidden" />
+
 <div class="row">
     <div class="col mb-3">
         <label asp-for="Nombre" class="form-label"><span class="req text-danger">*</span> Nombre</label>
-        <input asp-for="Nombre" class="form-control" autofocus />
+        <input asp-for="Nombre" class="form-control" />
         <span asp-validation-for="Nombre" class="text-danger"></span>
     </div>
     <div class="col mb-3">

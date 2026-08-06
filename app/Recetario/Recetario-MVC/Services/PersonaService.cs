@@ -21,13 +21,40 @@ public class PersonaService : IPersonaService
             .Select(p => new PersonaListaItem
             {
                 IdPersona = p.IdPersona,
+                Nombre = p.Nombre,
+                Apellido = p.Apellido,
                 NombreCompleto = p.Nombre + " " + p.Apellido,
                 Email = p.Email,
                 Telefono = p.Telefono,
+                IdClasificacion = p.IdClasificacion,
                 Sector = p.Clasificacion != null ? p.Clasificacion.Nombre : "—",
                 CantidadComandas = _context.Comandas.Count(c => c.IdPersona == p.IdPersona)
             })
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Los sectores con quienes los cubren. Vienen todos, también los vacíos:
+    /// un sector sin responsable hace fallar la generación de una comanda, así
+    /// que tiene que verse antes de que pase.
+    /// </summary>
+    public async Task<ResponsablesPorSector> ListarPorSectorAsync()
+    {
+        var personas = await ListarAsync();
+        var sectores = await ListarSectoresAsync();
+
+        return new ResponsablesPorSector
+        {
+            Sectores = sectores
+                .Select(c => new SectorConResponsables
+                {
+                    IdClasificacion = c.IdClasificacion,
+                    Nombre = c.Nombre,
+                    Responsables = personas.Where(p => p.IdClasificacion == c.IdClasificacion).ToList()
+                })
+                .ToList(),
+            SinSector = personas.Where(p => p.IdClasificacion is null).ToList()
+        };
     }
 
     public Task<PersonaFormViewModel?> ObtenerAsync(int id)

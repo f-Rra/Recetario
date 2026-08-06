@@ -6,6 +6,9 @@ namespace RecetarioMVC.Services;
 public interface IPersonaService
 {
     Task<List<PersonaListaItem>> ListarAsync();
+
+    /// <summary>Los sectores con quienes los cubren, incluidos los que están vacíos.</summary>
+    Task<ResponsablesPorSector> ListarPorSectorAsync();
     Task<PersonaFormViewModel?> ObtenerAsync(int id);
     Task<List<Clasificacion>> ListarSectoresAsync();
     Task CrearAsync(PersonaFormViewModel modelo);

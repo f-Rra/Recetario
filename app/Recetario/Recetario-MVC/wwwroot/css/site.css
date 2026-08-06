@@ -1106,6 +1106,130 @@ td.num + td {
   padding: 3px 12px;
 }
 
+/* ---------- Responsables: una tarjeta por sector (guía 30) ---------- */
+
+.rsp-resumen {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.rsp-resumen .sin-cubrir {
+  color: var(--sx-rojo);
+}
+
+.rsp-grilla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rsp {
+  background: #fff;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.07);
+}
+
+.rsp h4 {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--sx-azul-oscuro);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+/* El sector sin cubrir se marca en rojo: es el que va a sorprender */
+.rsp.vacio {
+  border-color: #F5C6C9;
+}
+
+.rsp.vacio h4 {
+  color: var(--sx-rojo);
+}
+
+.rsp .aviso {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+  margin: 0 0 10px;
+}
+
+.rsp.sin-sector {
+  margin-top: 12px;
+  border-color: #FFE2B8;
+}
+
+.rsp.sin-sector h4 {
+  color: var(--sx-ambar);
+}
+
+.rsp-sueltos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.rsp-persona {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid #F0F4F7;
+}
+
+.rsp-persona:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.rsp-persona .datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.rsp-persona .nombre {
+  font-weight: 600;
+}
+
+.rsp-persona .contacto,
+.rsp-persona .carga {
+  color: var(--sx-gris-suave);
+  font-size: 12px;
+}
+
+.rsp-persona .acciones {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.rsp-persona .acciones button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--sx-azul);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.rsp-persona .acciones .borrar:hover {
+  color: var(--sx-rojo);
+}
+
+@media (max-width: 1199px) {
+  .rsp-grilla,
+  .rsp-sueltos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .rsp-grilla,
+  .rsp-sueltos {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Proveedores: fichas de contacto (guía 29) ---------- */
 
 .prv-grilla {

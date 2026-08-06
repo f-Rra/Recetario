@@ -1,0 +1,33 @@
+@model PersonaListaItem
+@*
+    Una persona dentro de la tarjeta de su sector. Los datos que faltan se
+    muestran en gris, como en proveedores, para ver quién está a medio cargar.
+*@
+
+<div class="rsp-persona">
+    <div class="datos">
+        <div class="nombre">@Model.NombreCompleto</div>
+        <div class="contacto">
+            @(Model.Telefono ?? "sin teléfono") ·
+            @(Model.Email ?? "sin email")
+        </div>
+        <div class="carga">
+            @Model.CantidadComandas @(Model.CantidadComandas == 1 ? "comanda" : "comandas")
+        </div>
+    </div>
+    <div class="acciones">
+        <button type="button" title="Editar"
+                data-bs-toggle="modal" data-bs-target="#modalEditar"
+                data-id="@Model.IdPersona" data-completo="@Model.NombreCompleto"
+                data-nombre="@Model.Nombre" data-apellido="@Model.Apellido"
+                data-sector="@Model.IdClasificacion" data-email="@Model.Email"
+                data-telefono="@Model.Telefono">
+            <i class="bi bi-pencil"></i>
+        </button>
+        <button type="button" class="borrar" title="Eliminar"
+                data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                data-id="@Model.IdPersona" data-completo="@Model.NombreCompleto">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</div>

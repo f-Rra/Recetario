@@ -7,6 +7,7 @@ using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
 
+// Una sola pantalla por sectores: las altas y ediciones son modales (guía 30)
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class ResponsablesController : Controller
 {
@@ -19,14 +20,7 @@ public class ResponsablesController : Controller
 
     public async Task<IActionResult> Index()
     {
-        return View(await _personas.ListarAsync());
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Crear()
-    {
-        await CargarSectoresAsync();
-        return View(new PersonaFormViewModel());
+        return View(await ArmarPaginaAsync());
     }
 
     [HttpPost]
@@ -35,8 +29,10 @@ public class ResponsablesController : Controller
     {
         if (!ModelState.IsValid)
         {
-            await CargarSectoresAsync();
-            return View(modelo);
+            var pagina = await ArmarPaginaAsync();
+            pagina.Nuevo = modelo;
+            pagina.ModalAbierto = "modalCrear";
+            return View(nameof(Index), pagina);
         }
 
         await _personas.CrearAsync(modelo);
@@ -44,25 +40,18 @@ public class ResponsablesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Editar(int id)
-    {
-        var modelo = await _personas.ObtenerAsync(id);
-        if (modelo is null)
-            return NotFound();
-
-        await CargarSectoresAsync();
-        return View(modelo);
-    }
-
+    // El prefijo separa este formulario del de alta: los dos modales viven en
+    // la misma página y, sin prefijo, un error de uno se pinta en el otro
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Editar(PersonaFormViewModel modelo)
+    public async Task<IActionResult> Editar([Bind(Prefix = "Edicion")] PersonaFormViewModel modelo)
     {
         if (!ModelState.IsValid)
         {
-            await CargarSectoresAsync();
-            return View(modelo);
+            var pagina = await ArmarPaginaAsync();
+            pagina.Edicion = modelo;
+            pagina.ModalAbierto = "modalEditar";
+            return View(nameof(Index), pagina);
         }
 
         if (!await _personas.EditarAsync(modelo))
@@ -85,11 +74,16 @@ public class ResponsablesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task CargarSectoresAsync()
+    private async Task<ResponsablesPaginaViewModel> ArmarPaginaAsync()
     {
         var sectores = await _personas.ListarSectoresAsync();
         ViewBag.Sectores = sectores
             .Select(c => new SelectListItem(c.Nombre, c.IdClasificacion.ToString()))
             .ToList();
+
+        return new ResponsablesPaginaViewModel
+        {
+            Datos = await _personas.ListarPorSectorAsync()
+        };
     }
 }

@@ -1,62 +1,122 @@
-@model List<PersonaListaItem>
+@model ResponsablesPaginaViewModel
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     ViewData["Title"] = "Responsables";
+    ViewData["SinTitulo"] = true; // el resumen de arriba encabeza la pantalla
+
+    // El form de edición va con prefijo para no compartir los nombres de
+    // campo con el de alta, que está en la misma página
+    var datosEdicion = new ViewDataDictionary(ViewData);
+    datosEdicion.TemplateInfo.HtmlFieldPrefix = "Edicion";
+
+    var datos = Model.Datos;
 }
 
-<div class="d-flex justify-content-end mb-3">
-    <a asp-action="Crear" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo responsable</a>
+<div class="filtros-cocina">
+    <span class="rsp-resumen">
+        <b>@datos.Total</b> @(datos.Total == 1 ? "responsable" : "responsables")
+        @if (datos.SectoresSinCubrir > 0)
+        {
+            <span class="sin-cubrir">
+                · @datos.SectoresSinCubrir @(datos.SectoresSinCubrir == 1 ? "sector sin cubrir" : "sectores sin cubrir")
+            </span>
+        }
+    </span>
+    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0"
+            data-bs-toggle="modal" data-bs-target="#modalCrear">
+        <i class="bi bi-plus-lg"></i> Nuevo responsable
+    </button>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        @if (Model.Count == 0)
-        {
-            <div class="text-center text-muted py-4">
-                <i class="bi bi-person-badge" style="font-size: 28px; color: var(--sx-celeste);"></i>
-                <p class="mb-0 mt-2">Todavía no hay responsables de cocina cargados. Se necesitan para registrar comandas.</p>
-            </div>
-        }
-        else
-        {
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Sector</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th class="num">Comandas</th>
-                        <th class="text-end"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td>@item.NombreCompleto</td>
-                            <td>@item.Sector</td>
-                            <td>@(item.Email ?? "—")</td>
-                            <td>@(item.Telefono ?? "—")</td>
-                            <td class="num">@item.CantidadComandas</td>
-                            <td class="text-end">
-                                <a asp-action="Editar" asp-route-id="@item.IdPersona"
-                                   class="btn btn-sm btn-outline-primary" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
-                                        data-bs-toggle="modal" data-bs-target="#modalEliminar"
-                                        data-id="@item.IdPersona" data-nombre="@item.NombreCompleto">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+<div class="rsp-grilla">
+    @foreach (var sector in datos.Sectores)
+    {
+        <div class="rsp @(sector.SinCubrir ? "vacio" : "")">
+            <h4>@sector.Nombre.ToUpperInvariant()</h4>
+
+            @if (sector.SinCubrir)
+            {
+                @* Un sector sin responsable no frena la comanda, pero se la
+                   asigna a otro: conviene enterarse antes de que pase *@
+                <p class="aviso">
+                    Sin responsable — las comandas de este sector se le asignan a otro.
+                </p>
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3"
+                        data-bs-toggle="modal" data-bs-target="#modalCrear"
+                        data-sector="@sector.IdClasificacion">
+                    Asignar
+                </button>
+            }
+            else
+            {
+                @foreach (var persona in sector.Responsables)
+                {
+                    <partial name="_Persona" model="persona" />
+                }
+            }
+        </div>
+    }
+</div>
+
+@if (datos.SinSector.Count > 0)
+{
+    <div class="rsp sin-sector">
+        <h4>SIN SECTOR ASIGNADO</h4>
+        <p class="aviso">
+            No se les asigna ninguna comanda hasta que tengan un sector.
+        </p>
+        <div class="rsp-sueltos">
+            @foreach (var persona in datos.SinSector)
+            {
+                <partial name="_Persona" model="persona" />
+            }
+        </div>
+    </div>
+}
+
+@* ============ Alta ============ *@
+<div class="modal fade" id="modalCrear" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Crear" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo responsable</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_Form" model="Model.Nuevo" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
+@* ============ Edición ============ *@
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Editar" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar · <span id="modalEditarNombre"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_Form" model="Model.Edicion" view-data="datosEdicion" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* ============ Eliminar ============ *@
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -79,11 +139,45 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
+        // "Asignar" abre el alta con ese sector ya elegido
+        document.getElementById("modalCrear").addEventListener("show.bs.modal", function (evento) {
+            const boton = evento.relatedTarget;
+            const sector = document.getElementById("IdClasificacion");
+            if (boton && boton.dataset.sector) sector.value = boton.dataset.sector;
+        });
+
+        // Un solo modal de edición para todos: el que se toca le pasa sus datos
+        document.getElementById("modalEditar").addEventListener("show.bs.modal", function (evento) {
+            const boton = evento.relatedTarget;
+            if (!boton) return;
+
+            document.getElementById("modalEditarNombre").textContent = boton.dataset.completo;
+            const poner = (campo, valor) => document.getElementById("Edicion_" + campo).value = valor || "";
+            poner("IdPersona", boton.dataset.id);
+            poner("Nombre", boton.dataset.nombre);
+            poner("Apellido", boton.dataset.apellido);
+            poner("IdClasificacion", boton.dataset.sector);
+            poner("Email", boton.dataset.email);
+            poner("Telefono", boton.dataset.telefono);
+        });
+
         document.getElementById("modalEliminar").addEventListener("show.bs.modal", function (evento) {
             const boton = evento.relatedTarget;
+            if (!boton) return;
+
             document.getElementById("modalEliminarId").value = boton.dataset.id;
-            document.getElementById("modalEliminarNombre").textContent = boton.dataset.nombre;
+            document.getElementById("modalEliminarNombre").textContent = boton.dataset.completo;
         });
     </script>
+    @if (Model.ModalAbierto is not null)
+    {
+        @* El formulario volvió con errores: se reabre donde estaba *@
+        <script>
+            document.getElementById("modalEditarNombre").textContent =
+                "@(Model.Edicion.Nombre) @(Model.Edicion.Apellido)";
+            new bootstrap.Modal(document.getElementById("@Model.ModalAbierto")).show();
+        </script>
+    }
 }
