@@ -7,6 +7,9 @@ public interface IIngredienteService
 {
     Task<List<IngredienteListaItem>> ListarAsync(string? busqueda);
     Task<IngredienteFormViewModel?> ObtenerAsync(int id);
+
+    /// <summary>Ficha del ingrediente sin los precios: esos los trae su propio servicio.</summary>
+    Task<IngredienteDetalleViewModel?> ObtenerDetalleAsync(int id);
     Task<List<Unidad>> ListarUnidadesAsync();
     Task<string> GenerarCodigoAsync();
     Task CrearAsync(IngredienteFormViewModel modelo, string usuarioId);

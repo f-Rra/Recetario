@@ -68,6 +68,58 @@ public class IngredienteService : IIngredienteService
             .FirstOrDefaultAsync();
     }
 
+    public async Task<IngredienteDetalleViewModel?> ObtenerDetalleAsync(int id)
+    {
+        var ingrediente = await _context.Ingredientes
+            .Where(i => i.IdIngrediente == id)
+            .Select(i => new
+            {
+                i.IdIngrediente,
+                i.Codigo,
+                i.Descripcion,
+                i.IdUnidad,
+                Unidad = i.Unidad.Abreviatura,
+                i.Deposito,
+                i.StockActual,
+                i.StockMinimo
+            })
+            .FirstOrDefaultAsync();
+
+        if (ingrediente is null)
+            return null;
+
+        // Saber dónde se usa es lo que decide si se puede tocar o eliminar
+        var recetas = await _context.IngredientesReceta
+            .Where(ir => ir.IdIngrediente == id)
+            .OrderBy(ir => ir.Receta.Nombre)
+            .Select(ir => ir.Receta.Nombre)
+            .ToListAsync();
+
+        return new IngredienteDetalleViewModel
+        {
+            IdIngrediente = ingrediente.IdIngrediente,
+            Codigo = ingrediente.Codigo,
+            Descripcion = ingrediente.Descripcion,
+            Unidad = ingrediente.Unidad,
+            Deposito = ingrediente.Deposito,
+            StockActual = ingrediente.StockActual,
+            StockMinimo = ingrediente.StockMinimo,
+            Estado = StockEstado.De(ingrediente.StockActual, ingrediente.StockMinimo),
+            Recetas = recetas,
+            NuevoPrecio = new PrecioFormViewModel { IdIngrediente = id },
+            Datos = new IngredienteFormViewModel
+            {
+                IdIngrediente = ingrediente.IdIngrediente,
+                Codigo = ingrediente.Codigo,
+                Descripcion = ingrediente.Descripcion,
+                IdUnidad = ingrediente.IdUnidad,
+                Deposito = ingrediente.Deposito,
+                StockActual = ingrediente.StockActual,
+                StockMinimo = ingrediente.StockMinimo
+            }
+        };
+    }
+
     public Task<List<Unidad>> ListarUnidadesAsync() =>
         _context.Unidades.OrderBy(u => u.Nombre).ToListAsync();
 

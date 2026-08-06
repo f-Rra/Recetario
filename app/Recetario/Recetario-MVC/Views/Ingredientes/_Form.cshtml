@@ -1,4 +1,9 @@
 @model IngredienteFormViewModel
+@{
+    // El alta pide el stock inicial; la edición no, porque el stock actual
+    // solo se mueve por movimientos auditados (guía 12)
+    var esAlta = Model.IdIngrediente == 0;
+}
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
 
@@ -9,7 +14,7 @@
     </div>
     <div class="col-8 mb-3">
         <label asp-for="Descripcion" class="form-label"><span class="req text-danger">*</span> Descripción</label>
-        <input asp-for="Descripcion" class="form-control" autofocus />
+        <input asp-for="Descripcion" class="form-control" />
         <span asp-validation-for="Descripcion" class="text-danger"></span>
     </div>
 </div>
@@ -33,4 +38,29 @@
     </div>
 </div>
 
-@* El stock actual se maneja distinto en alta y edición: lo renderiza cada vista *@
+<div class="row">
+    @if (esAlta)
+    {
+        <div class="col mb-1">
+            <label asp-for="StockActual" class="form-label">Stock inicial</label>
+            <input asp-for="StockActual" class="form-control" placeholder="0,00" />
+            <span asp-validation-for="StockActual" class="text-danger"></span>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" asp-for="IdIngrediente" />
+        <input type="hidden" asp-for="StockActual" />
+    }
+    <div class="col mb-1">
+        <label asp-for="StockMinimo" class="form-label">Stock mínimo</label>
+        <input asp-for="StockMinimo" class="form-control" placeholder="0,00" />
+        <span asp-validation-for="StockMinimo" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="form-text mt-2">
+    @(esAlta
+        ? "El stock inicial queda registrado como una entrada."
+        : "El stock actual se cambia con un movimiento, no acá.")
+</div>

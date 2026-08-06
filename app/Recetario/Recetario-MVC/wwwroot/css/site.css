@@ -983,6 +983,142 @@ td.num + td {
   }
 }
 
+/* ---------- Maestro-detalle: lista y ficha (guía 28) ---------- */
+
+.mdt {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.mdt-lista {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+}
+
+.mdt-lista a {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 15px;
+  border-bottom: 1px solid #F0F4F7;
+  font-size: 13px;
+  color: var(--sx-gris-texto);
+  text-decoration: none;
+}
+
+.mdt-lista a:last-child {
+  border-bottom: 0;
+}
+
+.mdt-lista a:hover {
+  background: #F4F9FC;
+}
+
+.mdt-lista a .dato {
+  color: var(--sx-gris-suave);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* La barra azul del borde marca el elegido sin depender solo del fondo */
+.mdt-lista a.elegido {
+  background: var(--sx-celeste-claro);
+  box-shadow: inset 3px 0 0 var(--sx-azul);
+  color: var(--sx-azul-oscuro);
+  font-weight: 600;
+}
+
+.mdt-lista a.elegido .dato {
+  color: var(--sx-azul-oscuro);
+}
+
+.mdt-ficha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.07);
+  flex-wrap: wrap;
+}
+
+.mdt-ficha .titulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.mdt-ficha .titulo .nombre {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.mdt-ficha .titulo .meta {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.mdt-ficha .numero {
+  text-align: center;
+  padding: 0 10px;
+}
+
+.mdt-ficha .numero b {
+  font-size: 26px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+.mdt-ficha .numero span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--sx-gris-suave);
+}
+
+.mdt-panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+}
+
+.mdt-panel h4 {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--sx-azul-oscuro);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.chip-receta {
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  border-radius: 999px;
+  font-size: 12px;
+  padding: 3px 12px;
+}
+
+/* Dato de contexto al lado de los filtros */
+.mut-cocina {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 991px) {
+  .mdt {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Stock: los dos depósitos a la vista (guía 23) ---------- */
 
 .stk-depositos {
