@@ -1106,6 +1106,97 @@ td.num + td {
   padding: 3px 12px;
 }
 
+/* ---------- Editar receta: datos arriba, contenido abajo (guía 33) ---------- */
+
+.rec-datos {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+  flex-wrap: wrap;
+}
+
+.rec-datos .form-label {
+  font-size: 12px;
+  color: var(--sx-gris-suave);
+  margin-bottom: 4px;
+}
+
+.rec-datos .campo.codigo { width: 96px; }
+.rec-datos .campo.nombre { flex: 2; min-width: 180px; }
+.rec-datos .campo.clasificacion { flex: 1; min-width: 150px; }
+.rec-datos .campo.porciones { width: 118px; }
+
+.rec-datos .activa {
+  padding-bottom: 6px;
+}
+
+.rec-columnas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* La fila de carga cierra el panel, donde termina la lista */
+.rec-agregar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #EDF1F4;
+}
+
+.rec-paso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 13.5px;
+}
+
+.rec-paso i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sx-celeste-claro);
+  color: var(--sx-azul-oscuro);
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 650;
+  font-style: normal;
+  flex-shrink: 0;
+}
+
+.rec-paso span {
+  flex: 1;
+}
+
+.rec-quitar {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #A9B6BF;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.rec-quitar:hover {
+  color: var(--sx-rojo);
+}
+
+@media (max-width: 1199px) {
+  .rec-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Costeo: desglose con barras (guía 32) ---------- */
 
 .cst-calcular {

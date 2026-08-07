@@ -40,6 +40,20 @@ public class RecetaListaItem : IRecetaBuscada
     };
 }
 
+/// <summary>La pantalla del listado y el formulario de su modal de alta.</summary>
+public class RecetasPaginaViewModel
+{
+    public string? Busqueda { get; set; }
+    public int? IdClasificacion { get; set; }
+    public List<RecetaListaItem> Lista { get; set; } = new();
+
+    /// <summary>Para el modal de alta; trae el código que va a tocar.</summary>
+    public RecetaFormViewModel Nueva { get; set; } = new();
+
+    /// <summary>Se reabre el modal cuando el alta vuelve con errores.</summary>
+    public string? ModalAbierto { get; set; }
+}
+
 public class RecetaFormViewModel
 {
     public int IdReceta { get; set; }

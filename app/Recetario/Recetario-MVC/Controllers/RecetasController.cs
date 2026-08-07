@@ -20,10 +20,7 @@ public class RecetasController : Controller
 
     public async Task<IActionResult> Index(string? busqueda, int? clasificacion)
     {
-        ViewData["Busqueda"] = busqueda;
-        ViewData["Clasificacion"] = clasificacion;
-        await CargarClasificacionesAsync(clasificacion);
-        return View(await _recetas.ListarAsync(busqueda, clasificacion));
+        return View(await ArmarPaginaAsync(busqueda, clasificacion));
     }
 
     [HttpGet]
@@ -36,27 +33,21 @@ public class RecetasController : Controller
         return View(modelo);
     }
 
-    [HttpGet]
-    [Authorize(Roles = DbSeeder.RolAdmin)]
-    public async Task<IActionResult> Crear()
-    {
-        var modelo = new RecetaFormViewModel
-        {
-            Codigo = await _recetas.GenerarCodigoAsync()
-        };
-        await CargarClasificacionesAsync(null);
-        return View(modelo);
-    }
-
+    // El alta abre en modal desde el listado, pero crear una receta es solo el
+    // primer paso: al guardar se sigue a la edición, que es donde está el
+    // trabajo real (ingredientes y procedimiento)
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = DbSeeder.RolAdmin)]
-    public async Task<IActionResult> Crear(RecetaFormViewModel modelo)
+    public async Task<IActionResult> Crear(
+        [Bind(Prefix = "Nueva")] RecetaFormViewModel modelo, string? busqueda, int? clasificacion)
     {
         if (!ModelState.IsValid)
         {
-            await CargarClasificacionesAsync(null);
-            return View(modelo);
+            var pagina = await ArmarPaginaAsync(busqueda, clasificacion);
+            pagina.Nueva = modelo;
+            pagina.ModalAbierto = "modalCrear";
+            return View(nameof(Index), pagina);
         }
 
         var id = await _recetas.CrearAsync(modelo);
@@ -173,6 +164,20 @@ public class RecetasController : Controller
             TempData["Error"] = error;
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<RecetasPaginaViewModel> ArmarPaginaAsync(string? busqueda, int? clasificacion)
+    {
+        await CargarClasificacionesAsync(clasificacion);
+
+        return new RecetasPaginaViewModel
+        {
+            Busqueda = busqueda,
+            IdClasificacion = clasificacion,
+            Lista = await _recetas.ListarAsync(busqueda, clasificacion),
+            // El modal de alta ya trae el código que le va a tocar
+            Nueva = new RecetaFormViewModel { Codigo = await _recetas.GenerarCodigoAsync() }
+        };
     }
 
     private async Task CargarClasificacionesAsync(int? seleccionada)

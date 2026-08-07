@@ -1,18 +1,16 @@
-@model List<RecetaListaItem>
+@model RecetasPaginaViewModel
 @using RecetarioMVC.Data
 @{
     ViewData["Title"] = "Recetas";
     ViewData["SinTitulo"] = true; // la grilla de fichas se lee sola
     var esAdmin = User.IsInRole(DbSeeder.RolAdmin);
-    var busqueda = (string?)ViewData["Busqueda"];
-    var clasificacion = (int?)ViewData["Clasificacion"];
     var clasificaciones = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Clasificaciones;
 }
 
 <div class="filtros-cocina">
     <form method="get" class="busca-cocina" role="search">
-        <input type="hidden" name="clasificacion" value="@clasificacion" />
-        <input type="search" name="busqueda" value="@busqueda"
+        <input type="hidden" name="clasificacion" value="@Model.IdClasificacion" />
+        <input type="search" name="busqueda" value="@Model.Busqueda"
                class="form-control form-control-sm" placeholder="Buscar…" />
         <button type="submit" class="btn btn-primary btn-sm lupa-cocina" title="Buscar">
             <i class="bi bi-search"></i>
@@ -20,29 +18,30 @@
     </form>
 
     <div class="chips-cocina">
-        <a href="@Url.Action("Index", new { busqueda })"
-           class="@(clasificacion is null ? "activa" : "")">Todas</a>
+        <a href="@Url.Action("Index", new { busqueda = Model.Busqueda })"
+           class="@(Model.IdClasificacion is null ? "activa" : "")">Todas</a>
         @foreach (var c in clasificaciones)
         {
-            <a href="@Url.Action("Index", new { busqueda, clasificacion = c.Value })"
+            <a href="@Url.Action("Index", new { busqueda = Model.Busqueda, clasificacion = c.Value })"
                class="@(c.Selected ? "activa" : "")">@c.Text</a>
         }
     </div>
 
     @if (esAdmin)
     {
-        <a asp-action="Crear" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0">
+        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0"
+                data-bs-toggle="modal" data-bs-target="#modalCrear">
             <i class="bi bi-plus-lg"></i> Nueva receta
-        </a>
+        </button>
     }
 </div>
 
-@if (Model.Count == 0)
+@if (Model.Lista.Count == 0)
 {
     <div class="text-center text-muted py-5">
         <i class="bi bi-journal-text" style="font-size: 28px; color: var(--sx-celeste);"></i>
         <p class="mb-0 mt-2">
-            @(string.IsNullOrWhiteSpace(busqueda) && clasificacion is null
+            @(string.IsNullOrWhiteSpace(Model.Busqueda) && Model.IdClasificacion is null
                 ? "Todavía no hay recetas cargadas."
                 : "No se encontraron recetas con esos filtros.")
         </p>
@@ -51,7 +50,7 @@
 else
 {
     <div class="fch-grilla">
-        @foreach (var item in Model)
+        @foreach (var item in Model.Lista)
         {
             <div class="fch @(item.Activo ? "" : "inactiva")">
                 @if (!item.Completa)
@@ -105,6 +104,69 @@ else
 
 @if (esAdmin)
 {
+    @* ============ Alta ============ *@
+    <div class="modal fade" id="modalCrear" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Crear" method="post">
+                    <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                    <input type="hidden" name="clasificacion" value="@Model.IdClasificacion" />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nueva receta</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                        <div class="row">
+                            <div class="col-4 mb-3">
+                                <label asp-for="Nueva.Codigo" class="form-label"></label>
+                                <input asp-for="Nueva.Codigo" class="form-control" readonly />
+                            </div>
+                            <div class="col-8 mb-3">
+                                <label asp-for="Nueva.Nombre" class="form-label">
+                                    <span class="req text-danger">*</span> Nombre
+                                </label>
+                                <input asp-for="Nueva.Nombre" class="form-control" />
+                                <span asp-validation-for="Nueva.Nombre" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-7 mb-1">
+                                <label asp-for="Nueva.IdClasificacion" class="form-label">
+                                    <span class="req text-danger">*</span> Clasificación
+                                </label>
+                                <select asp-for="Nueva.IdClasificacion" asp-items="clasificaciones" class="form-select">
+                                    <option value="">Elegí una clasificación…</option>
+                                </select>
+                                <span asp-validation-for="Nueva.IdClasificacion" class="text-danger"></span>
+                            </div>
+                            <div class="col-5 mb-1">
+                                <label asp-for="Nueva.PorcionesBase" class="form-label">
+                                    <span class="req text-danger">*</span> Porciones base
+                                </label>
+                                <input asp-for="Nueva.PorcionesBase" class="form-control" />
+                                <span asp-validation-for="Nueva.PorcionesBase" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <input type="hidden" asp-for="Nueva.Activo" value="true" />
+                        <div class="form-text mt-3">
+                            Al guardar se sigue a la edición, donde se cargan los ingredientes
+                            y el procedimiento.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Crear y cargar contenido</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ============ Eliminar ============ *@
     <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -129,14 +191,24 @@ else
 }
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         const modal = document.getElementById("modalEliminar");
         if (modal) {
             modal.addEventListener("show.bs.modal", function (evento) {
                 const boton = evento.relatedTarget;
+                if (!boton) return;
+
                 document.getElementById("modalEliminarId").value = boton.dataset.id;
                 document.getElementById("modalEliminarNombre").textContent = boton.dataset.nombre;
             });
         }
     </script>
+    @if (Model.ModalAbierto is not null)
+    {
+        @* El alta volvió con errores: se reabre donde estaba *@
+        <script>
+            new bootstrap.Modal(document.getElementById("@Model.ModalAbierto")).show();
+        </script>
+    }
 }
