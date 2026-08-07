@@ -4,28 +4,47 @@ using Microsoft.AspNetCore.Mvc;
 using RecetarioMVC.Data;
 using RecetarioMVC.Models;
 using RecetarioMVC.Services;
+using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
 
+// La pantalla lleva el selector de recetas al costado: se cambia de receta sin
+// volver al listado (guía 32)
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class CostosController : Controller
 {
     private readonly ICosteoService _costeo;
+    private readonly IRecetaService _recetas;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public CostosController(ICosteoService costeo, UserManager<ApplicationUser> userManager)
+    public CostosController(
+        ICosteoService costeo,
+        IRecetaService recetas,
+        UserManager<ApplicationUser> userManager)
     {
         _costeo = costeo;
+        _recetas = recetas;
         _userManager = userManager;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Costear(int id)
+    public async Task<IActionResult> Costear(int? id)
     {
-        var modelo = await _costeo.ObtenerPaginaAsync(id);
+        var recetas = await _recetas.ListarAsync(null, null);
+
+        // Sin id —o con uno que ya no existe— se abre la primera
+        var elegida = id.HasValue && recetas.Any(r => r.IdReceta == id.Value)
+            ? id.Value
+            : recetas.FirstOrDefault()?.IdReceta;
+
+        if (elegida is null)
+            return View(new CostearPaginaViewModel());
+
+        var modelo = await _costeo.ObtenerPaginaAsync(elegida.Value);
         if (modelo is null)
             return NotFound();
 
+        modelo.Recetas = recetas;
         return View(modelo);
     }
 
@@ -45,6 +64,7 @@ public class CostosController : Controller
 
         modelo.Porciones = porciones;
         modelo.Resultado = await _costeo.CalcularAsync(idReceta, porciones);
+        modelo.Recetas = await _recetas.ListarAsync(null, null);
         return View(nameof(Costear), modelo);
     }
 

@@ -1106,6 +1106,115 @@ td.num + td {
   padding: 3px 12px;
 }
 
+/* ---------- Costeo: desglose con barras (guía 32) ---------- */
+
+.cst-calcular {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.cst-calcular .form-label {
+  font-size: 12px;
+  color: var(--sx-gris-suave);
+  margin-bottom: 4px;
+}
+
+.cst-calcular input {
+  width: 110px;
+  text-align: center;
+  font-weight: 650;
+}
+
+.cst-columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 12px;
+  align-items: start;
+}
+
+.cst-linea {
+  margin-bottom: 11px;
+}
+
+.cst-linea:last-child {
+  margin-bottom: 0;
+}
+
+.cst-linea .cab {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cst-linea .cab .text-muted {
+  font-size: 12px;
+  display: block;
+}
+
+/* La barra dice cuánto pesa cada ingrediente en el total */
+.cst-barra {
+  background: #EDF1F4;
+  border-radius: 999px;
+  height: 7px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.cst-barra i {
+  display: block;
+  height: 100%;
+  background: var(--sx-azul);
+  border-radius: 999px;
+}
+
+.cst-total {
+  background: var(--sx-azul-oscuro);
+  color: #fff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.cst-total.claro {
+  background: #fff;
+  color: var(--sx-gris-texto);
+  box-shadow: 0 1px 3px rgba(16, 60, 90, 0.06);
+}
+
+.cst-total .lbl {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cst-total.claro .lbl {
+  color: var(--sx-gris-suave);
+}
+
+.cst-total b {
+  display: block;
+  font-size: 26px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+
+.cst-total .pie {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 1199px) {
+  .cst-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Usuarios: un bloque por rol (guía 31) ---------- */
 
 .usr-columnas {

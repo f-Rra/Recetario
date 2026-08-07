@@ -9,6 +9,12 @@ public class CostearPaginaViewModel
     public string Receta { get; set; } = string.Empty;
     public int PorcionesBase { get; set; }
 
+    /// <summary>
+    /// Todas las recetas, para el selector de la izquierda: se cambia de
+    /// receta sin volver al listado.
+    /// </summary>
+    public List<RecetaListaItem> Recetas { get; set; } = new();
+
     [Required(ErrorMessage = "Ingresá las porciones.")]
     [Range(1, 99999, ErrorMessage = "Las porciones deben ser al menos {1}.")]
     [Display(Name = "Porciones a costear")]
@@ -43,6 +49,9 @@ public class CosteoDetalleItem
     public decimal PrecioUnitario { get; set; }
     public string Proveedor { get; set; } = string.Empty;
     public decimal Subtotal { get; set; }
+
+    /// <summary>Cuánto pesa este ingrediente en el total, para la barra.</summary>
+    public decimal Participacion(decimal total) => total <= 0 ? 0 : Subtotal / total * 100;
 }
 
 public class CosteoHistorialItem
