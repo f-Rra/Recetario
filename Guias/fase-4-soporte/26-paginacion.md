@@ -1,6 +1,6 @@
 # Guía 26 — Paginación
 
-> **Estado:** pendiente
+> **Estado:** completada
 
 ## Objetivo
 
@@ -75,26 +75,54 @@ La paginación lo reemplaza.
 - Los **separadores de día** de los historiales siguen funcionando dentro de
   cada página, aunque un día quede partido entre dos.
 
-## Piezas (al implementar)
+## Dos listados con dos usos
+
+Ingredientes y recetas se piden de dos formas distintas, así que cada servicio
+expone las dos y el nombre dice cuál es cuál:
+
+- `ListarAsync` trae **todo** lo que coincide. Lo necesitan el stock —que
+  muestra los dos depósitos a la vez—, los combos de ingrediente y el selector
+  de recetas del costeo.
+- `ListarPaginadoAsync` trae **una página**. Lo usan sus propios listados.
+
+En ingredientes, además, la página viaja en cada enlace y en cada formulario:
+editar algo de la página 2 tiene que devolverte a la página 2, no al principio.
+
+## Tamaños
+
+| Pantalla | Por página | Por qué |
+|---|---|---|
+| Movimientos · Comandas | 25 | tablas densas |
+| Ingredientes | 25 | la lista del maestro-detalle es angosta |
+| Recetas · Proveedores | 12 | grillas de fichas, tres por fila |
+
+## Piezas
 
 | Archivo | Contenido |
 |---|---|
-| `ViewModels/Paginado.cs` | El tipo compartido y el cálculo de páginas |
+| `ViewModels/Paginado.cs` | `Paginado<T>` y `PaginadorViewModel` |
+| `Services/Paginacion.cs` | El `Skip`/`Take` sobre la consulta |
 | `Views/Shared/_Paginador.cshtml` | El control, con los filtros en los enlaces |
 | `Services/StockService.cs` | Historial paginado; se va el `Take(100)` |
 | `Services/ComandaService.cs` | Historial de comandas paginado |
 | `Services/RecetaService.cs` · `IngredienteService.cs` · `ProveedorService.cs` | Listados paginados |
 | Controllers y vistas de esas cinco pantallas | Parámetro de página |
-| `wwwroot/css/site.css` | Estilo del paginador |
-| `Recetario-MVC.Tests/` | Que la página 2 no repita ni saltee filas |
+| `wwwroot/css/site.css` | Estilo del paginador, ancho y angosto |
+| `Recetario-MVC.Tests/PaginacionTests.cs` | Cortes, bordes y filtros |
 
-## Verificación (al implementar)
+## Verificación
 
-- Con más filas que el tamaño de página, la primera trae exactamente ese
-  tamaño y el total dice cuántas hay en total.
-- Ir a la última página y volver no repite ni saltea ninguna fila.
-- Cambiar de página conserva búsqueda, clasificación y fechas.
-- El historial de movimientos deja de cortar en 100.
+Contra los datos que ya están cargados:
+
+- **239 movimientos** en 10 páginas; la última trae 14 filas y el tope de 100
+  desaparece.
+- **27 ingredientes** en 2 páginas: 25 y 2. Elegir uno de la segunda no vuelve
+  a la primera.
+- Juntar las dos páginas devuelve las 30 filas de la prueba sin repetir ni
+  saltear ninguna.
+- Una página fuera de rango cae en la última que existe.
+- Cambiar de página conserva el filtro de tipo, fechas y búsqueda.
+- Recetas y proveedores no muestran paginador: entran en una página.
 - `dotnet test` en verde.
 
 ## Mensaje de commit

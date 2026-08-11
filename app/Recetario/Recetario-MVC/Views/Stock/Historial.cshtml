@@ -10,8 +10,8 @@
 
 <div class="hst-filtros">
     <span class="hst-chip">
-        <b>@Model.Movimientos.Count</b>
-        @(Model.Movimientos.Count == 1 ? "movimiento" : "movimientos")
+        <b>@Model.Movimientos.Total</b>
+        @(Model.Movimientos.Total == 1 ? "movimiento" : "movimientos")
     </span>
 
     <span class="flex-grow-1"></span>
@@ -36,7 +36,7 @@
     </form>
 </div>
 
-@if (Model.Movimientos.Count == 0)
+@if (Model.Movimientos.Total == 0)
 {
     <div class="hst-card">
         <div class="text-center text-muted py-5">
@@ -60,7 +60,7 @@ else
             </thead>
             <tbody>
                 @* Agrupado por día, igual que el historial de comandas *@
-                @foreach (var dia in Model.Movimientos.GroupBy(m => m.Fecha.Date))
+                @foreach (var dia in Model.Movimientos.Items.GroupBy(m => m.Fecha.Date))
                 {
                     <tr class="hst-dia">
                         <td colspan="5">@dia.Key.ToString("dddd d 'de' MMMM").ToUpperInvariant()</td>
@@ -96,10 +96,5 @@ else
         </table>
     </div>
 
-    @if (Model.Movimientos.Count == 100)
-    {
-        <div class="form-text mt-2">
-            Se muestran los últimos 100 movimientos: afiná los filtros para ver más atrás.
-        </div>
-    }
+    <partial name="_Paginador" model='PaginadorViewModel.De(Model.Movimientos, "movimiento", "movimientos")' />
 }

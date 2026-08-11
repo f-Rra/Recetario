@@ -17,9 +17,9 @@ public class ProveedoresController : Controller
         _proveedores = proveedores;
     }
 
-    public async Task<IActionResult> Index(string? busqueda)
+    public async Task<IActionResult> Index(string? busqueda, int pagina = 1)
     {
-        return View(await ArmarPaginaAsync(busqueda));
+        return View(await ArmarPaginaAsync(busqueda, pagina));
     }
 
     [HttpPost]
@@ -74,12 +74,12 @@ public class ProveedoresController : Controller
         return RedirectToAction(nameof(Index), new { busqueda });
     }
 
-    private async Task<ProveedoresPaginaViewModel> ArmarPaginaAsync(string? busqueda)
+    private async Task<ProveedoresPaginaViewModel> ArmarPaginaAsync(string? busqueda, int pagina = 1)
     {
         return new ProveedoresPaginaViewModel
         {
             Busqueda = busqueda,
-            Lista = await _proveedores.ListarAsync(busqueda)
+            Lista = await _proveedores.ListarAsync(busqueda, pagina)
         };
     }
 }

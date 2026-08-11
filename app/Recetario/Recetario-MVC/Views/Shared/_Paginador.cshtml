@@ -1,0 +1,55 @@
+@model PaginadorViewModel
+@*
+    Los enlaces se arman con la query string actual cambiando solo "pagina":
+    así ninguna pantalla tiene que acordarse de reenviar sus filtros.
+*@
+@functions {
+    string EnlaceA(int pagina)
+    {
+        var partes = Context.Request.Query
+            .Where(p => p.Key != "pagina")
+            .SelectMany(p => p.Value.Select(v => new KeyValuePair<string, string?>(p.Key, v)))
+            .ToList();
+
+        partes.Add(new KeyValuePair<string, string?>("pagina", pagina.ToString()));
+        return Context.Request.Path + QueryString.Create(partes);
+    }
+}
+
+@if (Model.TotalPaginas > 1)
+{
+    <nav class="pgn" aria-label="Paginación">
+        <span class="rango">
+            @Model.Desde–@Model.Hasta de @Model.Total
+            @(Model.Total == 1 ? Model.Singular : Model.Plural)
+        </span>
+
+        @if (Model.HayAnterior())
+        {
+            <a href="@EnlaceA(Model.Pagina - 1)" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-chevron-left"></i> Anterior
+            </a>
+        }
+        else
+        {
+            <span class="btn btn-outline-primary btn-sm rounded-pill px-3 disabled">
+                <i class="bi bi-chevron-left"></i> Anterior
+            </span>
+        }
+
+        <span class="pagina">Página @Model.Pagina de @Model.TotalPaginas</span>
+
+        @if (Model.HaySiguiente())
+        {
+            <a href="@EnlaceA(Model.Pagina + 1)" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                Siguiente <i class="bi bi-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <span class="btn btn-outline-primary btn-sm rounded-pill px-3 disabled">
+                Siguiente <i class="bi bi-chevron-right"></i>
+            </span>
+        }
+    </nav>
+}

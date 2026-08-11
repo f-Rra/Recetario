@@ -8,7 +8,7 @@ namespace RecetarioMVC.Services;
 
 public class StockService : IStockService
 {
-    private const int MaxFilasHistorial = 100;
+    private const int MovimientosPorPagina = 25;
 
     private readonly ApplicationDbContext _context;
 
@@ -138,8 +138,8 @@ public class StockService : IStockService
         return ajustados;
     }
 
-    public async Task<List<MovimientoHistorialItem>> HistorialAsync(
-        int? idIngrediente, TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta)
+    public Task<Paginado<MovimientoHistorialItem>> HistorialAsync(
+        int? idIngrediente, TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta, int pagina)
     {
         var query = _context.MovimientosStock.AsQueryable();
 
@@ -152,10 +152,11 @@ public class StockService : IStockService
         if (hasta.HasValue)
             query = query.Where(m => m.Fecha < hasta.Value.AddDays(1).ToDateTime(TimeOnly.MinValue));
 
-        return await query
+        // El desempate por id hace el orden total: sin él, dos movimientos de
+        // la misma hora podrían caer en dos páginas o en ninguna
+        var ordenada = query
             .OrderByDescending(m => m.Fecha)
             .ThenByDescending(m => m.IdMovimiento)
-            .Take(MaxFilasHistorial)
             .Select(m => new MovimientoHistorialItem
             {
                 Fecha = m.Fecha,
@@ -165,7 +166,8 @@ public class StockService : IStockService
                 Unidad = m.Unidad.Abreviatura,
                 Usuario = m.Usuario.Nombre + " " + m.Usuario.Apellido,
                 Observaciones = m.Observaciones
-            })
-            .ToListAsync();
+            });
+
+        return Paginacion.AplicarAsync(ordenada, pagina, MovimientosPorPagina);
     }
 }

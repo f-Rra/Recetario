@@ -136,15 +136,16 @@ public class StockServiceTests
             Cantidad = 3m
         }, "u1");
 
-        var todos = await servicio.HistorialAsync(null, null, null, null);
-        var soloHarina = await servicio.HistorialAsync(1, null, null, null);
-        var soloEntradas = await servicio.HistorialAsync(null, TipoMovimiento.Entrada, null, null);
+        var todos = await servicio.HistorialAsync(null, null, null, null, 1);
+        var soloHarina = await servicio.HistorialAsync(1, null, null, null, 1);
+        var soloEntradas = await servicio.HistorialAsync(null, TipoMovimiento.Entrada, null, null, 1);
 
-        Assert.Equal(3, todos.Count);
-        Assert.Equal(2, soloHarina.Count);
-        Assert.All(soloHarina, m => Assert.Equal("Harina 000", m.Ingrediente));
-        Assert.Equal(2, soloEntradas.Count);
-        Assert.All(soloEntradas, m => Assert.Equal(TipoMovimiento.Entrada, m.Tipo));
+        // El total cuenta lo filtrado, no lo que entró en la página
+        Assert.Equal(3, todos.Total);
+        Assert.Equal(2, soloHarina.Total);
+        Assert.All(soloHarina.Items, m => Assert.Equal("Harina 000", m.Ingrediente));
+        Assert.Equal(2, soloEntradas.Total);
+        Assert.All(soloEntradas.Items, m => Assert.Equal(TipoMovimiento.Entrada, m.Tipo));
     }
 
     // ---------- Inventario por depósito (guía 17) ----------

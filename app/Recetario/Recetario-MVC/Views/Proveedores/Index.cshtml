@@ -18,14 +18,14 @@
             <i class="bi bi-search"></i>
         </button>
     </form>
-    <span class="mut-cocina">@Model.Lista.Count @(Model.Lista.Count == 1 ? "proveedor" : "proveedores")</span>
+    <span class="mut-cocina">@Model.Lista.Total @(Model.Lista.Total == 1 ? "proveedor" : "proveedores")</span>
     <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0"
             data-bs-toggle="modal" data-bs-target="#modalCrear">
         <i class="bi bi-plus-lg"></i> Nuevo proveedor
     </button>
 </div>
 
-@if (Model.Lista.Count == 0)
+@if (Model.Lista.Total == 0)
 {
     <div class="text-center text-muted py-5">
         <i class="bi bi-truck" style="font-size: 28px; color: var(--sx-celeste);"></i>
@@ -39,7 +39,7 @@
 else
 {
     <div class="prv-grilla">
-        @foreach (var item in Model.Lista)
+        @foreach (var item in Model.Lista.Items)
         {
             <div class="prv">
                 <div class="prv-nombre">@item.Nombre</div>
@@ -84,6 +84,8 @@ else
             </div>
         }
     </div>
+
+    <partial name="_Paginador" model='PaginadorViewModel.De(Model.Lista, "proveedor", "proveedores")' />
 }
 
 @* ============ Alta ============ *@

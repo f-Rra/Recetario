@@ -16,9 +16,43 @@ public class RecetaService : IRecetaService
         _context = context;
     }
 
+    private const int RecetasPorPagina = 12;
+
+    /// <summary>Todas las que coinciden, sin paginar: lo necesita el selector del costeo.</summary>
     public async Task<List<RecetaListaItem>> ListarAsync(string? busqueda, int? idClasificacion)
     {
-        var texto = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim();
+        var texto = Normalizar(busqueda);
+        var recetas = await Consulta(texto, idClasificacion).ToListAsync();
+
+        if (texto is not null)
+            await CoincidenciaPorIngrediente.ResolverAsync(_context, recetas, texto);
+
+        return recetas;
+    }
+
+    public async Task<Paginado<RecetaListaItem>> ListarPaginadoAsync(
+        string? busqueda, int? idClasificacion, int pagina)
+    {
+        var texto = Normalizar(busqueda);
+        var resultado = await Paginacion.AplicarAsync(
+            Consulta(texto, idClasificacion), pagina, RecetasPorPagina);
+
+        // La aclaración se resuelve solo sobre la página que se está mostrando
+        if (texto is not null)
+            await CoincidenciaPorIngrediente.ResolverAsync(_context, resultado.Items, texto);
+
+        return resultado;
+    }
+
+    private static string? Normalizar(string? busqueda) =>
+        string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim();
+
+    /// <summary>
+    /// El desempate por id hace el orden total: dos recetas con el mismo
+    /// nombre no pueden saltar de página ni desaparecer entre dos.
+    /// </summary>
+    private IQueryable<RecetaListaItem> Consulta(string? texto, int? idClasificacion)
+    {
         var query = _context.Recetas.AsQueryable();
 
         // Un solo buscador para todo: "¿qué recetas llevan lechuga?" se
@@ -32,8 +66,8 @@ public class RecetaService : IRecetaService
         if (idClasificacion.HasValue)
             query = query.Where(r => r.IdClasificacion == idClasificacion.Value);
 
-        var recetas = await query
-            .OrderBy(r => r.Nombre)
+        return query
+            .OrderBy(r => r.Nombre).ThenBy(r => r.IdReceta)
             .Select(r => new RecetaListaItem
             {
                 IdReceta = r.IdReceta,
@@ -44,13 +78,7 @@ public class RecetaService : IRecetaService
                 CantidadIngredientes = r.Ingredientes.Count,
                 CantidadPasos = r.Procedimientos.Count,
                 Activo = r.Activo
-            })
-            .ToListAsync();
-
-        if (texto is not null)
-            await CoincidenciaPorIngrediente.ResolverAsync(_context, recetas, texto);
-
-        return recetas;
+            });
     }
 
     public async Task<RecetaDetalleViewModel?> ObtenerDetalleAsync(int id)

@@ -8,6 +8,8 @@ namespace RecetarioMVC.Services;
 
 public class ComandaService : IComandaService
 {
+    private const int ComandasPorPagina = 25;
+
     private readonly ApplicationDbContext _context;
 
     public ComandaService(ApplicationDbContext context)
@@ -600,7 +602,8 @@ public class ComandaService : IComandaService
 
     // ================= Consulta =================
 
-    public Task<List<ComandaListaItem>> ListarAsync(DateOnly? desde, DateOnly? hasta, int? idReceta)
+    public Task<Paginado<ComandaListaItem>> ListarAsync(
+        DateOnly? desde, DateOnly? hasta, int? idReceta, int pagina = 1)
     {
         var query = _context.Comandas.AsQueryable();
 
@@ -611,7 +614,8 @@ public class ComandaService : IComandaService
         if (idReceta.HasValue)
             query = query.Where(c => c.IdReceta == idReceta.Value);
 
-        return query
+        // Ya venía con orden total: la fecha desempata por id
+        var ordenada = query
             .OrderByDescending(c => c.Fecha)
             .ThenByDescending(c => c.IdComanda)
             .Select(c => new ComandaListaItem
@@ -637,8 +641,9 @@ public class ComandaService : IComandaService
                         Unidad = m.Unidad.Abreviatura
                     })
                     .FirstOrDefault()
-            })
-            .ToListAsync();
+            });
+
+        return Paginacion.AplicarAsync(ordenada, pagina, ComandasPorPagina);
     }
 
     public async Task<ComandaDetalleViewModel?> ObtenerDetalleAsync(int idComanda)

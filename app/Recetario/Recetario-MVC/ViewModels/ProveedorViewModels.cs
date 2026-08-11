@@ -47,7 +47,7 @@ public class ProveedorListaItem
 public class ProveedoresPaginaViewModel
 {
     public string? Busqueda { get; set; }
-    public List<ProveedorListaItem> Lista { get; set; } = new();
+    public Paginado<ProveedorListaItem> Lista { get; set; } = new();
 
     public ProveedorFormViewModel Nuevo { get; set; } = new();
     public ProveedorFormViewModel Edicion { get; set; } = new();

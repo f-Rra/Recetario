@@ -10,6 +10,9 @@ public class IngredienteService : IIngredienteService
 {
     private const string PrefijoCodigo = "ING";
 
+    // La lista de la izquierda es angosta: entran más que en una grilla
+    private const int IngredientesPorPagina = 25;
+
     private readonly ApplicationDbContext _context;
 
     public IngredienteService(ApplicationDbContext context)
@@ -17,38 +20,54 @@ public class IngredienteService : IIngredienteService
         _context = context;
     }
 
+    /// <summary>
+    /// Todos los que coinciden, sin paginar: lo necesitan el stock —que muestra
+    /// los dos depósitos a la vez— y los combos de ingrediente.
+    /// </summary>
     public async Task<List<IngredienteListaItem>> ListarAsync(string? busqueda)
+    {
+        return ConEstado(await Consulta(busqueda).ToListAsync());
+    }
+
+    public async Task<Paginado<IngredienteListaItem>> ListarPaginadoAsync(string? busqueda, int pagina)
+    {
+        var resultado = await Paginacion.AplicarAsync(Consulta(busqueda), pagina, IngredientesPorPagina);
+        ConEstado(resultado.Items);
+        return resultado;
+    }
+
+    /// <summary>
+    /// El desempate por id hace el orden total: dos ingredientes con la misma
+    /// descripción no pueden saltar de página ni desaparecer entre dos.
+    /// </summary>
+    private IQueryable<IngredienteListaItem> Consulta(string? busqueda)
     {
         var query = _context.Ingredientes.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(busqueda))
             query = query.Where(i => i.Codigo.Contains(busqueda) || i.Descripcion.Contains(busqueda));
 
-        var ingredientes = await query
-            .OrderBy(i => i.Descripcion)
-            .Select(i => new
+        return query
+            .OrderBy(i => i.Descripcion).ThenBy(i => i.IdIngrediente)
+            .Select(i => new IngredienteListaItem
             {
-                i.IdIngrediente,
-                i.Codigo,
-                i.Descripcion,
-                i.Deposito,
+                IdIngrediente = i.IdIngrediente,
+                Codigo = i.Codigo,
+                Descripcion = i.Descripcion,
+                Deposito = i.Deposito,
                 Unidad = i.Unidad.Abreviatura,
-                i.StockActual,
-                i.StockMinimo
-            })
-            .ToListAsync();
+                StockActual = i.StockActual,
+                StockMinimo = i.StockMinimo
+            });
+    }
 
-        return ingredientes.Select(i => new IngredienteListaItem
-        {
-            IdIngrediente = i.IdIngrediente,
-            Codigo = i.Codigo,
-            Descripcion = i.Descripcion,
-            Deposito = i.Deposito,
-            Unidad = i.Unidad,
-            StockActual = i.StockActual,
-            StockMinimo = i.StockMinimo,
-            Estado = StockEstado.De(i.StockActual, i.StockMinimo)
-        }).ToList();
+    /// <summary>El estado se resuelve acá: los umbrales viven en el helper.</summary>
+    private static List<IngredienteListaItem> ConEstado(List<IngredienteListaItem> items)
+    {
+        foreach (var item in items)
+            item.Estado = StockEstado.De(item.StockActual, item.StockMinimo);
+
+        return items;
     }
 
     public async Task<IngredienteFormViewModel?> ObtenerAsync(int id)

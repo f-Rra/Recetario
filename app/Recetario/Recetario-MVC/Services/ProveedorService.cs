@@ -14,7 +14,9 @@ public class ProveedorService : IProveedorService
         _context = context;
     }
 
-    public async Task<List<ProveedorListaItem>> ListarAsync(string? busqueda)
+    private const int ProveedoresPorPagina = 12;
+
+    public Task<Paginado<ProveedorListaItem>> ListarAsync(string? busqueda, int pagina = 1)
     {
         var query = _context.Proveedores.AsQueryable();
 
@@ -22,8 +24,9 @@ public class ProveedorService : IProveedorService
             query = query.Where(p => p.Nombre.Contains(busqueda) ||
                                      (p.Contacto != null && p.Contacto.Contains(busqueda)));
 
-        return await query
-            .OrderBy(p => p.Nombre)
+        // El desempate por id hace el orden total
+        var ordenada = query
+            .OrderBy(p => p.Nombre).ThenBy(p => p.IdProveedor)
             .Select(p => new ProveedorListaItem
             {
                 IdProveedor = p.IdProveedor,
@@ -33,8 +36,9 @@ public class ProveedorService : IProveedorService
                 Email = p.Email,
                 Direccion = p.Direccion,
                 CantidadPrecios = p.Precios.Count
-            })
-            .ToListAsync();
+            });
+
+        return Paginacion.AplicarAsync(ordenada, pagina, ProveedoresPorPagina);
     }
 
     public async Task<ProveedorFormViewModel?> ObtenerAsync(int id)

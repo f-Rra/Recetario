@@ -45,7 +45,7 @@ public class RecetasPaginaViewModel
 {
     public string? Busqueda { get; set; }
     public int? IdClasificacion { get; set; }
-    public List<RecetaListaItem> Lista { get; set; } = new();
+    public Paginado<RecetaListaItem> Lista { get; set; } = new();
 
     /// <summary>Para el modal de alta; trae el código que va a tocar.</summary>
     public RecetaFormViewModel Nueva { get; set; } = new();

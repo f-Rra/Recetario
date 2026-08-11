@@ -50,7 +50,7 @@ public class IngredienteListaItem
 public class IngredientesPaginaViewModel
 {
     public string? Busqueda { get; set; }
-    public List<IngredienteListaItem> Lista { get; set; } = new();
+    public Paginado<IngredienteListaItem> Lista { get; set; } = new();
     public IngredienteDetalleViewModel? Seleccionado { get; set; }
 
     /// <summary>Para el modal de alta; trae el código que va a tocar.</summary>

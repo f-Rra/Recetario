@@ -40,7 +40,7 @@ public class HistorialFiltrosViewModel
     public TipoMovimiento? Tipo { get; set; }
     public DateOnly? Desde { get; set; }
     public DateOnly? Hasta { get; set; }
-    public List<MovimientoHistorialItem> Movimientos { get; set; } = new();
+    public Paginado<MovimientoHistorialItem> Movimientos { get; set; } = new();
 }
 
 // ---------- Inventario por depósito ----------

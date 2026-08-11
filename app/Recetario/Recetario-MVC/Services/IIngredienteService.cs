@@ -5,7 +5,11 @@ namespace RecetarioMVC.Services;
 
 public interface IIngredienteService
 {
+    /// <summary>Todos los que coinciden: el stock y los combos los necesitan completos.</summary>
     Task<List<IngredienteListaItem>> ListarAsync(string? busqueda);
+
+    /// <summary>De a una página, para el listado de ingredientes.</summary>
+    Task<Paginado<IngredienteListaItem>> ListarPaginadoAsync(string? busqueda, int pagina);
     Task<IngredienteFormViewModel?> ObtenerAsync(int id);
 
     /// <summary>Ficha del ingrediente sin los precios: esos los trae su propio servicio.</summary>

@@ -253,7 +253,7 @@ public class ComandasController : Controller
 
     // ================= Consulta =================
 
-    public async Task<IActionResult> Index(DateOnly? desde, DateOnly? hasta, int? receta)
+    public async Task<IActionResult> Index(DateOnly? desde, DateOnly? hasta, int? receta, int pagina = 1)
     {
         // Por defecto, las del día
         var hoy = DateOnly.FromDateTime(DateTime.Today);
@@ -269,7 +269,7 @@ public class ComandasController : Controller
             .Select(r => new SelectListItem(r.Nombre, r.IdReceta.ToString(), r.IdReceta == receta))
             .ToList();
 
-        return View(await _comandas.ListarAsync(desde, hasta, receta));
+        return View(await _comandas.ListarAsync(desde, hasta, receta, pagina));
     }
 
     [HttpGet]

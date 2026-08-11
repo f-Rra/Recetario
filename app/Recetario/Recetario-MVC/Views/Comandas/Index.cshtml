@@ -1,4 +1,4 @@
-@model List<ComandaListaItem>
+@model Paginado<ComandaListaItem>
 @{
     ViewData["Title"] = "Comandas";
     ViewData["SinTitulo"] = true; // el chip con el total y los días alcanzan
@@ -10,7 +10,7 @@
 
 <div class="hst-filtros">
     <span class="hst-chip">
-        <b>@Model.Count</b> @(Model.Count == 1 ? "comanda" : "comandas")
+        <b>@Model.Total</b> @(Model.Total == 1 ? "comanda" : "comandas")
     </span>
 
     <span class="flex-grow-1"></span>
@@ -36,7 +36,7 @@
     </a>
 </div>
 
-@if (Model.Count == 0)
+@if (Model.Total == 0)
 {
     <div class="hst-card">
         <div class="text-center text-muted py-5">
@@ -62,7 +62,7 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var grupo in Model.GroupBy(c => c.Fecha))
+                @foreach (var grupo in Model.Items.GroupBy(c => c.Fecha))
                 {
                     <tr class="hst-dia">
                         <td colspan="6">@grupo.Key.ToString("dddd d 'de' MMMM").ToUpperInvariant()</td>
@@ -103,6 +103,8 @@ else
             </tbody>
         </table>
     </div>
+
+    <partial name="_Paginador" model='PaginadorViewModel.De(Model, "comanda", "comandas")' />
 }
 
 @section Scripts {

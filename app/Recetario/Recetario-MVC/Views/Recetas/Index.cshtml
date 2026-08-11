@@ -36,7 +36,7 @@
     }
 </div>
 
-@if (Model.Lista.Count == 0)
+@if (Model.Lista.Total == 0)
 {
     <div class="text-center text-muted py-5">
         <i class="bi bi-journal-text" style="font-size: 28px; color: var(--sx-celeste);"></i>
@@ -50,7 +50,7 @@
 else
 {
     <div class="fch-grilla">
-        @foreach (var item in Model.Lista)
+        @foreach (var item in Model.Lista.Items)
         {
             <div class="fch @(item.Activo ? "" : "inactiva")">
                 @if (!item.Completa)
@@ -100,6 +100,8 @@ else
             </div>
         }
     </div>
+
+    <partial name="_Paginador" model='PaginadorViewModel.De(Model.Lista, "receta", "recetas")' />
 }
 
 @if (esAdmin)

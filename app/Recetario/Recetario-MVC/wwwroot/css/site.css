@@ -1106,6 +1106,49 @@ td.num + td {
   padding: 3px 12px;
 }
 
+/* ---------- Paginador (guía 26) ---------- */
+
+.pgn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* El rango va primero y a la izquierda: dice más que el número de página */
+.pgn .rango {
+  color: var(--sx-gris-suave);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  margin-right: auto;
+}
+
+.pgn .pagina {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pgn .disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Dentro de la lista angosta del maestro-detalle no entra en una línea */
+.mdt-lista .pgn {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid #EDF1F4;
+}
+
+.mdt-lista .pgn .rango {
+  margin-right: 0;
+  flex-basis: 100%;
+  text-align: center;
+}
+
 /* ---------- Dashboard: tarjetas, paneles y actividad (guía 34) ---------- */
 
 .dsh-tarjetas {

@@ -20,14 +20,14 @@
             <i class="bi bi-search"></i>
         </button>
     </form>
-    <span class="mut-cocina">@Model.Lista.Count @(Model.Lista.Count == 1 ? "ingrediente" : "ingredientes")</span>
+    <span class="mut-cocina">@Model.Lista.Total @(Model.Lista.Total == 1 ? "ingrediente" : "ingredientes")</span>
     <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto flex-shrink-0"
             data-bs-toggle="modal" data-bs-target="#modalCrear">
         <i class="bi bi-plus-lg"></i> Nuevo ingrediente
     </button>
 </div>
 
-@if (Model.Lista.Count == 0)
+@if (Model.Lista.Total == 0)
 {
     <div class="text-center text-muted py-5">
         <i class="bi bi-egg-fried" style="font-size: 28px; color: var(--sx-celeste);"></i>
@@ -43,14 +43,17 @@ else
     <div class="mdt">
         @* ---------- La lista ---------- *@
         <div class="mdt-lista">
-            @foreach (var item in Model.Lista)
+            @foreach (var item in Model.Lista.Items)
             {
-                <a asp-action="Index" asp-route-busqueda="@Model.Busqueda" asp-route-id="@item.IdIngrediente"
+                <a asp-action="Index" asp-route-busqueda="@Model.Busqueda" asp-route-pagina="@Model.Lista.Pagina" asp-route-id="@item.IdIngrediente"
                    class="@(item.IdIngrediente == sel?.IdIngrediente ? "elegido" : "")">
                     <span class="nombre">@item.Descripcion</span>
                     <span class="dato">@FormatoCantidad.Formatear(item.StockActual, item.Unidad)</span>
                 </a>
             }
+
+            @* Va dentro de la lista: es lo que pagina, no la ficha *@
+            <partial name="_Paginador" model='PaginadorViewModel.De(Model.Lista, "ingrediente", "ingredientes")' />
         </div>
 
         @* ---------- La ficha ---------- *@
@@ -121,6 +124,7 @@ else
                                                 <input type="hidden" name="idPrecio" value="@precio.IdPrecio" />
                                                 <input type="hidden" name="idIngrediente" value="@sel.IdIngrediente" />
                                                 <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <input type="hidden" name="pagina" value="@Model.Lista.Pagina" />
                                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0 ms-2"
                                                         title="Quitar del historial">
                                                     <i class="bi bi-x-circle"></i>
@@ -167,6 +171,7 @@ else
         <div class="modal-content">
             <form asp-action="Crear" method="post">
                 <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <input type="hidden" name="pagina" value="@Model.Lista.Pagina" />
                 <div class="modal-header">
                     <h5 class="modal-title">Nuevo ingrediente</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -191,6 +196,7 @@ else
             <div class="modal-content">
                 <form asp-action="Editar" method="post">
                     <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <input type="hidden" name="pagina" value="@Model.Lista.Pagina" />
                     <div class="modal-header">
                         <h5 class="modal-title">Editar · @sel.Descripcion</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -213,6 +219,7 @@ else
             <div class="modal-content">
                 <form asp-action="AgregarPrecio" method="post">
                     <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <input type="hidden" name="pagina" value="@Model.Lista.Pagina" />
                     <input type="hidden" name="NuevoPrecio.IdIngrediente" value="@sel.IdIngrediente" />
                     <div class="modal-header">
                         <h5 class="modal-title">Cargar precio · @sel.Descripcion</h5>
@@ -277,6 +284,7 @@ else
                     <form asp-action="Eliminar" method="post" class="d-inline">
                         <input type="hidden" name="id" value="@sel.IdIngrediente" />
                         <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                <input type="hidden" name="pagina" value="@Model.Lista.Pagina" />
                         <button type="submit" class="btn btn-danger">Eliminar</button>
                     </form>
                 </div>

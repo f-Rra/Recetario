@@ -10,6 +10,9 @@ public interface IRecetaService
     /// contra código, nombre y los ingredientes que la receta lleva.
     /// </summary>
     Task<List<RecetaListaItem>> ListarAsync(string? busqueda, int? idClasificacion);
+
+    /// <summary>De a una página, para el listado de recetas.</summary>
+    Task<Paginado<RecetaListaItem>> ListarPaginadoAsync(string? busqueda, int? idClasificacion, int pagina);
     Task<RecetaDetalleViewModel?> ObtenerDetalleAsync(int id);
     Task<RecetaFormViewModel?> ObtenerFormAsync(int id);
     Task<List<Clasificacion>> ListarClasificacionesAsync();

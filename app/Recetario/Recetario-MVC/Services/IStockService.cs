@@ -12,9 +12,9 @@ public interface IStockService
     /// <returns>null si se registró; mensaje de error si no.</returns>
     Task<string?> RegistrarMovimientoAsync(MovimientoFormViewModel modelo, string usuarioId);
 
-    /// <summary>Historial con filtros, más reciente primero (últimos 100).</summary>
-    Task<List<MovimientoHistorialItem>> HistorialAsync(
-        int? idIngrediente, Models.TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta);
+    /// <summary>Historial con filtros, más reciente primero, de a una página.</summary>
+    Task<Paginado<MovimientoHistorialItem>> HistorialAsync(
+        int? idIngrediente, Models.TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta, int pagina);
 
     /// <summary>Ingredientes de un depósito para hacer el conteo físico.</summary>
     Task<InventarioViewModel> ObtenerInventarioAsync(Models.Deposito deposito);

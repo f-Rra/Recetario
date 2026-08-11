@@ -89,7 +89,7 @@ public class StockController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Historial(int? ingrediente, TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta)
+    public async Task<IActionResult> Historial(int? ingrediente, TipoMovimiento? tipo, DateOnly? desde, DateOnly? hasta, int pagina = 1)
     {
         var modelo = new HistorialFiltrosViewModel
         {
@@ -97,7 +97,7 @@ public class StockController : Controller
             Tipo = tipo,
             Desde = desde,
             Hasta = hasta,
-            Movimientos = await _stock.HistorialAsync(ingrediente, tipo, desde, hasta)
+            Movimientos = await _stock.HistorialAsync(ingrediente, tipo, desde, hasta, pagina)
         };
 
         var lista = await _ingredientes.ListarAsync(null);

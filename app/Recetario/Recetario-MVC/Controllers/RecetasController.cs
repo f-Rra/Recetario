@@ -18,9 +18,9 @@ public class RecetasController : Controller
         _recetas = recetas;
     }
 
-    public async Task<IActionResult> Index(string? busqueda, int? clasificacion)
+    public async Task<IActionResult> Index(string? busqueda, int? clasificacion, int pagina = 1)
     {
-        return View(await ArmarPaginaAsync(busqueda, clasificacion));
+        return View(await ArmarPaginaAsync(busqueda, clasificacion, pagina));
     }
 
     [HttpGet]
@@ -166,7 +166,8 @@ public class RecetasController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task<RecetasPaginaViewModel> ArmarPaginaAsync(string? busqueda, int? clasificacion)
+    private async Task<RecetasPaginaViewModel> ArmarPaginaAsync(
+        string? busqueda, int? clasificacion, int pagina = 1)
     {
         await CargarClasificacionesAsync(clasificacion);
 
@@ -174,7 +175,7 @@ public class RecetasController : Controller
         {
             Busqueda = busqueda,
             IdClasificacion = clasificacion,
-            Lista = await _recetas.ListarAsync(busqueda, clasificacion),
+            Lista = await _recetas.ListarPaginadoAsync(busqueda, clasificacion, pagina),
             // El modal de alta ya trae el código que le va a tocar
             Nueva = new RecetaFormViewModel { Codigo = await _recetas.GenerarCodigoAsync() }
         };

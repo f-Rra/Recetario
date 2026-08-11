@@ -39,7 +39,8 @@ public interface IComandaService
 
     // ---------- Consulta ----------
 
-    /// <summary>Comandas generadas, filtrables por rango de fechas y receta.</summary>
-    Task<List<ComandaListaItem>> ListarAsync(DateOnly? desde, DateOnly? hasta, int? idReceta);
+    /// <summary>Comandas generadas, filtrables por rango de fechas y receta, de a una página.</summary>
+    Task<Paginado<ComandaListaItem>> ListarAsync(
+        DateOnly? desde, DateOnly? hasta, int? idReceta, int pagina = 1);
     Task<ComandaDetalleViewModel?> ObtenerDetalleAsync(int idComanda);
 }
