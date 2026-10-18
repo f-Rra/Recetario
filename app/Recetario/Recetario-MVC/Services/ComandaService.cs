@@ -231,6 +231,9 @@ public class ComandaService : IComandaService
 
         var ingredientesPorReceta = await CalcularEfectivosPorRecetaAsync(carrito);
 
+        // Primer chequeo, afuera de la transacción: evita abrir una cuando ya se ve que falta
+        // stock. No alcanza para decidir, porque otra comanda puede descontar entre este
+        // chequeo y el descuento: el que decide es el de adentro de la transacción.
         var faltantes = await ValidarStockAsync(ingredientesPorReceta);
         if (faltantes.Count > 0)
         {
@@ -238,13 +241,64 @@ public class ComandaService : IComandaService
             return resultado;
         }
 
-        var secciones = new List<SeccionComandaPdf>();
-        var idsComandas = new List<int>();
+        try
+        {
+            await ReintentoPorConcurrencia.EjecutarAsync(_context, () =>
+                GenerarEnTransaccionAsync(carrito, usuarioId, responsables, ingredientesPorReceta, resultado));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Tres intentos seguidos chocaron con otra persona que seguía moviendo el stock
+            return new ResultadoGeneracion
+            {
+                Error = "El stock de los ingredientes cambió mientras se generaba la comanda. Probá de nuevo."
+            };
+        }
 
+        if (resultado.Ok)
+            await CompletarSeccionesAsync(resultado.Secciones, carrito);
+
+        return resultado;
+    }
+
+    /// <summary>
+    /// Un intento de generar las comandas. Lee el stock acá adentro, ya dentro de la
+    /// transacción, y lo valida con las mismas entidades que después descuenta. Si otra
+    /// persona cambia alguno de esos ingredientes entre la lectura y el guardado, EF lo
+    /// detecta (StockActual tiene token de concurrencia), la transacción se deshace y
+    /// ReintentoPorConcurrencia vuelve a llamar acá, con el stock ya actualizado.
+    /// </summary>
+    private async Task GenerarEnTransaccionAsync(
+        CarritoComanda carrito,
+        string usuarioId,
+        Dictionary<int, Persona> responsables,
+        Dictionary<int, List<IngredienteEfectivo>> ingredientesPorReceta,
+        ResultadoGeneracion resultado)
+    {
         var estrategia = _context.Database.CreateExecutionStrategy();
         await estrategia.ExecuteAsync(async () =>
         {
+            // Cada vuelta arranca limpia: lo que dejó un intento anterior no sirve
+            resultado.IdsComandas.Clear();
+            resultado.Secciones.Clear();
+            resultado.Faltantes = new List<FaltanteStock>();
+
             await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+            var requerido = RequeridoPorIngrediente(ingredientesPorReceta);
+            var idsIngredientes = requerido.Keys.ToList();
+            var ingredientes = await _context.Ingredientes
+                .Where(i => idsIngredientes.Contains(i.IdIngrediente))
+                .ToDictionaryAsync(i => i.IdIngrediente);
+
+            var faltantes = CalcularFaltantes(
+                requerido, id => ingredientes.TryGetValue(id, out var ing) ? ing.StockActual : 0m);
+            if (faltantes.Count > 0)
+            {
+                // Todavía no se escribió nada: al salir sin Commit la transacción se deshace
+                resultado.Faltantes = faltantes;
+                return;
+            }
 
             foreach (var item in carrito.Items)
             {
@@ -278,15 +332,16 @@ public class ComandaService : IComandaService
                         Observaciones = $"Consumo comanda #{comanda.IdComanda}"
                     });
 
-                    var ingrediente = await _context.Ingredientes.FindAsync(ing.IdIngrediente);
-                    if (ingrediente is not null)
+                    // La misma entidad que se validó arriba: si el stock cambió desde que se
+                    // leyó, este guardado falla en lugar de pisar el cambio
+                    if (ingredientes.TryGetValue(ing.IdIngrediente, out var ingrediente))
                         ingrediente.StockActual -= ing.Cantidad;
                 }
 
                 await _context.SaveChangesAsync();
-                idsComandas.Add(comanda.IdComanda);
+                resultado.IdsComandas.Add(comanda.IdComanda);
 
-                secciones.Add(new SeccionComandaPdf
+                resultado.Secciones.Add(new SeccionComandaPdf
                 {
                     Receta = item.Nombre,
                     Sector = item.Clasificacion,
@@ -306,11 +361,6 @@ public class ComandaService : IComandaService
 
             await transaccion.CommitAsync();
         });
-
-        await CompletarSeccionesAsync(secciones, carrito);
-        resultado.IdsComandas = idsComandas;
-        resultado.Secciones = secciones;
-        return resultado;
     }
 
     /// <summary>Códigos y procedimiento de cada receta, para el PDF.</summary>
@@ -561,29 +611,25 @@ public class ComandaService : IComandaService
             .ToList();
     }
 
-    /// <summary>Suma lo requerido por todas las recetas y lo compara con el stock.</summary>
-    private async Task<List<FaltanteStock>> ValidarStockAsync(
-        Dictionary<int, List<IngredienteEfectivo>> ingredientesPorReceta)
-    {
-        var requerido = ingredientesPorReceta.Values
+    /// <summary>Lo que necesita cada ingrediente sumando todas las recetas del pedido.</summary>
+    private sealed record RequeridoDeIngrediente(string Nombre, string Unidad, decimal Cantidad);
+
+    private static Dictionary<int, RequeridoDeIngrediente> RequeridoPorIngrediente(
+        Dictionary<int, List<IngredienteEfectivo>> ingredientesPorReceta) =>
+        ingredientesPorReceta.Values
             .SelectMany(lista => lista)
             .GroupBy(i => i.IdIngrediente)
-            .ToDictionary(g => g.Key, g => new
-            {
-                Nombre = g.First().Nombre,
-                Unidad = g.First().Unidad,
-                Cantidad = g.Sum(x => x.Cantidad)
-            });
+            .ToDictionary(g => g.Key, g => new RequeridoDeIngrediente(
+                g.First().Nombre, g.First().Unidad, g.Sum(x => x.Cantidad)));
 
-        var ids = requerido.Keys.ToList();
-        var stocks = await _context.Ingredientes
-            .Where(i => ids.Contains(i.IdIngrediente))
-            .ToDictionaryAsync(i => i.IdIngrediente, i => i.StockActual);
-
+    /// <summary>Compara lo requerido con el stock que informa <paramref name="disponiblePara"/>.</summary>
+    private static List<FaltanteStock> CalcularFaltantes(
+        Dictionary<int, RequeridoDeIngrediente> requerido, Func<int, decimal> disponiblePara)
+    {
         var faltantes = new List<FaltanteStock>();
         foreach (var (id, datos) in requerido)
         {
-            var disponible = stocks.GetValueOrDefault(id, 0m);
+            var disponible = disponiblePara(id);
             if (disponible < datos.Cantidad)
             {
                 faltantes.Add(new FaltanteStock
@@ -598,6 +644,20 @@ public class ComandaService : IComandaService
         }
 
         return faltantes.OrderBy(f => f.Ingrediente).ToList();
+    }
+
+    /// <summary>Suma lo requerido por todas las recetas y lo compara con el stock.</summary>
+    private async Task<List<FaltanteStock>> ValidarStockAsync(
+        Dictionary<int, List<IngredienteEfectivo>> ingredientesPorReceta)
+    {
+        var requerido = RequeridoPorIngrediente(ingredientesPorReceta);
+
+        var ids = requerido.Keys.ToList();
+        var stocks = await _context.Ingredientes
+            .Where(i => ids.Contains(i.IdIngrediente))
+            .ToDictionaryAsync(i => i.IdIngrediente, i => i.StockActual);
+
+        return CalcularFaltantes(requerido, id => stocks.GetValueOrDefault(id, 0m));
     }
 
     // ================= Consulta =================

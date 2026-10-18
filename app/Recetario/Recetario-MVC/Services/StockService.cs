@@ -27,42 +27,63 @@ public class StockService : IStockService
         if (cantidad < 0 || (cantidad == 0 && tipo != TipoMovimiento.Ajuste))
             return "La cantidad debe ser mayor a cero.";
 
-        var ingrediente = await _context.Ingredientes.FindAsync(modelo.IdIngrediente);
-        if (ingrediente is null)
-            return "El ingrediente no existe.";
+        string? error = null;
 
-        var estrategia = _context.Database.CreateExecutionStrategy();
-        await estrategia.ExecuteAsync(async () =>
+        try
         {
-            await using var transaccion = await _context.Database.BeginTransactionAsync();
-
-            _context.MovimientosStock.Add(new MovimientoStock
+            // El ingrediente se lee adentro del reintento: si el stock cambia mientras tanto
+            // (otra persona cargando un movimiento, o una comanda), se vuelve a leer y el
+            // movimiento se aplica sobre el valor nuevo en lugar de pisarlo
+            await ReintentoPorConcurrencia.EjecutarAsync(_context, async () =>
             {
-                IdIngrediente = ingrediente.IdIngrediente,
-                Tipo = tipo,
-                Cantidad = cantidad,
-                IdUnidad = ingrediente.IdUnidad,
-                Fecha = DateTime.Now,
-                UsuarioId = usuarioId,
-                Observaciones = string.IsNullOrWhiteSpace(modelo.Observaciones)
-                    ? null
-                    : modelo.Observaciones.Trim()
+                error = null;
+
+                var ingrediente = await _context.Ingredientes.FindAsync(modelo.IdIngrediente);
+                if (ingrediente is null)
+                {
+                    error = "El ingrediente no existe.";
+                    return;
+                }
+
+                var estrategia = _context.Database.CreateExecutionStrategy();
+                await estrategia.ExecuteAsync(async () =>
+                {
+                    await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+                    _context.MovimientosStock.Add(new MovimientoStock
+                    {
+                        IdIngrediente = ingrediente.IdIngrediente,
+                        Tipo = tipo,
+                        Cantidad = cantidad,
+                        IdUnidad = ingrediente.IdUnidad,
+                        Fecha = DateTime.Now,
+                        UsuarioId = usuarioId,
+                        Observaciones = string.IsNullOrWhiteSpace(modelo.Observaciones)
+                            ? null
+                            : modelo.Observaciones.Trim()
+                    });
+
+                    // Misma semántica que el trigger viejo
+                    ingrediente.StockActual = tipo switch
+                    {
+                        TipoMovimiento.Entrada => ingrediente.StockActual + cantidad,
+                        TipoMovimiento.Salida => ingrediente.StockActual - cantidad,
+                        TipoMovimiento.Ajuste => cantidad,
+                        _ => ingrediente.StockActual
+                    };
+
+                    await _context.SaveChangesAsync();
+                    await transaccion.CommitAsync();
+                });
             });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Tres intentos seguidos chocaron con otra persona que seguía moviendo el stock
+            return "El stock de este ingrediente cambió mientras se registraba el movimiento. Probá de nuevo.";
+        }
 
-            // Misma semántica que el trigger viejo
-            ingrediente.StockActual = tipo switch
-            {
-                TipoMovimiento.Entrada => ingrediente.StockActual + cantidad,
-                TipoMovimiento.Salida => ingrediente.StockActual - cantidad,
-                TipoMovimiento.Ajuste => cantidad,
-                _ => ingrediente.StockActual
-            };
-
-            await _context.SaveChangesAsync();
-            await transaccion.CommitAsync();
-        });
-
-        return null;
+        return error;
     }
 
     public async Task<InventarioViewModel> ObtenerInventarioAsync(Deposito deposito)
@@ -96,43 +117,49 @@ public class StockService : IStockService
             return 0;
 
         var ids = contados.Keys.ToList();
-        var ingredientes = await _context.Ingredientes
-            .Where(i => i.Deposito == deposito && ids.Contains(i.IdIngrediente))
-            .ToListAsync();
-
         var ajustados = 0;
-        var estrategia = _context.Database.CreateExecutionStrategy();
 
-        await estrategia.ExecuteAsync(async () =>
+        // Los ingredientes se leen adentro del reintento: si una comanda cambió el stock de alguno
+        // mientras se guardaba el conteo, se vuelve a leer y se compara contra el valor nuevo
+        await ReintentoPorConcurrencia.EjecutarAsync(_context, async () =>
         {
-            await using var transaccion = await _context.Database.BeginTransactionAsync();
-            ajustados = 0;
+            var ingredientes = await _context.Ingredientes
+                .Where(i => i.Deposito == deposito && ids.Contains(i.IdIngrediente))
+                .ToListAsync();
 
-            foreach (var ingrediente in ingredientes)
+            var estrategia = _context.Database.CreateExecutionStrategy();
+
+            await estrategia.ExecuteAsync(async () =>
             {
-                var contado = contados[ingrediente.IdIngrediente];
+                await using var transaccion = await _context.Database.BeginTransactionAsync();
+                ajustados = 0;
 
-                // Lo que ya coincide con el sistema no genera movimiento
-                if (contado == ingrediente.StockActual)
-                    continue;
-
-                _context.MovimientosStock.Add(new MovimientoStock
+                foreach (var ingrediente in ingredientes)
                 {
-                    IdIngrediente = ingrediente.IdIngrediente,
-                    Tipo = TipoMovimiento.Ajuste,
-                    Cantidad = contado,
-                    IdUnidad = ingrediente.IdUnidad,
-                    Fecha = DateTime.Now,
-                    UsuarioId = usuarioId,
-                    Observaciones = $"Inventario de {NombreDeposito.De(deposito).ToLowerInvariant()}"
-                });
+                    var contado = contados[ingrediente.IdIngrediente];
 
-                ingrediente.StockActual = contado;
-                ajustados++;
-            }
+                    // Lo que ya coincide con el sistema no genera movimiento
+                    if (contado == ingrediente.StockActual)
+                        continue;
 
-            await _context.SaveChangesAsync();
-            await transaccion.CommitAsync();
+                    _context.MovimientosStock.Add(new MovimientoStock
+                    {
+                        IdIngrediente = ingrediente.IdIngrediente,
+                        Tipo = TipoMovimiento.Ajuste,
+                        Cantidad = contado,
+                        IdUnidad = ingrediente.IdUnidad,
+                        Fecha = DateTime.Now,
+                        UsuarioId = usuarioId,
+                        Observaciones = $"Inventario de {NombreDeposito.De(deposito).ToLowerInvariant()}"
+                    });
+
+                    ingrediente.StockActual = contado;
+                    ajustados++;
+                }
+
+                await _context.SaveChangesAsync();
+                await transaccion.CommitAsync();
+            });
         });
 
         return ajustados;

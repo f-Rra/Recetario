@@ -21,7 +21,11 @@ public class IngredienteConfiguracion : IEntityTypeConfiguration<Ingrediente>
         builder.Property(i => i.Deposito)
                .HasDefaultValue(Deposito.Bodega)
                .HasSentinel((Deposito)0);
-        builder.Property(i => i.StockActual).HasPrecision(10, 4);
+        // Token de concurrencia: el UPDATE del stock lleva "WHERE StockActual = <lo que se leyó>".
+        // Si otra persona lo cambió entre la lectura y el guardado, no actualiza ninguna fila y EF
+        // lanza DbUpdateConcurrencyException en lugar de pisar el cambio de la otra.
+        // No agrega ninguna columna: se compara contra el propio valor del stock.
+        builder.Property(i => i.StockActual).HasPrecision(10, 4).IsConcurrencyToken();
         builder.Property(i => i.StockMinimo).HasPrecision(10, 4);
         builder.HasIndex(i => i.Codigo).IsUnique();
 
