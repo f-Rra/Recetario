@@ -127,7 +127,7 @@ public class IngredienteService : IIngredienteService
             StockMinimo = ingrediente.StockMinimo,
             Estado = StockEstado.De(ingrediente.StockActual, ingrediente.StockMinimo),
             Recetas = recetas,
-            NuevoPrecio = new PrecioFormViewModel { IdIngrediente = id },
+            NuevoPrecio = new PrecioFormViewModel { IdIngrediente = id, FechaVigencia = _reloj.Hoy() },
             Datos = new IngredienteFormViewModel
             {
                 IdIngrediente = ingrediente.IdIngrediente,

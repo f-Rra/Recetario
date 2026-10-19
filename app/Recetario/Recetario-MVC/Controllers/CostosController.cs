@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RecetarioMVC.Data;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.Models;
 using RecetarioMVC.Services;
 using RecetarioMVC.ViewModels;
@@ -16,15 +17,18 @@ public class CostosController : Controller
     private readonly ICosteoService _costeo;
     private readonly IRecetaService _recetas;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly TimeProvider _reloj;
 
     public CostosController(
         ICosteoService costeo,
         IRecetaService recetas,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        TimeProvider reloj)
     {
         _costeo = costeo;
         _recetas = recetas;
         _userManager = userManager;
+        _reloj = reloj;
     }
 
     [HttpGet]
@@ -75,7 +79,7 @@ public class CostosController : Controller
         if (costeo is null)
             return NotFound();
 
-        var pdf = Services.Pdf.CosteoPdf.Generar(costeo);
+        var pdf = Services.Pdf.CosteoPdf.Generar(costeo, _reloj.Ahora());
         return File(pdf, "application/pdf", $"costeo-{costeo.Codigo}-{costeo.Fecha:yyyy-MM-dd}.pdf");
     }
 

@@ -9,7 +9,9 @@ namespace RecetarioMVC.Services.Pdf;
 /// <summary>Informe de costeo registrado (reemplaza a GeneradorPDF.GenerarCosto).</summary>
 public static class CosteoPdf
 {
-    public static byte[] Generar(CosteoRegistradoViewModel costeo)
+    // generado: cuándo se emite el informe, para el pie de página. Llega de afuera (del reloj
+    // de la aplicación) porque esta clase es estática y no tiene cómo pedirlo.
+    public static byte[] Generar(CosteoRegistradoViewModel costeo, DateTime generado)
     {
         return Document.Create(doc =>
         {
@@ -73,7 +75,7 @@ public static class CosteoPdf
                     });
                 });
 
-                pagina.Footer().Element(EstiloPdf.PieDePagina);
+                pagina.Footer().Element(e => EstiloPdf.PieDePagina(e, generado));
             });
         }).GeneratePdf();
     }

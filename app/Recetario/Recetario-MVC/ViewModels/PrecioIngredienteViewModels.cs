@@ -36,5 +36,6 @@ public class PrecioFormViewModel
 
     [Required(ErrorMessage = "Ingresá la fecha de vigencia.")]
     [Display(Name = "Fecha de vigencia")]
-    public DateOnly FechaVigencia { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    // La fecha que propone el formulario la completa IngredienteService.ObtenerDetalleAsync
+    public DateOnly FechaVigencia { get; set; }
 }

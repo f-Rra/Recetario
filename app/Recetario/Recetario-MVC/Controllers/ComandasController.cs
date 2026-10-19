@@ -18,11 +18,13 @@ public class ComandasController : Controller
 
     private readonly IComandaService _comandas;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly TimeProvider _reloj;
 
-    public ComandasController(IComandaService comandas, UserManager<ApplicationUser> userManager)
+    public ComandasController(IComandaService comandas, UserManager<ApplicationUser> userManager, TimeProvider reloj)
     {
         _comandas = comandas;
         _userManager = userManager;
+        _reloj = reloj;
     }
 
     // ================= Comandera =================
@@ -225,7 +227,7 @@ public class ComandasController : Controller
         var usuario = await _userManager.GetUserAsync(User);
         var pdf = ComandaPdf.Generar(new ComandaPdfViewModel
         {
-            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Fecha = _reloj.Hoy(),
             Comensales = carrito.Comensales,
             Usuario = usuario?.NombreCompleto ?? string.Empty,
             Secciones = resultado.Secciones
@@ -248,7 +250,7 @@ public class ComandasController : Controller
             return NotFound();
 
         HttpContext.Session.Remove(ClavePdfPendiente);
-        return File(pdf, "application/pdf", $"comanda-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
+        return File(pdf, "application/pdf", $"comanda-{_reloj.Ahora():yyyyMMdd-HHmm}.pdf");
     }
 
     // ================= Consulta =================
@@ -256,7 +258,7 @@ public class ComandasController : Controller
     public async Task<IActionResult> Index(DateOnly? desde, DateOnly? hasta, int? receta, int pagina = 1)
     {
         // Por defecto, las del día
-        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var hoy = _reloj.Hoy();
         desde ??= hoy;
         hasta ??= hoy;
 

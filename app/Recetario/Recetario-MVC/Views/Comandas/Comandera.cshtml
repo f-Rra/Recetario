@@ -1,4 +1,5 @@
 @model ComanderaViewModel
+@inject TimeProvider Reloj
 @using System.Text.Json
 @using RecetarioMVC.Models
 @{
@@ -91,7 +92,7 @@
     @* ==================== El ticket ==================== *@
     <aside class="cmd-ticket">
         <h2>COMANDA</h2>
-        <div class="cmd-fecha">@DateTime.Now.ToString("dddd d 'de' MMMM · HH:mm")</div>
+        <div class="cmd-fecha">@Reloj.GetLocalNow().ToString("dddd d 'de' MMMM · HH:mm")</div>
         <hr class="cmd-guiones">
 
         @if (Model.Carrito.EstaVacio)

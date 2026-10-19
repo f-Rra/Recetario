@@ -43,13 +43,13 @@ public static class EstiloPdf
              .PaddingVertical(6).PaddingHorizontal(8)
              .DefaultTextStyle(t => t.FontSize(12).FontColor(GrisTexto));
 
-    public static void PieDePagina(IContainer contenedor)
+    public static void PieDePagina(IContainer contenedor, DateTime generado)
     {
         contenedor.AlignCenter().Text(t =>
         {
             t.DefaultTextStyle(s => s.FontSize(9.5f).FontColor(GrisSuave));
             t.Span("Generado el ");
-            t.Span($"{DateTime.Now:dd/MM/yyyy HH:mm}");
+            t.Span($"{generado:dd/MM/yyyy HH:mm}");
             t.Span(" · Página ");
             t.CurrentPageNumber();
             t.Span(" de ");
