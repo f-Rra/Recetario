@@ -7,7 +7,7 @@ namespace RecetarioMVC.Tests;
 
 public class DashboardServiceTests
 {
-    private static readonly DateOnly Hoy = DateOnly.FromDateTime(DateTime.Today);
+    private static readonly DateOnly Hoy = new(2026, 3, 10);   // el día que marca RelojDePrueba.Cualquiera()
 
     private static ApplicationDbContext CrearContexto()
     {
@@ -47,7 +47,7 @@ public class DashboardServiceTests
     public async Task Resumen_ValorizaElInventarioAlPrecioVigente()
     {
         using var context = CrearContexto();
-        var servicio = new DashboardService(context);
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
 
         var resumen = await servicio.ObtenerResumenAsync();
 
@@ -61,7 +61,7 @@ public class DashboardServiceTests
     public async Task Resumen_CuentaLosIngredientesPorDeposito()
     {
         using var context = CrearContexto();
-        var servicio = new DashboardService(context);
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
 
         var resumen = await servicio.ObtenerResumenAsync();
 
@@ -73,7 +73,7 @@ public class DashboardServiceTests
     public async Task Resumen_MarcaLasRecetasIncompletas()
     {
         using var context = CrearContexto();
-        var servicio = new DashboardService(context);
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
 
         // La única receta no tiene ingredientes ni pasos
         var sinContenido = await servicio.ObtenerResumenAsync();
@@ -104,7 +104,7 @@ public class DashboardServiceTests
             new Comanda { IdComanda = 2, IdReceta = 1, IdPersona = 1, UsuarioId = "u1", Fecha = Hoy, Porciones = 80 },
             new Comanda { IdComanda = 3, IdReceta = 1, IdPersona = 1, UsuarioId = "u1", Fecha = mesAnterior, Porciones = 100 });
         context.SaveChanges();
-        var servicio = new DashboardService(context);
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
 
         var resumen = await servicio.ObtenerResumenAsync();
 
@@ -122,7 +122,7 @@ public class DashboardServiceTests
             IdComanda = 1, IdReceta = 1, IdPersona = 1, UsuarioId = "u1", Fecha = Hoy, Porciones = 50
         });
         context.SaveChanges();
-        var servicio = new DashboardService(context);
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
 
         var resumen = await servicio.ObtenerResumenAsync();
 
@@ -145,7 +145,7 @@ public class DashboardServiceTests
             // Este sí: es una reposición manual
             new MovimientoStock { IdMovimiento = 3, IdIngrediente = 1, Tipo = TipoMovimiento.Entrada, Cantidad = 20m, IdUnidad = 1, Fecha = DateTime.Now, UsuarioId = "u1", Observaciones = "Compra semanal" });
         context.SaveChanges();
-        var servicio = new DashboardService(context);
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
 
         var resumen = await servicio.ObtenerResumenAsync();
 

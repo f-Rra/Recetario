@@ -16,15 +16,17 @@ public class DashboardService : IDashboardService
     private const string PrefijoConsumo = "Consumo comanda";
 
     private readonly ApplicationDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public DashboardService(ApplicationDbContext context)
+    public DashboardService(ApplicationDbContext context, TimeProvider reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     public async Task<DashboardViewModel> ObtenerResumenAsync()
     {
-        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var hoy = _reloj.Hoy();
         var inicioMes = new DateOnly(hoy.Year, hoy.Month, 1);
         var inicioMesAnterior = inicioMes.AddMonths(-1);
 

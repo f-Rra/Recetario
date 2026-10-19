@@ -47,6 +47,9 @@ builder.Services.AddScoped<RecetarioMVC.Services.IComandaService, RecetarioMVC.S
 builder.Services.AddScoped<RecetarioMVC.Services.IPersonaService, RecetarioMVC.Services.PersonaService>();
 builder.Services.AddScoped<RecetarioMVC.Services.IStockService, RecetarioMVC.Services.StockService>();
 
+// El reloj de la aplicación: siempre da la hora de Argentina, esté donde esté el servidor
+builder.Services.AddSingleton<TimeProvider, RecetarioMVC.Helpers.RelojArgentina>();
+
 // El pedido en curso de la comandera vive en la sesión (guía 15)
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

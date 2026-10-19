@@ -112,7 +112,7 @@ public class StockConcurrenciaTests
         // Entre el chequeo de stock y el descuento, otra comanda se lleva 9 kg: quedan 1 y esta necesita 1,5
         var interceptor = new OtraPersonaCambiaElStock(() => CambiarStockAsync(baseDeDatos, -9m));
         using var contexto = new ApplicationDbContext(Opciones(baseDeDatos).AddInterceptors(interceptor).Options);
-        var servicio = new ComandaService(contexto);
+        var servicio = new ComandaService(contexto, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(CarritoDeNoquis(), "u1");
 
@@ -130,7 +130,7 @@ public class StockConcurrenciaTests
         // Otra comanda se lleva 1 kg en el medio: quedan 9, todavía alcanza
         var interceptor = new OtraPersonaCambiaElStock(() => CambiarStockAsync(baseDeDatos, -1m));
         using var contexto = new ApplicationDbContext(Opciones(baseDeDatos).AddInterceptors(interceptor).Options);
-        var servicio = new ComandaService(contexto);
+        var servicio = new ComandaService(contexto, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(CarritoDeNoquis(), "u1");
 
@@ -148,7 +148,7 @@ public class StockConcurrenciaTests
         // Una entrada de 5 kg mientras otra persona carga una entrada de 3
         var interceptor = new OtraPersonaCambiaElStock(() => CambiarStockAsync(baseDeDatos, 3m));
         using var contexto = new ApplicationDbContext(Opciones(baseDeDatos).AddInterceptors(interceptor).Options);
-        var servicio = new StockService(contexto);
+        var servicio = new StockService(contexto, RelojDePrueba.Cualquiera());
 
         var error = await servicio.RegistrarMovimientoAsync(
             new MovimientoFormViewModel { IdIngrediente = Harina, Tipo = TipoMovimiento.Entrada, Cantidad = 5m }, "u1");

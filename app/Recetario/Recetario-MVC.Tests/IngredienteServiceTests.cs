@@ -52,7 +52,7 @@ public class IngredienteServiceTests
     public async Task Detalle_TraeLosDatosConSuEstadoDeStock()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var detalle = await servicio.ObtenerDetalleAsync(Lechuga);
 
@@ -68,7 +68,7 @@ public class IngredienteServiceTests
     public async Task Detalle_ListaLasRecetasQueLoLlevan()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var lechuga = await servicio.ObtenerDetalleAsync(Lechuga);
         var harina = await servicio.ObtenerDetalleAsync(Harina);
@@ -81,7 +81,7 @@ public class IngredienteServiceTests
     public async Task Detalle_DejaElFormularioListoParaEditar()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var detalle = await servicio.ObtenerDetalleAsync(Lechuga);
 
@@ -98,7 +98,7 @@ public class IngredienteServiceTests
     public async Task Detalle_DeUnIngredienteQueNoExiste_EsNulo()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         Assert.Null(await servicio.ObtenerDetalleAsync(999));
     }

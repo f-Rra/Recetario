@@ -45,7 +45,7 @@ public class StockServiceTests
     public async Task Entrada_SumaYAuditaConElUsuario()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Entrada, 5.5m), "u1");
 
@@ -60,7 +60,7 @@ public class StockServiceTests
     public async Task Salida_RestaYPermiteQuedarNegativo()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Salida, 12m), "u1");
 
@@ -72,7 +72,7 @@ public class StockServiceTests
     public async Task Ajuste_SeteaElStockAlValorContado()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         // Semántica del trigger viejo: "conté y hay 3,25"
         var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Ajuste, 3.25m), "u1");
@@ -85,7 +85,7 @@ public class StockServiceTests
     public async Task Ajuste_ACero_EsValido()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Ajuste, 0m), "u1");
 
@@ -97,7 +97,7 @@ public class StockServiceTests
     public async Task CantidadCeroEnEntradaOSalida_FallaSinTocarNada()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         var errorEntrada = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Entrada, 0m), "u1");
         var errorInexistente = await servicio.RegistrarMovimientoAsync(new MovimientoFormViewModel
@@ -126,7 +126,7 @@ public class StockServiceTests
             StockActual = 5m
         });
         context.SaveChanges();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
         await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Entrada, 1m), "u1");
         await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Salida, 2m), "u1");
         await servicio.RegistrarMovimientoAsync(new MovimientoFormViewModel
@@ -170,7 +170,7 @@ public class StockServiceTests
     {
         using var context = CrearContexto();
         AgregarIngredienteDeCamara(context);
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         var bodega = await servicio.ObtenerInventarioAsync(Deposito.Bodega);
         var camara = await servicio.ObtenerInventarioAsync(Deposito.Camara);
@@ -194,7 +194,7 @@ public class StockServiceTests
             StockActual = 8m
         });
         context.SaveChanges();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
         {
@@ -212,7 +212,7 @@ public class StockServiceTests
     public async Task Inventario_LoQueYaCoincide_NoGeneraMovimiento()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         // El stock del escenario base es 10: contar 10 no es un ajuste
         var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
@@ -228,7 +228,7 @@ public class StockServiceTests
     public async Task Inventario_RegistraCadaDiferenciaComoAjusteConSuObservacion()
     {
         using var context = CrearContexto();
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
         {
@@ -247,7 +247,7 @@ public class StockServiceTests
     {
         using var context = CrearContexto();
         AgregarIngredienteDeCamara(context);
-        var servicio = new StockService(context);
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
         // Se manda el de cámara pero se está contando bodega
         var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
@@ -263,7 +263,7 @@ public class StockServiceTests
     public async Task AltaDeIngredienteConStockInicial_GeneraElMovimientoAuditado()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         await servicio.CrearAsync(new IngredienteFormViewModel
         {

@@ -11,10 +11,12 @@ public class ComandaService : IComandaService
     private const int ComandasPorPagina = 25;
 
     private readonly ApplicationDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public ComandaService(ApplicationDbContext context)
+    public ComandaService(ApplicationDbContext context, TimeProvider reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     /// <summary>Ingrediente de una receta ya resuelto contra la base.</summary>
@@ -307,7 +309,7 @@ public class ComandaService : IComandaService
                 var comanda = new Comanda
                 {
                     IdReceta = item.IdReceta,
-                    Fecha = DateOnly.FromDateTime(DateTime.Today),
+                    Fecha = _reloj.Hoy(),
                     Porciones = carrito.Comensales,
                     UsuarioId = usuarioId,
                     IdPersona = responsables[item.IdReceta].IdPersona
@@ -327,7 +329,7 @@ public class ComandaService : IComandaService
                         Tipo = TipoMovimiento.Salida,
                         Cantidad = ing.Cantidad,
                         IdUnidad = ing.IdUnidad,
-                        Fecha = DateTime.Now,
+                        Fecha = _reloj.Ahora(),
                         UsuarioId = usuarioId,
                         Observaciones = $"Consumo comanda #{comanda.IdComanda}"
                     });

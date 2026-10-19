@@ -14,10 +14,12 @@ public class IngredienteService : IIngredienteService
     private const int IngredientesPorPagina = 25;
 
     private readonly ApplicationDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public IngredienteService(ApplicationDbContext context)
+    public IngredienteService(ApplicationDbContext context, TimeProvider reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     /// <summary>
@@ -183,7 +185,7 @@ public class IngredienteService : IIngredienteService
                 Tipo = TipoMovimiento.Entrada,
                 Cantidad = modelo.StockActual,
                 IdUnidad = ingrediente.IdUnidad,
-                Fecha = DateTime.Now,
+                Fecha = _reloj.Ahora(),
                 UsuarioId = usuarioId,
                 Observaciones = "Stock inicial"
             });

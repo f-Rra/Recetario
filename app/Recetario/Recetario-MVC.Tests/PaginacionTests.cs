@@ -41,7 +41,7 @@ public class PaginacionTests
     public async Task PrimeraPagina_TraeElTamanoYElTotalCompleto()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var pagina = await servicio.ListarPaginadoAsync(null, 1);
 
@@ -58,7 +58,7 @@ public class PaginacionTests
     public async Task LasPaginas_NoRepitenNiSalteanFilas()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var primera = await servicio.ListarPaginadoAsync(null, 1);
         var segunda = await servicio.ListarPaginadoAsync(null, 2);
@@ -74,7 +74,7 @@ public class PaginacionTests
     public async Task UltimaPagina_TraeSoloElResto()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var segunda = await servicio.ListarPaginadoAsync(null, 2);
 
@@ -89,7 +89,7 @@ public class PaginacionTests
     public async Task PaginaFueraDeRango_CaeEnLaUltimaQueExiste()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         // Un enlace viejo, o filtrar estando en la página 5
         var lejos = await servicio.ListarPaginadoAsync(null, 99);
@@ -104,7 +104,7 @@ public class PaginacionTests
     public async Task ElFiltro_CambiaElTotalYLasPaginas()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         // Los nombres van de "Ingrediente 001" a "Ingrediente 030":
         // "Ingrediente 01" matchea del 010 al 019, diez en total
@@ -119,7 +119,7 @@ public class PaginacionTests
     public async Task SinResultados_NoRompeNiInventaPaginas()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         var vacia = await servicio.ListarPaginadoAsync("no existe", 1);
 
@@ -134,7 +134,7 @@ public class PaginacionTests
     public async Task SinPaginar_SigueTrayendoTodo()
     {
         using var context = CrearContexto();
-        var servicio = new IngredienteService(context);
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
 
         // El stock muestra los dos depósitos a la vez: necesita la lista entera
         var todos = await servicio.ListarAsync(null);

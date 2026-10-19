@@ -11,10 +11,12 @@ public class StockService : IStockService
     private const int MovimientosPorPagina = 25;
 
     private readonly ApplicationDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public StockService(ApplicationDbContext context)
+    public StockService(ApplicationDbContext context, TimeProvider reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     public async Task<string?> RegistrarMovimientoAsync(MovimientoFormViewModel modelo, string usuarioId)
@@ -56,7 +58,7 @@ public class StockService : IStockService
                         Tipo = tipo,
                         Cantidad = cantidad,
                         IdUnidad = ingrediente.IdUnidad,
-                        Fecha = DateTime.Now,
+                        Fecha = _reloj.Ahora(),
                         UsuarioId = usuarioId,
                         Observaciones = string.IsNullOrWhiteSpace(modelo.Observaciones)
                             ? null
@@ -148,7 +150,7 @@ public class StockService : IStockService
                         Tipo = TipoMovimiento.Ajuste,
                         Cantidad = contado,
                         IdUnidad = ingrediente.IdUnidad,
-                        Fecha = DateTime.Now,
+                        Fecha = _reloj.Ahora(),
                         UsuarioId = usuarioId,
                         Observaciones = $"Inventario de {NombreDeposito.De(deposito).ToLowerInvariant()}"
                     });

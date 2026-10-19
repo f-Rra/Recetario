@@ -78,7 +78,7 @@ public class ComandaServiceTests
     public async Task Generar_DescuentaStockEscaladoALosComensales()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         // 12 comensales sobre base 6 → factor 2 → 1,25 kg, que redondea a 1,5 (guía 24)
         var resultado = await servicio.GenerarAsync(Carrito(12, ItemNoquis()), "u1");
@@ -92,7 +92,7 @@ public class ComandaServiceTests
     public async Task Generar_VariasRecetas_RegistraUnaComandaPorReceta()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(
             Carrito(6, ItemNoquis(), ItemDecoracion()), "u1");
@@ -107,7 +107,7 @@ public class ComandaServiceTests
     public async Task Generar_RecetaSinResponsablePropio_HeredaElDeLaPrincipal()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(
             Carrito(6, ItemNoquis(), ItemDecoracion()), "u1");
@@ -121,7 +121,7 @@ public class ComandaServiceTests
     public async Task Sustitucion_ConsumeElReemplazoYNoElOriginal()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(
             Carrito(6, ItemNoquis(new ModificacionCarrito
@@ -145,7 +145,7 @@ public class ComandaServiceTests
     public async Task Eliminacion_NoDescuentaEseIngrediente()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(
             Carrito(6, ItemNoquis(new ModificacionCarrito
@@ -164,7 +164,7 @@ public class ComandaServiceTests
     public async Task Adicion_DescuentaLaCantidadIndicadaParaLaComanda()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(
             Carrito(6, ItemNoquis(new ModificacionCarrito
@@ -183,7 +183,7 @@ public class ComandaServiceTests
     public async Task Generar_SinStockSuficiente_BloqueaSinRegistrarNada()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         // 6 comensales → 0,625 kg; 200 comensales → 20,83 kg y solo hay 10
         var resultado = await servicio.GenerarAsync(Carrito(200, ItemNoquis()), "u1");
@@ -199,7 +199,7 @@ public class ComandaServiceTests
     public async Task Generar_CarritoVacioOComensalesInvalidos_Falla()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var vacio = await servicio.GenerarAsync(Carrito(6), "u1");
         var sinComensales = await servicio.GenerarAsync(Carrito(0, ItemNoquis()), "u1");
@@ -215,7 +215,7 @@ public class ComandaServiceTests
         using var context = CrearContexto();
         context.Personas.RemoveRange(context.Personas);
         context.SaveChanges();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(Carrito(6, ItemNoquis()), "u1");
 
@@ -228,7 +228,7 @@ public class ComandaServiceTests
     public async Task Generar_ArmaLasSeccionesDelPdfConIngredientesModificados()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.GenerarAsync(
             Carrito(6, ItemNoquis(new ModificacionCarrito
@@ -258,7 +258,7 @@ public class ComandaServiceTests
     public async Task ObtenerIngredientesPreview_EscalaYMarcaSiNoAlcanza()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var alcanza = await servicio.ObtenerIngredientesPreviewAsync(Noquis, 12);
         var noAlcanza = await servicio.ObtenerIngredientesPreviewAsync(Noquis, 200);
@@ -275,7 +275,7 @@ public class ComandaServiceTests
     public async Task Revisar_AvisaElFaltanteSinTocarNada()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         // 200 comensales sobre base 6 → 20,83 kg de harina y solo hay 10
         var revision = await servicio.RevisarAsync(Carrito(200, ItemNoquis()));
@@ -293,7 +293,7 @@ public class ComandaServiceTests
     public async Task Revisar_ConStockSuficiente_NoAvisaFaltantes()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var revision = await servicio.RevisarAsync(Carrito(12, ItemNoquis()));
 
@@ -316,7 +316,7 @@ public class ComandaServiceTests
             IdUnidad = 1
         });
         context.SaveChanges();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         // 60 comensales: 6,25 kg de los ñoquis (redondean a 6,5) + 5 de la
         // guarnición = 11,5 > 10
@@ -332,7 +332,7 @@ public class ComandaServiceTests
     public async Task Revisar_CarritoVacio_NoAvisaNada()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var revision = await servicio.RevisarAsync(Carrito(200));
 
@@ -353,7 +353,7 @@ public class ComandaServiceTests
             Descripcion = "Hervir hasta que floten."
         });
         context.SaveChanges();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var revision = await servicio.RevisarAsync(Carrito(6, ItemNoquis(), ItemDecoracion()));
 
@@ -368,7 +368,7 @@ public class ComandaServiceTests
     public async Task ListarCatalogo_BuscaTambienPorIngrediente()
     {
         using var context = CrearContexto();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var porIngrediente = await servicio.ListarCatalogoAsync("Perejil", null);
         var porNombre = await servicio.ListarCatalogoAsync("Ñoq", null);
@@ -394,7 +394,7 @@ public class ComandaServiceTests
             Descripcion = "Hervir hasta que floten."
         });
         context.SaveChanges();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var catalogo = await servicio.ListarCatalogoAsync(null, null);
 
@@ -413,7 +413,7 @@ public class ComandaServiceTests
         var receta = await context.Recetas.FindAsync(Decoracion);
         receta!.Activo = false;
         context.SaveChanges();
-        var servicio = new ComandaService(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
         var todas = await servicio.ListarCatalogoAsync(null, null);
         var porSector = await servicio.ListarCatalogoAsync(null, 1);

@@ -68,7 +68,7 @@ public class CosteoServiceTests
     public async Task Calcular_CasoBase_CoincideConValorCalculadoAMano()
     {
         using var context = CrearContexto();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.CalcularAsync(idReceta: 1, porciones: 6);
 
@@ -94,7 +94,7 @@ public class CosteoServiceTests
             FechaVigencia = new DateOnly(2026, 7, 10)
         });
         context.SaveChanges();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.CalcularAsync(1, 6);
 
@@ -115,7 +115,7 @@ public class CosteoServiceTests
             FechaVigencia = new DateOnly(2026, 7, 1) // misma fecha que el precio 1
         });
         context.SaveChanges();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.CalcularAsync(1, 6);
 
@@ -127,7 +127,7 @@ public class CosteoServiceTests
     public async Task Calcular_ElDobleDePorciones_DuplicaElTotalYMantieneElUnitario()
     {
         using var context = CrearContexto();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var basePorciones = await servicio.CalcularAsync(1, 6);
         var doble = await servicio.CalcularAsync(1, 12);
@@ -160,7 +160,7 @@ public class CosteoServiceTests
             IdUnidad = 1
         });
         context.SaveChanges();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var resultado = await servicio.CalcularAsync(1, 6);
 
@@ -174,7 +174,7 @@ public class CosteoServiceTests
     public async Task Calcular_RecetaInexistenteOPorcionesInvalidas_DevuelveNull()
     {
         using var context = CrearContexto();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         Assert.Null(await servicio.CalcularAsync(idReceta: 99, porciones: 6));
         Assert.Null(await servicio.CalcularAsync(idReceta: 1, porciones: 0));
@@ -187,7 +187,7 @@ public class CosteoServiceTests
         using var context = CrearContexto();
         context.Users.Add(new ApplicationUser { Id = "u1", Nombre = "Admin", Apellido = "Test" });
         context.SaveChanges();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var idCosto = await servicio.RegistrarAsync(1, 6, "u1");
 
@@ -208,7 +208,7 @@ public class CosteoServiceTests
         using var context = CrearContexto();
         context.PreciosIngrediente.RemoveRange(context.PreciosIngrediente);
         context.SaveChanges();
-        var servicio = new CosteoService(context);
+        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
 
         var idCosto = await servicio.RegistrarAsync(1, 6, "u1");
 

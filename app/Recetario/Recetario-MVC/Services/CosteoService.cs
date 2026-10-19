@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RecetarioMVC.Data;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.Models;
 using RecetarioMVC.ViewModels;
 
@@ -8,10 +9,12 @@ namespace RecetarioMVC.Services;
 public class CosteoService : ICosteoService
 {
     private readonly ApplicationDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public CosteoService(ApplicationDbContext context)
+    public CosteoService(ApplicationDbContext context, TimeProvider reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     public async Task<CostearPaginaViewModel?> ObtenerPaginaAsync(int idReceta)
@@ -135,7 +138,7 @@ public class CosteoService : ICosteoService
         var costo = new Costo
         {
             IdReceta = idReceta,
-            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Fecha = _reloj.Hoy(),
             Porciones = porciones,
             CostoTotal = resultado.CostoTotal,
             CostoUnitario = resultado.CostoUnitario,
