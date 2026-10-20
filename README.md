@@ -1,5 +1,7 @@
 # Recetario
 
+[![CI](https://github.com/f-Rra/Recetario/actions/workflows/ci.yml/badge.svg)](https://github.com/f-Rra/Recetario/actions/workflows/ci.yml)
+
 Sistema de gestión de recetas, costeo y comandas para cocina, desarrollado para **Grupo Southex** (facility management & food services). Aplicación web ASP.NET Core MVC que permite administrar recetas con su costeo por ingrediente, controlar stock con trazabilidad completa y operar el flujo diario de comandas de cocina.
 
 > Este proyecto nació como TPI académico en **WinForms** (.NET Framework, 3 capas, ADO.NET + stored procedures) y fue **migrado a ASP.NET Core MVC**. El proceso completo está documentado guía por guía en [`Guias/`](Guias/).
