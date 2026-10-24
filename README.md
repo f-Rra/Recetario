@@ -42,16 +42,37 @@ Requisitos: .NET 9 SDK y SQL Server (Express o superior).
 
 ```bash
 cd app/Recetario/Recetario-MVC
-dotnet ef database update   # crea la base RecetarioMVC y siembra roles, admin y catálogos
-dotnet run
+
+# La clave del administrador inicial no está en el código: se carga con user-secrets,
+# que la guarda en tu usuario de Windows, fuera del repositorio
+dotnet user-secrets set "DefaultAdmin:Password" "una-clave-de-8-o-mas-caracteres"
+
+dotnet run   # al arrancar aplica las migraciones y siembra roles, catálogos y el administrador
 ```
 
-La cadena de conexión está en `appsettings.json` (por defecto `.\SQLEXPRESS`). El seeder crea un usuario administrador inicial:
+La cadena de conexión está en `appsettings.json` (por defecto `.\SQLEXPRESS`); si tu instancia de SQL Server se llama distinto, sobrescribila con `dotnet user-secrets set "ConnectionStrings:RecetarioMVC" "..."`. El seeder crea un administrador inicial:
 
 - **Usuario:** `admin@recetario.local`
-- **Contraseña:** `Admin123!` _(cambiar en el primer ingreso)_
+- **Contraseña:** la que cargaste en `DefaultAdmin:Password`
+
+Si la base todavía no tiene administrador y falta la clave, la aplicación **no arranca** y muestra el comando que hay que correr. Una vez creado el administrador, la clave ya no se vuelve a pedir.
 
 Los demás usuarios se dan de alta desde el módulo de Usuarios (no hay registro público).
+
+## Publicar en Azure
+
+Se publica igual que [SCA-MVC](https://github.com/f-Rra/Control-Almuerzos-MVC): un App Service gratuito y una base Azure SQL gratuita. No hace falta cambiar código, porque las migraciones se aplican solas al arrancar. Los nombres exactos de las pantallas del portal pueden variar.
+
+1. **Base de datos.** En el portal de Azure, crear una *Azure SQL Database* con la oferta gratuita, llamada `RecetarioMVC`, con autenticación SQL. En el firewall del servidor, permitir el acceso de los servicios de Azure.
+2. **Aplicación.** Crear una *Web App* con runtime **.NET 9** y plan **Free (F1)**.
+3. **Configuración de la aplicación** (variables de entorno de la Web App):
+   - `ConnectionStrings__RecetarioMVC`: la cadena de conexión de la base de Azure SQL.
+   - `DefaultAdmin__Password`: la clave del administrador, de 8 caracteres o más. **Sin esta variable la aplicación no arranca** la primera vez.
+4. **Publicar.** Desde Visual Studio (clic derecho en el proyecto → *Publicar* → *Azure*) o con `dotnet publish -c Release` y subiendo el resultado.
+5. **Primer arranque.** Crea las tablas, los roles, los catálogos y el administrador `admin@recetario.local`. Si algo falla, el *Log stream* de la Web App muestra el motivo.
+6. **Datos de demostración** (opcional). Ejecutar `scripts/Datos_Demo_MVC.sql` contra la base de Azure con SSMS o Azure Data Studio, porque el editor de consultas del portal no entiende `GO`. El script borra y recarga los datos operativos: no usarlo en una base con datos reales.
+
+Al ser un plan gratuito, la primera visita después de un rato sin uso puede tardar unos segundos en responder.
 
 ## Estructura del repositorio
 
