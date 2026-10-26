@@ -1,0 +1,51 @@
+# Levanta Recetario con su propia base SQL Server, sin instalar nada en la compu:
+#
+#   1. Copiá .env.example a .env y completá las dos claves
+#   2. docker compose up --build
+#   3. Abrí http://localhost:5090 y entrá con admin@recetario.local y la clave de ADMIN_PASSWORD
+#   4. Opcional, para ver la aplicación con recetas, ingredientes y comandas de ejemplo:
+#        docker compose exec db bash -c '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -f 65001 -i /scripts/Datos_Demo_MVC.sql'
+#
+# Es para probarlo en tu máquina. No lo uses en un servidor: la base queda con la clave del .env
+# y sin ninguna de las protecciones de un despliegue real.
+
+name: recetario
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?Falta SA_PASSWORD. Copiá .env.example a .env y completalo}
+    ports:
+      # Solo desde tu propia máquina, por si querés mirar la base con SSMS (puerto 14332).
+      # El puerto de siempre, el 1433, queda libre para tu SQL Server de verdad.
+      - "127.0.0.1:14332:1433"
+    volumes:
+      # Los datos sobreviven a un `docker compose down`. Para empezar de cero: `docker compose down -v`
+      - recetario-datos:/var/opt/mssql
+      # El script de datos de ejemplo, para cargarlo desde adentro del contenedor (paso 4)
+      - ./scripts:/scripts:ro
+    healthcheck:
+      # SQL Server tarda en arrancar; la aplicación espera a que responda antes de levantar
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  web:
+    build: ./app/Recetario/Recetario-MVC
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__RecetarioMVC: "Server=db;Database=RecetarioMVC;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      # Con esta clave el sembrador crea el administrador la primera vez. Sin ella, no arranca.
+      DefaultAdmin__Password: ${ADMIN_PASSWORD:?Falta ADMIN_PASSWORD. Copiá .env.example a .env y completalo}
+    ports:
+      - "5090:8080"
+
+volumes:
+  recetario-datos:

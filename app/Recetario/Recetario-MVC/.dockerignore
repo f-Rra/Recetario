@@ -1,0 +1,8 @@
+# Lo que se compila en tu máquina no entra a la imagen: se vuelve a compilar adentro
+**/bin/
+**/obj/
+
+# Archivos de editores y de herramientas
+.vs/
+.vscode/
+*.user

@@ -38,6 +38,31 @@ La lógica de negocio vive en **servicios** (`Services/`) con interfaces e inyec
 
 ## Cómo correrlo
 
+### Con Docker (la forma más rápida)
+
+No hace falta instalar SQL Server: Docker levanta la aplicación y su propia base.
+
+```bash
+cp .env.example .env      # en PowerShell: copy .env.example .env
+# Editá .env y completá SA_PASSWORD (clave de la base) y ADMIN_PASSWORD (clave del administrador)
+docker compose up --build
+```
+
+Cuando termine de arrancar, abrí **http://localhost:5090** y entrá con `admin@recetario.local` y la clave que pusiste en `ADMIN_PASSWORD`.
+
+Recién levantado, Recetario solo trae los catálogos (sectores, unidades) y el administrador. Para verlo con **27 ingredientes, 6 recetas con su procedimiento y precios de ejemplo**, cargá los datos de demostración con este comando, que corre el script `scripts/Datos_Demo_MVC.sql` dentro del contenedor:
+
+```bash
+docker compose exec db bash -c '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -f 65001 -i /scripts/Datos_Demo_MVC.sql'
+```
+
+- La primera vez tarda unos minutos: baja las imágenes y crea la base con sus migraciones.
+- Los datos quedan en un volumen: sobreviven a `docker compose down`. Para empezar de cero, `docker compose down -v`.
+- La base se puede mirar con SSMS en `localhost,14332` (usuario `sa`). El puerto 1433 queda libre para tu SQL Server.
+- Es para probar en tu máquina. Para publicarlo, ver **Publicar en Azure** más abajo.
+
+### Sin Docker
+
 Requisitos: .NET 9 SDK y SQL Server (Express o superior).
 
 ```bash
