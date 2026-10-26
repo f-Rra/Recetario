@@ -6,6 +6,23 @@ Sistema de gestión de recetas, costeo y comandas para cocina, desarrollado para
 
 > Este proyecto nació como TPI académico en **WinForms** (.NET Framework, 3 capas, ADO.NET + stored procedures) y fue **migrado a ASP.NET Core MVC**. El proceso completo está documentado guía por guía en [`Guias/`](Guias/).
 
+## Capturas
+
+Datos de demostración (`scripts/Datos_Demo_MVC.sql`): 27 ingredientes, 6 recetas con su procedimiento y precios de ejemplo.
+
+| | |
+|---|---|
+| ![Dashboard](docs/capturas/01-dashboard.png) | ![Comandera](docs/capturas/07-comandera.png) |
+| **Dashboard**: métricas del mes, valor del inventario, últimas comandas y toda la actividad de stock | **Comandera**: se arma el pedido, se escala a los comensales y al generarlo se descuenta el stock |
+| ![Costeo](docs/capturas/04-costeo.png) | ![Receta](docs/capturas/03-receta.png) |
+| **Costeo** de una receta escalado por porciones, con el desglose por ingrediente y el precio vigente de cada uno | **Receta** con sus ingredientes y el procedimiento paso a paso |
+| ![Ingredientes](docs/capturas/02-ingredientes.png) | ![Historial de comandas](docs/capturas/06-historial-comandas.png) |
+| **Ingredientes** con su stock, el historial de precios y las recetas donde se usan | **Historial de comandas** por día, con el responsable de cada sector y el PDF de cada una |
+
+![Movimientos de stock](docs/capturas/05-stock.png)
+
+**Movimientos de stock**: cada entrada, salida y ajuste queda registrado y se puede filtrar.
+
 ## Funcionalidades
 
 **Administración**
@@ -32,9 +49,10 @@ Sistema de gestión de recetas, costeo y comandas para cocina, desarrollado para
 | Autenticación | ASP.NET Core Identity (roles Admin / Cocina) |
 | UI | Bootstrap 5 · Bootstrap Icons · paleta de marca Grupo Southex |
 | PDFs | QuestPDF |
-| Tests | xUnit · EF Core InMemory |
+| Tests | xUnit · EF Core InMemory · GitHub Actions (CI) |
+| Contenedores | Docker Compose (la aplicación y SQL Server) |
 
-La lógica de negocio vive en **servicios** (`Services/`) con interfaces e inyección de dependencias; los controladores son delgados. Los servicios críticos (costeo, comandas, stock) están cubiertos por **22 tests** que verifican paridad con el sistema original.
+La lógica de negocio vive en **servicios** (`Services/`) con interfaces e inyección de dependencias; los controladores son delgados. Los servicios críticos (costeo, comandas, stock) están cubiertos por **más de 140 tests** que corren en cada push (ver el badge de arriba) y que, entre otras cosas, verifican paridad con el sistema original.
 
 ## Cómo correrlo
 
@@ -99,6 +117,13 @@ Se publica igual que [SCA-MVC](https://github.com/f-Rra/Control-Almuerzos-MVC): 
 
 Al ser un plan gratuito, la primera visita después de un rato sin uso puede tardar unos segundos en responder.
 
+## Decisiones técnicas
+
+- **Stock a prueba de comandas simultáneas.** Dos personas generando una comanda a la vez no pueden dejar el stock mal: el stock se valida adentro de la transacción y lleva un token de concurrencia, de modo que si alguien lo cambia entre la lectura y el guardado, EF lo detecta y la operación se reintenta con el valor nuevo. Los tests lo simulan con un segundo contexto que cambia el stock justo antes del guardado.
+- **Un solo reloj con la hora de Argentina.** Un servidor en la nube corre en UTC, tres horas adelantado. Toda la aplicación pregunta la hora a un `TimeProvider` en lugar de usar `DateTime.Now`, y los tests lo reemplazan por un reloj falso para simular, por ejemplo, las 23:30 de Argentina cuando en UTC ya es el día siguiente.
+- **Sin claves en el repositorio.** La clave del administrador inicial sale de `DefaultAdmin:Password` (user-secrets o variable de entorno) y, si falta, la aplicación no arranca.
+- **Una base de datos de demostración reproducible**, con Docker Compose y un script de datos de ejemplo.
+
 ## Estructura del repositorio
 
 ```
@@ -107,8 +132,10 @@ Recetario/
 │  ├─ Recetario.sln
 │  ├─ Recetario-MVC/          # la aplicación
 │  └─ Recetario-MVC.Tests/    # tests de servicios críticos
+├─ docs/capturas/             # las capturas de este README
 ├─ Guias/                     # bitácora de la migración, una guía por commit
-├─ scripts/                   # schema y objetos SQL originales (SPs, triggers, vistas)
+├─ scripts/                   # schema y objetos SQL originales, y los datos de demostración
+├─ docker-compose.yml         # la aplicación y su base, con un comando
 └─ README.md
 ```
 

@@ -260,7 +260,11 @@ GO
 DECLARE @Admin NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetUsers WHERE Email = 'admin@recetario.local');
 
 INSERT INTO MovimientosStock (IdIngrediente, Tipo, Cantidad, IdUnidad, Fecha, UsuarioId, Observaciones)
-SELECT IdIngrediente, 1, StockActual, IdUnidad, GETDATE(), @Admin, N'Stock inicial'
+SELECT IdIngrediente, 1, StockActual, IdUnidad,
+       -- Hora de Argentina y no GETDATE(): un servidor en la nube (Azure SQL, un contenedor) corre en
+       -- UTC, y la aplicación guarda y muestra siempre la hora de Argentina
+       CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Argentina Standard Time' AS datetime2),
+       @Admin, N'Stock inicial'
 FROM Ingredientes
 WHERE StockActual > 0 AND @Admin IS NOT NULL;
 GO

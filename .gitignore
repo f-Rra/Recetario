@@ -428,3 +428,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Videos: pesan decenas de MB y no van en el repositorio; se suben a YouTube y se enlazan desde el README
+*.mp4
