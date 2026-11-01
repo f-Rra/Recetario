@@ -1,146 +1,124 @@
 # Recetario
 
 [![CI](https://github.com/f-Rra/Recetario/actions/workflows/ci.yml/badge.svg)](https://github.com/f-Rra/Recetario/actions/workflows/ci.yml)
+![.NET 9](https://img.shields.io/badge/.NET-9.0-blue)
+![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-512BD4)
+![SQL Server](https://img.shields.io/badge/SQL%20Server-EF%20Core-CC2927)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 
-Sistema de gestión de recetas, costeo y comandas para cocina, desarrollado para **Grupo Southex** (facility management & food services). Aplicación web ASP.NET Core MVC que permite administrar recetas con su costeo por ingrediente, controlar stock con trazabilidad completa y operar el flujo diario de comandas de cocina.
-
-> Este proyecto nació como TPI académico en **WinForms** (.NET Framework, 3 capas, ADO.NET + stored procedures) y fue **migrado a ASP.NET Core MVC**. El proceso completo está documentado guía por guía en [`Guias/`](Guias/).
-
-## Capturas
-
-Datos de demostración (`scripts/Datos_Demo_MVC.sql`): 27 ingredientes, 6 recetas con su procedimiento y precios de ejemplo.
-
-| | |
-|---|---|
-| ![Dashboard](docs/capturas/01-dashboard.png) | ![Comandera](docs/capturas/07-comandera.png) |
-| **Dashboard**: métricas del mes, valor del inventario, últimas comandas y toda la actividad de stock | **Comandera**: se arma el pedido, se escala a los comensales y al generarlo se descuenta el stock |
-| ![Costeo](docs/capturas/04-costeo.png) | ![Receta](docs/capturas/03-receta.png) |
-| **Costeo** de una receta escalado por porciones, con el desglose por ingrediente y el precio vigente de cada uno | **Receta** con sus ingredientes y el procedimiento paso a paso |
-| ![Ingredientes](docs/capturas/02-ingredientes.png) | ![Historial de comandas](docs/capturas/06-historial-comandas.png) |
-| **Ingredientes** con su stock, el historial de precios y las recetas donde se usan | **Historial de comandas** por día, con el responsable de cada sector y el PDF de cada una |
-
-![Movimientos de stock](docs/capturas/05-stock.png)
-
-**Movimientos de stock**: cada entrada, salida y ajuste queda registrado y se puede filtrar.
+Sistema de recetas, costeo y comandas para cocina. Nació como trabajo práctico en WinForms y se migró a ASP.NET Core MVC.
 
 ## Funcionalidades
 
-**Administración**
-- ABM de ingredientes con código autogenerado, estado de stock (normal / bajo / crítico) y baja protegida por referencias.
-- ABM de proveedores y **precios por ingrediente con historial** (precio vigente por fecha).
-- ABM de recetas: datos, ingredientes con rendimiento (cantidad bruta calculada) y procedimiento paso a paso.
-- **Costeo de recetas** escalado por porciones, con desglose por ingrediente persistido e historial reimprimible.
-- **Stock y movimientos**: entradas, salidas y ajustes por inventario, con historial filtrable y auditado.
-- Gestión de usuarios (roles Admin / Cocina) y responsables de sector.
-- Dashboard con métricas y alertas de stock.
+- **Costeo de recetas**: calcula el costo con el precio vigente de cada ingrediente, escalado a las porciones que se necesiten, y lo exporta a PDF.
+- **Comandas con stock automático**: se elige la receta y los comensales, se pueden sustituir, sumar o sacar ingredientes, y el stock se descuenta solo. La comanda sale en PDF.
+- **Stock auditado**: cada entrada, salida o ajuste queda como un movimiento con usuario y fecha, y el dashboard avisa qué ingredientes están por agotarse.
+- **Ingredientes y proveedores** con el historial de precios de cada uno.
+- **Dos perfiles**: administrador y cocina, con permisos distintos.
 
-**Cocina**
-- Panel del día con las comandas y accesos rápidos.
-- Registro de comandas que **consume stock** automáticamente, escalado a las porciones.
-- Modificaciones de comanda (sustitución / adición / eliminación) con ajuste de stock auditado.
-- Consulta de recetas y descarga de la comanda en PDF.
+## Capturas
+
+Una copia local con datos de demostración.
+
+| | | | |
+|---|---|---|---|
+| <img src="docs/capturas/01-dashboard.png" width="200"> | <img src="docs/capturas/07-comandera.png" width="200"> | <img src="docs/capturas/04-costeo.png" width="200"> | <img src="docs/capturas/03-receta.png" width="200"> |
+| Dashboard con métricas y actividad de stock | Comandera: escala a los comensales y descuenta stock | Costeo escalado por porciones | Receta con su procedimiento paso a paso |
+| <img src="docs/capturas/02-ingredientes.png" width="200"> | <img src="docs/capturas/05-stock.png" width="200"> | <img src="docs/capturas/06-historial-comandas.png" width="200"> | |
+| Ingredientes con stock e historial de precios | Movimientos de stock, filtrables y auditados | Historial de comandas | |
 
 ## Stack
 
-| Capa | Tecnología |
-|---|---|
-| Framework | ASP.NET Core MVC · .NET 9 |
-| Datos | Entity Framework Core 9 (code-first, Fluent API) · SQL Server |
-| Autenticación | ASP.NET Core Identity (roles Admin / Cocina) |
-| UI | Bootstrap 5 · Bootstrap Icons · paleta de marca Grupo Southex |
-| PDFs | QuestPDF |
-| Tests | xUnit · EF Core InMemory · GitHub Actions (CI) |
-| Contenedores | Docker Compose (la aplicación y SQL Server) |
+.NET 9 · ASP.NET Core MVC · EF Core 9 (code-first, Fluent API) · SQL Server · ASP.NET Core Identity · Bootstrap 5 · QuestPDF · xUnit · Docker Compose · GitHub Actions.
 
-La lógica de negocio vive en **servicios** (`Services/`) con interfaces e inyección de dependencias; los controladores son delgados. Los servicios críticos (costeo, comandas, stock) están cubiertos por **más de 140 tests** que corren en cada push (ver el badge de arriba) y que, entre otras cosas, verifican paridad con el sistema original.
+## Modelo de datos
 
-## Cómo correrlo
+```mermaid
+erDiagram
+    CLASIFICACION ||--o{ RECETA : agrupa
+    RECETA ||--o{ INGREDIENTE_RECETA : lleva
+    INGREDIENTE ||--o{ INGREDIENTE_RECETA : "se usa en"
+    RECETA ||--o{ PROCEDIMIENTO : "se hace en pasos"
+    UNIDAD ||--o{ INGREDIENTE : "se mide en"
+    INGREDIENTE ||--o{ PRECIO_INGREDIENTE : "tiene precios"
+    PROVEEDOR ||--o{ PRECIO_INGREDIENTE : cotiza
+    INGREDIENTE ||--o{ MOVIMIENTO_STOCK : mueve
+    RECETA ||--o{ COMANDA : "se cocina en"
+    PERSONA ||--o{ COMANDA : "es responsable de"
+    COMANDA ||--o{ MODIFICACION : "se modifica con"
+    RECETA ||--o{ COSTO : "se costea en"
+    COSTO ||--|{ COSTO_DETALLE : detalla
+    INGREDIENTE ||--o{ COSTO_DETALLE : "se cuenta en"
 
-### Con Docker (la forma más rápida)
-
-No hace falta instalar SQL Server: Docker levanta la aplicación y su propia base.
-
-```bash
-cp .env.example .env      # en PowerShell: copy .env.example .env
-# Editá .env y completá SA_PASSWORD (clave de la base) y ADMIN_PASSWORD (clave del administrador)
-docker compose up --build
+    RECETA {
+        string Codigo
+        string Nombre
+        int PorcionesBase
+    }
+    INGREDIENTE {
+        string Descripcion
+        decimal StockActual "con token de concurrencia"
+        decimal StockMinimo
+        enum Deposito "Bodega, Camara"
+    }
+    INGREDIENTE_RECETA {
+        decimal CantNeta
+        decimal Rendimiento
+        decimal CantBruta
+    }
+    PRECIO_INGREDIENTE {
+        decimal Precio
+        date FechaVigencia
+    }
+    COMANDA {
+        date Fecha
+        int Porciones
+    }
+    MODIFICACION {
+        enum Tipo "Sustitucion, Adicion, Eliminacion"
+        decimal Cantidad
+    }
+    MOVIMIENTO_STOCK {
+        enum Tipo "Entrada, Salida, Ajuste"
+        decimal Cantidad
+        datetime Fecha
+    }
+    COSTO {
+        int Porciones
+        decimal CostoTotal
+        decimal CostoUnitario
+    }
 ```
 
-Cuando termine de arrancar, abrí **http://localhost:5090** y entrá con `admin@recetario.local` y la clave que pusiste en `ADMIN_PASSWORD`.
+Cada ingrediente de una receta lleva su cantidad neta, su rendimiento y su cantidad bruta. Cada costeo guarda su propio detalle con el costo unitario que se usó, así que un cambio de precio posterior no lo altera. Los usuarios del sistema son las tablas de ASP.NET Core Identity.
 
-Recién levantado, Recetario solo trae los catálogos (sectores, unidades) y el administrador. Para verlo con **27 ingredientes, 6 recetas con su procedimiento y precios de ejemplo**, cargá los datos de demostración con este comando, que corre el script `scripts/Datos_Demo_MVC.sql` dentro del contenedor:
+## Arquitectura
 
-```bash
-docker compose exec db bash -c '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -f 65001 -i /scripts/Datos_Demo_MVC.sql'
+```mermaid
+flowchart LR
+    Usuario["Administrador o cocina<br/>(navegador)"] -->|cookie de Identity| MVC
+    subgraph App["Aplicación ASP.NET Core"]
+        MVC["Controladores MVC"] --> Serv
+        Serv["Servicios<br/>costeo · comandas · stock · recetas"] --> PDF["PDF (QuestPDF)"]
+    end
+    Serv --> DB[("SQL Server")]
 ```
-
-- La primera vez tarda unos minutos: baja las imágenes y crea la base con sus migraciones.
-- Los datos quedan en un volumen: sobreviven a `docker compose down`. Para empezar de cero, `docker compose down -v`.
-- La base se puede mirar con SSMS en `localhost,14332` (usuario `sa`). El puerto 1433 queda libre para tu SQL Server.
-- Es para probar en tu máquina. Para publicarlo, ver **Publicar en Azure** más abajo.
-
-### Sin Docker
-
-Requisitos: .NET 9 SDK y SQL Server (Express o superior).
-
-```bash
-cd app/Recetario/Recetario-MVC
-
-# La clave del administrador inicial no está en el código: se carga con user-secrets,
-# que la guarda en tu usuario de Windows, fuera del repositorio
-dotnet user-secrets set "DefaultAdmin:Password" "una-clave-de-8-o-mas-caracteres"
-
-dotnet run   # al arrancar aplica las migraciones y siembra roles, catálogos y el administrador
-```
-
-La cadena de conexión está en `appsettings.json` (por defecto `.\SQLEXPRESS`); si tu instancia de SQL Server se llama distinto, sobrescribila con `dotnet user-secrets set "ConnectionStrings:RecetarioMVC" "..."`. El seeder crea un administrador inicial:
-
-- **Usuario:** `admin@recetario.local`
-- **Contraseña:** la que cargaste en `DefaultAdmin:Password`
-
-Si la base todavía no tiene administrador y falta la clave, la aplicación **no arranca** y muestra el comando que hay que correr. Una vez creado el administrador, la clave ya no se vuelve a pedir.
-
-Los demás usuarios se dan de alta desde el módulo de Usuarios (no hay registro público).
-
-## Publicar en Azure
-
-Se publica igual que [SCA-MVC](https://github.com/f-Rra/Control-Almuerzos-MVC): un App Service gratuito y una base Azure SQL gratuita. No hace falta cambiar código, porque las migraciones se aplican solas al arrancar. Los nombres exactos de las pantallas del portal pueden variar.
-
-1. **Base de datos.** En el portal de Azure, crear una *Azure SQL Database* con la oferta gratuita, llamada `RecetarioMVC`, con autenticación SQL. En el firewall del servidor, permitir el acceso de los servicios de Azure.
-2. **Aplicación.** Crear una *Web App* con runtime **.NET 9** y plan **Free (F1)**.
-3. **Configuración de la aplicación** (variables de entorno de la Web App):
-   - `ConnectionStrings__RecetarioMVC`: la cadena de conexión de la base de Azure SQL.
-   - `DefaultAdmin__Password`: la clave del administrador, de 8 caracteres o más. **Sin esta variable la aplicación no arranca** la primera vez.
-4. **Publicar.** Desde Visual Studio (clic derecho en el proyecto → *Publicar* → *Azure*) o con `dotnet publish -c Release` y subiendo el resultado.
-5. **Primer arranque.** Crea las tablas, los roles, los catálogos y el administrador `admin@recetario.local`. Si algo falla, el *Log stream* de la Web App muestra el motivo.
-6. **Datos de demostración** (opcional). Ejecutar `scripts/Datos_Demo_MVC.sql` contra la base de Azure con SSMS o Azure Data Studio, porque el editor de consultas del portal no entiende `GO`. El script borra y recarga los datos operativos: no usarlo en una base con datos reales.
-
-Al ser un plan gratuito, la primera visita después de un rato sin uso puede tardar unos segundos en responder.
 
 ## Decisiones técnicas
 
-- **Stock a prueba de comandas simultáneas.** Dos personas generando una comanda a la vez no pueden dejar el stock mal: el stock se valida adentro de la transacción y lleva un token de concurrencia, de modo que si alguien lo cambia entre la lectura y el guardado, EF lo detecta y la operación se reintenta con el valor nuevo. Los tests lo simulan con un segundo contexto que cambia el stock justo antes del guardado.
-- **Un solo reloj con la hora de Argentina.** Un servidor en la nube corre en UTC, tres horas adelantado. Toda la aplicación pregunta la hora a un `TimeProvider` en lugar de usar `DateTime.Now`, y los tests lo reemplazan por un reloj falso para simular, por ejemplo, las 23:30 de Argentina cuando en UTC ya es el día siguiente.
-- **Sin claves en el repositorio.** La clave del administrador inicial sale de `DefaultAdmin:Password` (user-secrets o variable de entorno) y, si falta, la aplicación no arranca.
-- **Una base de datos de demostración reproducible**, con Docker Compose y un script de datos de ejemplo.
+- **Stock a prueba de comandas simultáneas.** Se valida dentro de la transacción y con un token de concurrencia: si dos comandas lo tocan a la vez, EF lo detecta y reintenta con el valor nuevo.
+- **Un solo reloj con la hora de Argentina.** La aplicación pregunta la hora a un `TimeProvider` y no a `DateTime.Now`, porque un servidor en la nube corre en UTC, tres horas adelantado.
+- **La lógica en servicios y los controladores delgados**, con interfaces e inyección de dependencias.
+- **Sin claves en el repositorio.** La del administrador sale de user-secrets o de una variable de entorno; si falta, la aplicación no arranca.
+- **Migrada con la referencia delante.** Los scripts SQL del sistema original se conservan y los servicios se verificaron contra ellos.
 
-## Estructura del repositorio
+El porqué de cada una está en [`docs/decisiones-tecnicas.md`](docs/decisiones-tecnicas.md).
 
-```
-Recetario/
-├─ app/Recetario/
-│  ├─ Recetario.sln
-│  ├─ Recetario-MVC/          # la aplicación
-│  └─ Recetario-MVC.Tests/    # tests de servicios críticos
-├─ docs/capturas/             # las capturas de este README
-├─ Guias/                     # bitácora de la migración, una guía por commit
-├─ scripts/                   # schema y objetos SQL originales, y los datos de demostración
-├─ docker-compose.yml         # la aplicación y su base, con un comando
-└─ README.md
-```
+## Tests y CI
 
-`scripts/` conserva la base de datos y la lógica del sistema WinForms original. Se mantiene como documentación: fue la referencia contra la que se verificó cada servicio reescrito en C# (por ejemplo, el costeo replica la selección de precio vigente del `sp_CalcularCostoReceta`, y el consumo de stock replica `trg_ConsumirStockComanda`).
+141 tests de xUnit sobre costeo, comandas, stock (incluida la concurrencia), dashboard y el manejo de la hora. Corren en cada push con GitHub Actions.
 
-## Sobre la migración
+## Autor
 
-La migración se hizo en 5 fases (esqueleto → CRUDs → núcleo/costeo → cocina → soporte → cierre), documentadas en [`Guias/`](Guias/). Además de trasladar la funcionalidad, se corrigieron limitaciones del diseño original: historial real de precios, escalado de costeo por porciones, bloqueo de costeos incompletos, y trazabilidad completa del stock mediante movimientos auditados.
+- Estudiante de la Tecnicatura Universitaria en Programación - UTN FRGP
+- Email: [facundo.rra@gmail.com](mailto:facundo.rra@gmail.com)
