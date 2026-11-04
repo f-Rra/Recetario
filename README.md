@@ -90,7 +90,7 @@ erDiagram
     }
 ```
 
-Cada ingrediente de una receta lleva su cantidad neta, su rendimiento y su cantidad bruta. Cada costeo guarda su propio detalle con el costo unitario que se usó, así que un cambio de precio posterior no lo altera. Los usuarios del sistema son las tablas de ASP.NET Core Identity.
+Cada ingrediente de una receta lleva su cantidad neta, su rendimiento y su cantidad bruta. Cada costeo guarda su propio detalle con el costo unitario que se usó, así que un cambio de precio posterior no lo altera. Los usuarios del sistema son las tablas de ASP.NET Core Identity. El esquema completo, con todas las columnas y restricciones, está en [`docs/DER.md`](docs/DER.md).
 
 ## Arquitectura
 
