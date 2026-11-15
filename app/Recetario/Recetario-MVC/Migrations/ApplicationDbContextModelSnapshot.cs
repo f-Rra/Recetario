@@ -578,6 +578,32 @@ namespace RecetarioMVC.Migrations
                         });
                 });
 
+            modelBuilder.Entity("RecetarioMVC.Models.PasoComanda", b =>
+                {
+                    b.Property<int>("IdPasoComanda")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdPasoComanda"));
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("IdComanda")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NroPaso")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdPasoComanda");
+
+                    b.HasIndex("IdComanda", "NroPaso")
+                        .IsUnique();
+
+                    b.ToTable("PasosComanda", (string)null);
+                });
+
             modelBuilder.Entity("RecetarioMVC.Models.Persona", b =>
                 {
                     b.Property<int>("IdPersona")
@@ -1020,6 +1046,17 @@ namespace RecetarioMVC.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("RecetarioMVC.Models.PasoComanda", b =>
+                {
+                    b.HasOne("RecetarioMVC.Models.Comanda", "Comanda")
+                        .WithMany("Pasos")
+                        .HasForeignKey("IdComanda")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comanda");
+                });
+
             modelBuilder.Entity("RecetarioMVC.Models.Persona", b =>
                 {
                     b.HasOne("RecetarioMVC.Models.Clasificacion", "Clasificacion")
@@ -1083,6 +1120,8 @@ namespace RecetarioMVC.Migrations
                     b.Navigation("Ingredientes");
 
                     b.Navigation("Modificaciones");
+
+                    b.Navigation("Pasos");
                 });
 
             modelBuilder.Entity("RecetarioMVC.Models.Costo", b =>

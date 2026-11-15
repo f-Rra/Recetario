@@ -1,6 +1,6 @@
 # Modelo de datos
 
-Diagrama entidad-relación de Recetario, armado a partir del modelo de EF Core (el último snapshot de las migraciones). Muestra las quince tablas del negocio y las tres de ASP.NET Core Identity que la aplicación usa para los usuarios y sus roles.
+Diagrama entidad-relación de Recetario, armado a partir del modelo de EF Core (el último snapshot de las migraciones). Muestra las dieciséis tablas del negocio y las tres de ASP.NET Core Identity que la aplicación usa para los usuarios y sus roles.
 
 ```mermaid
 erDiagram
@@ -24,6 +24,7 @@ erDiagram
     INGREDIENTE |o--o{ MODIFICACION : "se sustituye en"
     INGREDIENTE |o--o{ MODIFICACION : "reemplaza en"
     UNIDAD ||--o{ MODIFICACION : "mide"
+    COMANDA ||--o{ PASO_COMANDA : "se hizo en pasos"
     INGREDIENTE ||--o{ MOVIMIENTO_STOCK : "mueve"
     UNIDAD ||--o{ MOVIMIENTO_STOCK : "mide"
     ASPNETUSERS ||--o{ MOVIMIENTO_STOCK : "registra"
@@ -124,6 +125,12 @@ erDiagram
         int Tipo "1 Entrada, 2 Salida, 3 Ajuste"
         nvarchar(450) UsuarioId FK
     }
+    PASO_COMANDA {
+        int IdPasoComanda PK
+        nvarchar(max) Descripcion "copiada de la receta al generar la comanda"
+        int IdComanda FK
+        int NroPaso
+    }
     PERSONA {
         int IdPersona PK
         nvarchar(100) Apellido
@@ -172,13 +179,13 @@ erDiagram
 
 | Qué | Dónde | Para qué |
 |---|---|---|
-| Únicos | `CLASIFICACION.Nombre`, `INGREDIENTE.Codigo`, `PROCEDIMIENTO.IdReceta, NroPaso`, `RECETA.Codigo`, `UNIDAD.Abreviatura`, `UNIDAD.Nombre` | Un código, un nombre o una abreviatura no se repiten; una receta no tiene dos veces el mismo paso |
+| Únicos | `CLASIFICACION.Nombre`, `INGREDIENTE.Codigo`, `PASO_COMANDA.IdComanda, NroPaso`, `PROCEDIMIENTO.IdReceta, NroPaso`, `RECETA.Codigo`, `UNIDAD.Abreviatura`, `UNIDAD.Nombre` | Un código, un nombre o una abreviatura no se repiten; una receta no tiene dos veces el mismo paso |
 | `CHECK` en las cantidades, los precios y las porciones | `COMANDA`, `COSTO`, `INGREDIENTE_RECETA`, `MODIFICACION`, `MOVIMIENTO_STOCK`, `PRECIO_INGREDIENTE`, `PROCEDIMIENTO`, `RECETA` | Siempre mayores que cero. La única excepción es el movimiento de ajuste, que admite cero ("conté y no queda nada") |
 | `CHECK (StockMinimo >= 0)` | `INGREDIENTE` | El stock mínimo no puede ser negativo |
 | `CHECK (Rendimiento > 0 AND Rendimiento <= 100)` | `INGREDIENTE_RECETA` | El rendimiento es un porcentaje |
 | Token de concurrencia en `StockActual` | `INGREDIENTE` | Si dos comandas tocan el stock a la vez, EF lo detecta y reintenta |
 | Claves foráneas con `ON DELETE RESTRICT` | Todas, salvo las de abajo | La base no deja borrar algo que tiene historial |
-| `ON DELETE CASCADE` | `COSTO_DETALLE` → `COSTO`, `INGREDIENTE_COMANDA` → `COMANDA`, `INGREDIENTE_RECETA` → `RECETA`, `MODIFICACION` → `COMANDA`, `PRECIO_INGREDIENTE` → `INGREDIENTE`, `PROCEDIMIENTO` → `RECETA` | Lo que cuelga de una receta, un ingrediente, un costeo o una comanda se va con ella |
+| `ON DELETE CASCADE` | `COSTO_DETALLE` → `COSTO`, `INGREDIENTE_COMANDA` → `COMANDA`, `INGREDIENTE_RECETA` → `RECETA`, `MODIFICACION` → `COMANDA`, `PASO_COMANDA` → `COMANDA`, `PRECIO_INGREDIENTE` → `INGREDIENTE`, `PROCEDIMIENTO` → `RECETA` | Lo que cuelga de una receta, un ingrediente, un costeo o una comanda se va con ella |
 
 Los importes y las cantidades llevan cuatro decimales (`decimal(10,4)` y `decimal(12,4)`), y el rendimiento, dos (`decimal(5,2)`).
 

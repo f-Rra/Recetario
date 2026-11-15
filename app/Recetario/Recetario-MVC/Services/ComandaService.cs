@@ -302,6 +302,15 @@ public class ComandaService : IComandaService
                 return;
             }
 
+            // El procedimiento de cada receta, tal como está ahora: se copia a la comanda
+            var idsRecetas = carrito.Items.Select(i => i.IdReceta).ToList();
+            var pasosPorReceta = (await _context.Procedimientos
+                    .Where(p => idsRecetas.Contains(p.IdReceta))
+                    .OrderBy(p => p.NroPaso)
+                    .Select(p => new { p.IdReceta, p.NroPaso, p.Descripcion })
+                    .ToListAsync())
+                .ToLookup(p => p.IdReceta);
+
             foreach (var item in carrito.Items)
             {
                 var efectivos = ingredientesPorReceta[item.IdReceta];
@@ -318,6 +327,16 @@ public class ComandaService : IComandaService
                 await _context.SaveChangesAsync();
 
                 await PersistirModificacionesAsync(comanda.IdComanda, item, carrito.Comensales);
+
+                foreach (var paso in pasosPorReceta[item.IdReceta])
+                {
+                    _context.PasosComanda.Add(new PasoComanda
+                    {
+                        IdComanda = comanda.IdComanda,
+                        NroPaso = paso.NroPaso,
+                        Descripcion = paso.Descripcion
+                    });
+                }
 
                 // Un movimiento de salida por ingrediente realmente usado:
                 // la lista efectiva ya tiene aplicadas las modificaciones
@@ -753,12 +772,12 @@ public class ComandaService : IComandaService
             })
             .ToListAsync();
 
-        comanda.Pasos = await _context.Procedimientos
-            .Where(p => p.IdReceta == comanda.IdReceta)
+        // El procedimiento también es el guardado al generarla, no el que tenga hoy la receta
+        comanda.Pasos = await _context.PasosComanda
+            .Where(p => p.IdComanda == idComanda)
             .OrderBy(p => p.NroPaso)
             .Select(p => new PasoItem
             {
-                IdProcedimiento = p.IdProcedimiento,
                 NroPaso = p.NroPaso,
                 Descripcion = p.Descripcion
             })

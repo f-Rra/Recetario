@@ -16,4 +16,7 @@ public class Comanda
 
     /// <summary>Lo que se cocinó: los ingredientes con las modificaciones ya aplicadas.</summary>
     public ICollection<IngredienteComanda> Ingredientes { get; set; } = new List<IngredienteComanda>();
+
+    /// <summary>El procedimiento de la receta tal como estaba al generar la comanda.</summary>
+    public ICollection<PasoComanda> Pasos { get; set; } = new List<PasoComanda>();
 }

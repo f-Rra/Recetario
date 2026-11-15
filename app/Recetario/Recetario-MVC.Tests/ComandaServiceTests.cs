@@ -510,4 +510,54 @@ public class ComandaServiceTests
         Assert.Equal(resultado.IdsComandas, guardados.Select(g => g.IdComanda));
         Assert.Equal(new[] { Harina, Perejil }, guardados.Select(g => g.IdIngrediente));
     }
+
+    // ---------- Procedimiento de una comanda ya generada ----------
+    // Igual que los ingredientes: se copia de la receta al generar la comanda.
+
+    private static void CargarProcedimientoDeNoquis(ApplicationDbContext context)
+    {
+        context.Procedimientos.AddRange(
+            new Procedimiento { IdReceta = Noquis, NroPaso = 1, Descripcion = "Hervir las papas." },
+            new Procedimiento { IdReceta = Noquis, NroPaso = 2, Descripcion = "Sumar la harina y amasar." });
+        context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task Detalle_MuestraElProcedimientoQueTeniaLaRecetaAlGenerar()
+    {
+        using var context = CrearContexto();
+        CargarProcedimientoDeNoquis(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
+        var resultado = await servicio.GenerarAsync(Carrito(6, ItemNoquis()), "u1");
+
+        // Después se edita el procedimiento: cambia un paso, se quita otro y se suma uno
+        var pasos = await context.Procedimientos.Where(p => p.IdReceta == Noquis).OrderBy(p => p.NroPaso).ToListAsync();
+        pasos[0].Descripcion = "Hornear las papas.";
+        context.Procedimientos.Remove(pasos[1]);
+        context.Procedimientos.Add(new Procedimiento { IdReceta = Noquis, NroPaso = 3, Descripcion = "Servir con salsa." });
+        await context.SaveChangesAsync();
+
+        var detalle = await servicio.ObtenerDetalleAsync(resultado.IdsComandas.Single());
+
+        Assert.Equal(
+            new[] { (1, "Hervir las papas."), (2, "Sumar la harina y amasar.") },
+            detalle!.Pasos.Select(p => (p.NroPaso, p.Descripcion)));
+    }
+
+    [Fact]
+    public async Task Generar_CopiaACadaComandaElProcedimientoDeSuReceta()
+    {
+        using var context = CrearContexto();
+        CargarProcedimientoDeNoquis(context);
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
+
+        // La guarnición no tiene procedimiento cargado
+        var resultado = await servicio.GenerarAsync(Carrito(6, ItemNoquis(), ItemDecoracion()), "u1");
+
+        var deNoquis = await servicio.ObtenerDetalleAsync(resultado.IdsComandas[0]);
+        var deGuarnicion = await servicio.ObtenerDetalleAsync(resultado.IdsComandas[1]);
+        Assert.Equal(2, deNoquis!.Pasos.Count);
+        Assert.Empty(deGuarnicion!.Pasos);
+        Assert.Equal(2, await context.PasosComanda.CountAsync());
+    }
 }
