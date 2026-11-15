@@ -37,6 +37,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
 
+// La sesión dura 8 horas, pero en cada pedido se revisa que el sello de seguridad del
+// usuario siga siendo el mismo (por defecto Identity lo revisa cada 30 minutos). El sello
+// cambia cuando se desactiva al usuario o se le restablece la contraseña: así quien ya
+// estaba adentro queda afuera en el pedido siguiente, no horas después.
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+    options.ValidationInterval = TimeSpan.Zero);
+
 builder.Services.AddScoped<RecetarioMVC.Services.IDashboardService, RecetarioMVC.Services.DashboardService>();
 builder.Services.AddScoped<RecetarioMVC.Services.IIngredienteService, RecetarioMVC.Services.IngredienteService>();
 builder.Services.AddScoped<RecetarioMVC.Services.IProveedorService, RecetarioMVC.Services.ProveedorService>();

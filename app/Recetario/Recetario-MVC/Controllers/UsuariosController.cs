@@ -111,6 +111,11 @@ public class UsuariosController : Controller
 
         usuario.Activo = !usuario.Activo;
         await _userManager.UpdateAsync(usuario);
+
+        // El inicio de sesión ya rechaza al usuario inactivo, pero eso no alcanza a quien
+        // ya estaba adentro: cambiar el sello invalida las sesiones que tenga abiertas
+        if (!usuario.Activo)
+            await _userManager.UpdateSecurityStampAsync(usuario);
         TempData["Exito"] = $"Usuario {usuario.NombreCompleto} {(usuario.Activo ? "activado" : "desactivado")}.";
         return RedirectToAction(nameof(Index));
     }
