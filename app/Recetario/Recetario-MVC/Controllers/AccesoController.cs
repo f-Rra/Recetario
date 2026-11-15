@@ -48,7 +48,7 @@ public class AccesoController : Controller
             usuario, modelo.Password, modelo.Recordarme, lockoutOnFailure: true);
 
         if (resultado.Succeeded)
-            return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+            return RedirigirTrasIngresar(returnUrl);
 
         if (resultado.IsLockedOut)
             ModelState.AddModelError(string.Empty,
@@ -57,6 +57,20 @@ public class AccesoController : Controller
             ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
 
         return View(modelo);
+    }
+
+    /// <summary>
+    /// A dónde va el usuario después de ingresar. La dirección de retorno viaja en la URL
+    /// y cualquiera la puede escribir: solo se la sigue si es de esta misma aplicación.
+    /// Con una externa, LocalRedirect lanzaba una excepción (error 500) después de haber
+    /// iniciado la sesión; ahora se va al inicio.
+    /// </summary>
+    [NonAction]
+    public IActionResult RedirigirTrasIngresar(string? returnUrl)
+    {
+        return Url.IsLocalUrl(returnUrl)
+            ? LocalRedirect(returnUrl)
+            : RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
