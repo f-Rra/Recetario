@@ -10,7 +10,11 @@ public class MovimientoStockConfiguracion : IEntityTypeConfiguration<MovimientoS
     {
         builder.ToTable("MovimientosStock", t =>
         {
-            t.HasCheckConstraint("CK_MovimientosStock_Cantidad", "Cantidad > 0");
+            // La entrada y la salida mueven una cantidad, así que tiene que ser mayor a cero.
+            // El ajuste guarda el valor contado, y contar cero es válido ("no queda nada")
+            t.HasCheckConstraint(
+                "CK_MovimientosStock_Cantidad",
+                $"Cantidad > 0 OR (Tipo = {(int)TipoMovimiento.Ajuste} AND Cantidad = 0)");
         });
         builder.HasKey(m => m.IdMovimiento);
         builder.Property(m => m.Cantidad).HasPrecision(10, 4);

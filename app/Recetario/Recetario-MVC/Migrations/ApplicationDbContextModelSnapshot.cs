@@ -17,7 +17,7 @@ namespace RecetarioMVC.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.18")
+                .HasAnnotation("ProductVersion", "9.0.21")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -393,6 +393,7 @@ namespace RecetarioMVC.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("StockActual")
+                        .IsConcurrencyToken()
                         .HasPrecision(10, 4)
                         .HasColumnType("decimal(10,4)");
 
@@ -537,7 +538,7 @@ namespace RecetarioMVC.Migrations
 
                     b.ToTable("MovimientosStock", null, t =>
                         {
-                            t.HasCheckConstraint("CK_MovimientosStock_Cantidad", "Cantidad > 0");
+                            t.HasCheckConstraint("CK_MovimientosStock_Cantidad", "Cantidad > 0 OR (Tipo = 3 AND Cantidad = 0)");
                         });
                 });
 

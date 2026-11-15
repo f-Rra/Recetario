@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using RecetarioMVC.Data;
 using RecetarioMVC.Models;
 using RecetarioMVC.Services;
@@ -91,6 +93,40 @@ public class StockServiceTests
 
         Assert.Null(error);
         Assert.Equal(0m, (await context.Ingredientes.SingleAsync()).StockActual);
+    }
+
+    // La base en memoria no aplica las restricciones de la tabla, así que el test de arriba
+    // pasaba aunque SQL Server rechazara el movimiento con cantidad cero. Este mira la regla
+    // que se le manda a la base: tiene que dejar pasar el cero solo cuando es un ajuste.
+    [Fact]
+    public void RestriccionDeCantidad_AdmiteCeroSoloEnElAjuste()
+    {
+        using var context = CrearContexto();
+
+        // Las restricciones solo están en el modelo de diseño, el que usan las migraciones
+        var modelo = context.GetService<IDesignTimeModel>().Model;
+        var restriccion = modelo.FindEntityType(typeof(MovimientoStock))!
+            .GetCheckConstraints()
+            .Single(c => c.Name == "CK_MovimientosStock_Cantidad");
+
+        Assert.Equal(3, (int)TipoMovimiento.Ajuste);
+        Assert.Equal("Cantidad > 0 OR (Tipo = 3 AND Cantidad = 0)", restriccion.Sql);
+    }
+
+    [Fact]
+    public async Task Inventario_ContarCero_DejaElStockEnCero()
+    {
+        using var context = CrearContexto();
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
+
+        var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, new List<InventarioItem>
+        {
+            new() { IdIngrediente = 1, Contado = 0m }
+        }, "u1");
+
+        Assert.Equal(1, ajustados);
+        Assert.Equal(0m, (await context.Ingredientes.SingleAsync()).StockActual);
+        Assert.Equal(0m, (await context.MovimientosStock.SingleAsync()).Cantidad);
     }
 
     [Fact]
