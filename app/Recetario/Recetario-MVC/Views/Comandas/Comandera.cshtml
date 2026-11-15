@@ -400,12 +400,31 @@
                 return;
             }
 
-            panel.innerHTML = datos.ingredientes.map(i => `
-                <div class="fila${i.alcanza ? "" : " falta"}">
-                    <span>${i.ingrediente}${i.alcanza ? "" : " ⚠"}</span>
-                    <span class="pts"></span>
-                    <span>${i.cantidadTexto}</span>
-                </div>`).join("");
+            panel.replaceChildren(...datos.ingredientes.map(i => {
+                const fila = document.createElement("div");
+                fila.className = i.alcanza ? "fila" : "fila falta";
+                const puntos = elemento("span", "");
+                puntos.className = "pts";
+                fila.append(
+                    elemento("span", i.ingrediente + (i.alcanza ? "" : " ⚠")),
+                    puntos,
+                    elemento("span", i.cantidadTexto));
+                return fila;
+            }));
+        }
+
+        // Los nombres los carga la gente: se ponen como texto, nunca como HTML. Con
+        // innerHTML, un ingrediente llamado "<img onerror=…>" se ejecutaba como código
+        function elemento(etiqueta, texto) {
+            const nodo = document.createElement(etiqueta);
+            nodo.textContent = texto;
+            return nodo;
+        }
+
+        function opcion(valor, texto) {
+            const nodo = elemento("option", texto);
+            nodo.value = valor;
+            return nodo;
         }
 
         // ---- Modal de modificación ----
@@ -418,9 +437,8 @@
             document.getElementById("modalReceta").textContent = boton.dataset.nombre;
             document.getElementById("modalTipo").value = "";
 
-            document.getElementById("modalOriginal").innerHTML = (ingredientesPorReceta[idReceta] || [])
-                .map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`)
-                .join("");
+            document.getElementById("modalOriginal").replaceChildren(
+                ...(ingredientesPorReceta[idReceta] || []).map(i => opcion(i.id, `${i.nombre} (${i.unidad})`)));
 
             document.getElementById("modalCantidad").value = "";
             actualizarCampos();
@@ -444,8 +462,9 @@
             });
 
             const select = document.getElementById("modalReemplazo");
-            select.innerHTML = '<option value="">Elegí un ingrediente…</option>' +
-                candidatos.map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`).join("");
+            select.replaceChildren(
+                opcion("", "Elegí un ingrediente…"),
+                ...candidatos.map(i => opcion(i.id, `${i.nombre} (${i.unidad})`)));
         }
 
         function actualizarCampos() {
