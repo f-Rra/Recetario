@@ -80,7 +80,7 @@ public class ComandaServiceTests
         using var context = CrearContexto();
         var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
 
-        // 12 comensales sobre base 6 → factor 2 → 1,25 kg, que redondea a 1,5 (guía 24)
+        // 12 comensales sobre base 6 → factor 2 → 1,25 kg, que redondea a 1,5
         var resultado = await servicio.GenerarAsync(Carrito(12, ItemNoquis()), "u1");
 
         Assert.True(resultado.Ok);
@@ -269,7 +269,7 @@ public class ComandaServiceTests
         Assert.False(noAlcanza!.Ingredientes.Single().Alcanza);
     }
 
-    // ---------- Revisión previa (guía 18) ----------
+    // ---------- Revisión previa ----------
 
     [Fact]
     public async Task Revisar_AvisaElFaltanteSinTocarNada()

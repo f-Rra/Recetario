@@ -4,7 +4,7 @@ using QuestPDF.Infrastructure;
 
 namespace RecetarioMVC.Services.Pdf;
 
-/// <summary>Paleta Southex y bloques comunes de los PDFs (guía 01).</summary>
+/// <summary>Paleta Southex y bloques comunes de los PDFs.</summary>
 public static class EstiloPdf
 {
     public const string Azul = "#1078B0";

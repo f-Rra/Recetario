@@ -18,7 +18,7 @@ public interface IIngredienteService
     Task<string> GenerarCodigoAsync();
     Task CrearAsync(IngredienteFormViewModel modelo, string usuarioId);
 
-    /// <summary>Edita datos y stock mínimo. El stock actual solo se mueve por movimientos (guía 12).</summary>
+    /// <summary>Edita datos y stock mínimo. El stock actual solo se mueve por movimientos.</summary>
     Task<bool> EditarAsync(IngredienteFormViewModel modelo);
 
     /// <summary>

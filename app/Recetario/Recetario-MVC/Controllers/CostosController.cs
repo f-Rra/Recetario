@@ -10,7 +10,7 @@ using RecetarioMVC.ViewModels;
 namespace RecetarioMVC.Controllers;
 
 // La pantalla lleva el selector de recetas al costado: se cambia de receta sin
-// volver al listado (guía 32)
+// volver al listado
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class CostosController : Controller
 {

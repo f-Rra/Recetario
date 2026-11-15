@@ -1,5 +1,5 @@
 /* ============================================================
-   Recetario MVC — Sistema de diseño (Guía 01)
+   Recetario MVC — Sistema de diseño
    Paleta Grupo Southex + layout sidebar/topbar
    ============================================================ */
 
@@ -204,7 +204,7 @@ html, body {
   color: var(--sx-gris-texto);
 }
 
-/* ============ Componentes (Guía 01) ============ */
+/* ============ Componentes ============ */
 
 /* Cards blancas sobre fondo gris, sin bordes duros */
 .card {
@@ -324,7 +324,7 @@ td.num + td {
   width: 250px;
 }
 
-/* Badges de estado de stock (guía 01) */
+/* Badges de estado de stock */
 .badge-estado-ok {
   background: #EDF4EE;
   color: #2E6B3E;
@@ -340,7 +340,7 @@ td.num + td {
   color: var(--sx-rojo);
 }
 
-/* ---------- Comandera: catálogo y ticket (guía 19) ---------- */
+/* ---------- Comandera: catálogo y ticket ---------- */
 
 /* minmax(0, …): sin el piso de min-content, así las píldoras scrollean
    adentro de su fila en lugar de empujar el ticket fuera de la pantalla */
@@ -701,7 +701,7 @@ td.num + td {
   }
 }
 
-/* ---------- Historial de comandas (guía 20) ---------- */
+/* ---------- Historial de comandas ---------- */
 
 .hst-filtros {
   display: flex;
@@ -791,7 +791,7 @@ td.num + td {
 }
 
 /* Historial de movimientos: mismo lenguaje, pero la fila no lleva a ningún
-   lado, así que el ingrediente va en negro y la hora al lado (guía 25) */
+   lado, así que el ingrediente va en negro y la hora al lado */
 .hst-ingrediente {
   font-weight: 600;
 }
@@ -802,7 +802,7 @@ td.num + td {
   margin-left: 8px;
 }
 
-/* ---------- Detalle de comanda (guía 21) ---------- */
+/* ---------- Detalle de comanda ---------- */
 
 .dtc-volver {
   color: var(--sx-azul);
@@ -882,7 +882,7 @@ td.num + td {
   margin: 0 0 12px;
 }
 
-/* La misma columna con puntos de guía del ticket (guía 19) */
+/* La misma columna con puntos de guía del ticket */
 .dtc-lista div {
   display: flex;
   padding: 3.5px 0;
@@ -933,7 +933,7 @@ td.num + td {
   }
 }
 
-/* ---------- Listado de recetas en fichas (guía 22) ---------- */
+/* ---------- Listado de recetas en fichas ---------- */
 
 .fch-grilla {
   display: grid;
@@ -1020,7 +1020,7 @@ td.num + td {
   }
 }
 
-/* ---------- Maestro-detalle: lista y ficha (guía 28) ---------- */
+/* ---------- Maestro-detalle: lista y ficha ---------- */
 
 .mdt {
   display: grid;
@@ -1143,7 +1143,7 @@ td.num + td {
   padding: 3px 12px;
 }
 
-/* ---------- Paginador (guía 26) ---------- */
+/* ---------- Paginador ---------- */
 
 .pgn {
   display: flex;
@@ -1186,7 +1186,7 @@ td.num + td {
   text-align: center;
 }
 
-/* ---------- Dashboard: tarjetas, paneles y actividad (guía 34) ---------- */
+/* ---------- Dashboard: tarjetas, paneles y actividad ---------- */
 
 .dsh-tarjetas {
   display: grid;
@@ -1344,7 +1344,7 @@ td.num + td {
   }
 }
 
-/* ---------- Editar receta: datos arriba, contenido abajo (guía 33) ---------- */
+/* ---------- Editar receta: datos arriba, contenido abajo ---------- */
 
 .rec-datos {
   display: flex;
@@ -1435,7 +1435,7 @@ td.num + td {
   }
 }
 
-/* ---------- Costeo: desglose con barras (guía 32) ---------- */
+/* ---------- Costeo: desglose con barras ---------- */
 
 .cst-calcular {
   display: flex;
@@ -1544,7 +1544,7 @@ td.num + td {
   }
 }
 
-/* ---------- Usuarios: un bloque por rol (guía 31) ---------- */
+/* ---------- Usuarios: un bloque por rol ---------- */
 
 .usr-columnas {
   display: grid;
@@ -1601,7 +1601,7 @@ td.num + td {
   }
 }
 
-/* ---------- Responsables: una tarjeta por sector (guía 30) ---------- */
+/* ---------- Responsables: una tarjeta por sector ---------- */
 
 .rsp-resumen {
   font-size: 14px;
@@ -1725,7 +1725,7 @@ td.num + td {
   }
 }
 
-/* ---------- Proveedores: fichas de contacto (guía 29) ---------- */
+/* ---------- Proveedores: fichas de contacto ---------- */
 
 .prv-grilla {
   display: grid;
@@ -1804,7 +1804,7 @@ td.num + td {
   }
 }
 
-/* ---------- Stock: los dos depósitos a la vista (guía 23) ---------- */
+/* ---------- Stock: los dos depósitos a la vista ---------- */
 
 .stk-depositos {
   display: grid;
@@ -1903,7 +1903,7 @@ td.num + td {
   font-weight: 600;
 }
 
-/* ---------- Avisos previos a generar (guía 18) ---------- */
+/* ---------- Avisos previos a generar ---------- */
 
 /* Receta a la que le falta contenido: avisa, no bloquea */
 .icono-incompleta {
@@ -1961,7 +1961,7 @@ td.num + td {
   font-size: 13px;
 }
 
-/* Cards de métricas para dashboards (guía 06) */
+/* Cards de métricas para dashboards */
 .metric-card {
   background: #fff;
   border-radius: 8px;

@@ -22,7 +22,7 @@ Docker Compose levanta la aplicación con su propia base de SQL Server, y un scr
 
 ## La migración desde WinForms
 
-El proyecto nació como TPI académico en WinForms (.NET Framework, 3 capas, ADO.NET y stored procedures). La migración a ASP.NET Core MVC se hizo en fases (esqueleto, CRUDs, núcleo y costeo, cocina, soporte y cierre), documentadas en [`Guias/`](../Guias/).
+El proyecto nació como TPI académico en WinForms (.NET Framework, 3 capas, ADO.NET y stored procedures). La migración a ASP.NET Core MVC se hizo en fases (esqueleto, CRUDs, núcleo y costeo, cocina, soporte y cierre). La bitácora de esa migración, una guía por commit, quedó en el historial del repositorio.
 
 Además de trasladar la funcionalidad, se corrigieron limitaciones del diseño original: historial real de precios, escalado de costeo por porciones, bloqueo de costeos incompletos y trazabilidad completa del stock mediante movimientos auditados.
 
@@ -35,7 +35,6 @@ app/Recetario/
 ├─ Recetario-MVC/          la aplicación: controladores, servicios, datos, vistas
 └─ Recetario-MVC.Tests/    los tests de xUnit
 docs/                      capturas y documentación
-Guias/                     bitácora de la migración, una guía por commit
 scripts/                   la base y la lógica del sistema original, y los datos de demostración
 docker-compose.yml         la aplicación y su base, con un comando
 ```

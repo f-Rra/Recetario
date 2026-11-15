@@ -213,7 +213,7 @@ INSERT INTO Procedimientos (IdReceta, NroPaso, Descripcion) VALUES
 (6, 3, N'Rectificar con sal y pimienta.');
 GO
 
-/* ---------- Depósitos (guía 17) ----------
+/* ---------- Depósitos ----------
    Bodega guarda lo seco y cámara lo refrigerado: lácteos, carnes, huevos y
    todas las frutas y verduras (incluidas papas, cebolla y ajo). El default de
    la columna deja todo en bodega, así que solo se reasigna la cámara. */

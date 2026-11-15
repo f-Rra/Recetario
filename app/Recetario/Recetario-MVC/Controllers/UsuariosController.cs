@@ -9,7 +9,7 @@ using RecetarioMVC.ViewModels;
 namespace RecetarioMVC.Controllers;
 
 // Una sola pantalla agrupada por rol: el alta y el reseteo de contraseña son
-// modales, así que todo vuelve al Index (guía 31)
+// modales, así que todo vuelve al Index
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class UsuariosController : Controller
 {

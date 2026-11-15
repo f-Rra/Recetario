@@ -1,5 +1,5 @@
 // Validación cliente con decimales es-AR: jQuery Validation solo acepta
-// punto decimal por defecto; estos overrides aceptan también la coma (guía 07).
+// punto decimal por defecto; estos overrides aceptan también la coma.
 if (window.jQuery && $.validator) {
     $.validator.methods.number = function (value, element) {
         return this.optional(element) || /^-?(?:\d+|\d{1,3}(?:\.\d{3})+)?(?:,\d+)?$|^-?\d*\.?\d+$/.test(value);

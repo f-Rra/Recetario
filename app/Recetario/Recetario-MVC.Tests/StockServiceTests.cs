@@ -212,7 +212,7 @@ public class StockServiceTests
         Assert.All(soloEntradas.Items, m => Assert.Equal(TipoMovimiento.Entrada, m.Tipo));
     }
 
-    // ---------- Inventario por depósito (guía 17) ----------
+    // ---------- Inventario por depósito ----------
 
     /// <summary>Agrega un refrigerado, para tener uno en cada depósito.</summary>
     private static void AgregarIngredienteDeCamara(ApplicationDbContext context)

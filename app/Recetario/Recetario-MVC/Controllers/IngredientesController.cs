@@ -10,7 +10,7 @@ using RecetarioMVC.ViewModels;
 namespace RecetarioMVC.Controllers;
 
 // Una sola pantalla: la lista, la ficha del elegido y sus precios. Las altas y
-// ediciones son modales, así que todo vuelve siempre al Index (guía 28).
+// ediciones son modales, así que todo vuelve siempre al Index.
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class IngredientesController : Controller
 {

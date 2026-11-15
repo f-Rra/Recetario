@@ -7,10 +7,10 @@ using RecetarioMVC.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// QuestPDF con licencia Community (guía 13)
+// QuestPDF con licencia Community
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
-// Cultura es-AR en toda la app: decimales con coma en binding y formato (guía 07)
+// Cultura es-AR en toda la app: decimales con coma en binding y formato
 var culturaArgentina = new CultureInfo("es-AR");
 CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;
 CultureInfo.DefaultThreadCurrentUICulture = culturaArgentina;
@@ -20,7 +20,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
-        // Sin registro público: los usuarios los crea el Admin (guía 04)
+        // Sin registro público: los usuarios los crea el Admin
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
         options.User.RequireUniqueEmail = true;
@@ -57,7 +57,7 @@ builder.Services.AddScoped<RecetarioMVC.Services.IStockService, RecetarioMVC.Ser
 // El reloj de la aplicación: siempre da la hora de Argentina, esté donde esté el servidor
 builder.Services.AddSingleton<TimeProvider, RecetarioMVC.Helpers.RelojArgentina>();
 
-// El pedido en curso de la comandera vive en la sesión (guía 15)
+// El pedido en curso de la comandera vive en la sesión
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

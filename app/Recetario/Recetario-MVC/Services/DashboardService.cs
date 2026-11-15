@@ -71,7 +71,7 @@ public class DashboardService : IDashboardService
             .ToListAsync();
 
         // Vigente = fecha más reciente que ya haya llegado, desempate por id: la misma
-        // semántica que usa el costeo (guía 10)
+        // semántica que usa el costeo
         var hoy = _reloj.Hoy();
         var precios = await _context.PreciosIngrediente
             .Where(p => p.FechaVigencia <= hoy)

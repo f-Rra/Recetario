@@ -7,7 +7,7 @@ using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
 
-// Una sola pantalla por sectores: las altas y ediciones son modales (guía 30)
+// Una sola pantalla por sectores: las altas y ediciones son modales
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class ResponsablesController : Controller
 {

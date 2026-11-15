@@ -6,7 +6,7 @@ using RecetarioMVC.ViewModels;
 
 namespace RecetarioMVC.Controllers;
 
-// Una sola pantalla de fichas: las altas y ediciones son modales (guía 29)
+// Una sola pantalla de fichas: las altas y ediciones son modales
 [Authorize(Roles = DbSeeder.RolAdmin)]
 public class ProveedoresController : Controller
 {

@@ -177,7 +177,7 @@ public class IngredienteService : IIngredienteService
             },
             nuevo => _context.Ingredientes.AnyAsync(i => i.Codigo == nuevo.Codigo));
 
-        // El stock inicial también queda auditado (guía 12)
+        // El stock inicial también queda auditado
         if (modelo.StockActual > 0)
         {
             _context.MovimientosStock.Add(new MovimientoStock
@@ -209,7 +209,7 @@ public class IngredienteService : IIngredienteService
         ingrediente.Descripcion = modelo.Descripcion.Trim();
         ingrediente.IdUnidad = modelo.IdUnidad!.Value;
         ingrediente.Deposito = modelo.Deposito!.Value;
-        // StockActual no se toca: solo se mueve por movimientos auditados (guía 12)
+        // StockActual no se toca: solo se mueve por movimientos auditados
         ingrediente.StockMinimo = modelo.StockMinimo;
         await _context.SaveChangesAsync();
         return true;

@@ -16,7 +16,7 @@ public class IngredienteConfiguracion : IEntityTypeConfiguration<Ingrediente>
         builder.Property(i => i.Codigo).HasMaxLength(20).IsRequired();
         builder.Property(i => i.Descripcion).HasMaxLength(100).IsRequired();
         // Los ingredientes que ya existían quedan en bodega; los refrigerados
-        // se reasignan por script (guía 17). El centinela es 0 —valor que el
+        // se reasignan por script. El centinela es 0 —valor que el
         // enum no usa— así el default solo actúa si nadie indicó el depósito.
         builder.Property(i => i.Deposito)
                .HasDefaultValue(Deposito.Bodega)
