@@ -169,7 +169,21 @@ public class ComandasController : Controller
             return RedirectToAction(nameof(Comandera));
         }
 
-        item.Modificaciones.Add(new ModificacionCarrito
+        // Los ids llegan del formulario: el que se quita o sustituye tiene que ser de la
+        // receta, y el que entra tiene que existir
+        if (form.Tipo != TipoModificacion.Adicion && original is null)
+        {
+            TempData["Error"] = "El ingrediente a quitar o sustituir no es de esta receta.";
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        if (form.Tipo != TipoModificacion.Eliminacion && reemplazo is null)
+        {
+            TempData["Error"] = "El ingrediente elegido no existe.";
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        var nueva = new ModificacionCarrito
         {
             Tipo = form.Tipo.Value,
             IdIngredienteOriginal = form.IdIngredienteOriginal,
@@ -179,7 +193,16 @@ public class ComandasController : Controller
             // Solo la adición trae cantidad; el resto la hereda de la receta
             Cantidad = form.Tipo == TipoModificacion.Adicion ? form.Cantidad : null,
             Unidad = reemplazo?.Unidad.Abreviatura ?? original?.Unidad
-        });
+        };
+
+        var contradiccion = ReglasModificacion.Validar(item.Modificaciones, nueva);
+        if (contradiccion is not null)
+        {
+            TempData["Error"] = contradiccion;
+            return RedirectToAction(nameof(Comandera));
+        }
+
+        item.Modificaciones.Add(nueva);
 
         CarritoSesion.Guardar(HttpContext.Session, carrito);
         TempData["Exito"] = "Modificación agregada a la receta.";
