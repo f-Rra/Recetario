@@ -131,7 +131,15 @@ html, body {
   font-size: 13.5px;
 }
 
-.sidebar-usuario .btn-salir {
+.sidebar-usuario-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sidebar-usuario .btn-salir,
+.sidebar-usuario .enlace-clave {
   background: none;
   border: none;
   padding: 0;
@@ -141,7 +149,8 @@ html, body {
   cursor: pointer;
 }
 
-.sidebar-usuario .btn-salir:hover {
+.sidebar-usuario .btn-salir:hover,
+.sidebar-usuario .enlace-clave:hover {
   color: #fff;
 }
 

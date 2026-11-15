@@ -97,7 +97,10 @@
             </nav>
 
             <div class="sidebar-usuario">
-                <span title="@usuario?.Email">@(usuario?.NombreCompleto ?? "—")</span>
+                <div class="sidebar-usuario-datos">
+                    <span title="@usuario?.Email">@(usuario?.NombreCompleto ?? "—")</span>
+                    <a asp-controller="Acceso" asp-action="CambiarPassword" class="enlace-clave">Cambiar contraseña</a>
+                </div>
                 <form asp-controller="Acceso" asp-action="Logout" method="post" class="d-inline">
                     <button type="submit" class="btn-salir">Salir</button>
                 </form>
