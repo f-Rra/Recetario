@@ -161,20 +161,21 @@ public class IngredienteService : IIngredienteService
 
     public async Task CrearAsync(IngredienteFormViewModel modelo, string usuarioId)
     {
-        // El código se regenera en el POST: el del form pudo quedar viejo
-        // si otro admin creó un ingrediente en el medio.
-        var ingrediente = new Ingrediente
-        {
-            Codigo = await GenerarCodigoAsync(),
-            Descripcion = modelo.Descripcion.Trim(),
-            IdUnidad = modelo.IdUnidad!.Value,
-            Deposito = modelo.Deposito!.Value,
-            StockActual = modelo.StockActual,
-            StockMinimo = modelo.StockMinimo
-        };
-
-        _context.Ingredientes.Add(ingrediente);
-        await _context.SaveChangesAsync();
+        // El código se regenera en el POST: el del form pudo quedar viejo si otro admin creó
+        // un ingrediente en el medio. Y si se lo llevan justo entre que se calcula y se
+        // guarda, se vuelve a intentar con el siguiente
+        var ingrediente = await ReintentoPorCodigoRepetido.CrearAsync(
+            _context,
+            async () => new Ingrediente
+            {
+                Codigo = await GenerarCodigoAsync(),
+                Descripcion = modelo.Descripcion.Trim(),
+                IdUnidad = modelo.IdUnidad!.Value,
+                Deposito = modelo.Deposito!.Value,
+                StockActual = modelo.StockActual,
+                StockMinimo = modelo.StockMinimo
+            },
+            nuevo => _context.Ingredientes.AnyAsync(i => i.Codigo == nuevo.Codigo));
 
         // El stock inicial también queda auditado (guía 12)
         if (modelo.StockActual > 0)

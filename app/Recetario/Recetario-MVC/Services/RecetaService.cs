@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RecetarioMVC.Data;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.Models;
 using RecetarioMVC.ViewModels;
 
@@ -169,17 +170,20 @@ public class RecetaService : IRecetaService
 
     public async Task<int> CrearAsync(RecetaFormViewModel modelo)
     {
-        var receta = new Receta
-        {
-            Codigo = await GenerarCodigoAsync(),
-            Nombre = modelo.Nombre.Trim(),
-            IdClasificacion = modelo.IdClasificacion!.Value,
-            PorcionesBase = modelo.PorcionesBase!.Value,
-            Activo = modelo.Activo
-        };
+        // El código se calcula en cada intento: si otra persona creó una receta en el medio
+        // y se llevó el mismo, se vuelve a pedir el siguiente
+        var receta = await ReintentoPorCodigoRepetido.CrearAsync(
+            _context,
+            async () => new Receta
+            {
+                Codigo = await GenerarCodigoAsync(),
+                Nombre = modelo.Nombre.Trim(),
+                IdClasificacion = modelo.IdClasificacion!.Value,
+                PorcionesBase = modelo.PorcionesBase!.Value,
+                Activo = modelo.Activo
+            },
+            nueva => _context.Recetas.AnyAsync(r => r.Codigo == nueva.Codigo));
 
-        _context.Recetas.Add(receta);
-        await _context.SaveChangesAsync();
         return receta.IdReceta;
     }
 
