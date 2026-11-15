@@ -102,4 +102,117 @@ public class IngredienteServiceTests
 
         Assert.Null(await servicio.ObtenerDetalleAsync(999));
     }
+
+    // ---------- Cambio de unidad ----------
+    // Las cantidades ya cargadas no se convierten: si a un ingrediente con 2 kg de stock
+    // se le cambia la unidad a gramos, pasa a tener 2 g, y lo mismo sus recetas.
+
+    private const int Gramo = 2;
+    private const int Nuevo = 3;     // recién creado: sin stock, sin recetas, sin historial
+
+    private static ApplicationDbContext CrearContextoConOtraUnidad()
+    {
+        var context = CrearContexto();
+        context.AddRange(
+            new Unidad { IdUnidad = Gramo, Nombre = "Gramo", Abreviatura = "g" },
+            new Ingrediente
+            {
+                IdIngrediente = Nuevo, Codigo = "ING003", Descripcion = "Azafrán",
+                IdUnidad = 1, Deposito = Deposito.Bodega, StockActual = 0m, StockMinimo = 0m
+            },
+            new ApplicationUser { Id = "u1", Nombre = "Admin", Apellido = "Test" });
+        context.SaveChanges();
+        return context;
+    }
+
+    private static RecetarioMVC.ViewModels.IngredienteFormViewModel Formulario(int id, string descripcion, int idUnidad) => new()
+    {
+        IdIngrediente = id,
+        Descripcion = descripcion,
+        IdUnidad = idUnidad,
+        Deposito = Deposito.Bodega,
+        StockMinimo = 1m
+    };
+
+    [Fact]
+    public async Task CambiarUnidad_DeUnIngredienteEnRecetas_SeRechaza()
+    {
+        using var context = CrearContextoConOtraUnidad();
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
+
+        var motivo = await servicio.ValidarCambioDeUnidadAsync(Lechuga, Gramo);
+
+        Assert.NotNull(motivo);
+        Assert.Contains("2 receta(s)", motivo);
+        Assert.Contains("kg", motivo);
+    }
+
+    [Fact]
+    public async Task CambiarUnidad_DeUnIngredienteConStock_SeRechaza()
+    {
+        using var context = CrearContextoConOtraUnidad();
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
+
+        var motivo = await servicio.ValidarCambioDeUnidadAsync(Harina, Gramo);
+
+        Assert.NotNull(motivo);
+        Assert.Contains("stock", motivo);
+    }
+
+    [Fact]
+    public async Task CambiarUnidad_DeUnIngredienteSinStockPeroConMovimientos_SeRechaza()
+    {
+        using var context = CrearContextoConOtraUnidad();
+        context.MovimientosStock.Add(new MovimientoStock
+        {
+            IdIngrediente = Nuevo, Tipo = TipoMovimiento.Ajuste, Cantidad = 0m, IdUnidad = 1,
+            Fecha = new DateTime(2026, 3, 10), UsuarioId = "u1"
+        });
+        context.SaveChanges();
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
+
+        var motivo = await servicio.ValidarCambioDeUnidadAsync(Nuevo, Gramo);
+
+        Assert.NotNull(motivo);
+        Assert.Contains("movimientos", motivo);
+    }
+
+    [Fact]
+    public async Task CambiarUnidad_DeUnIngredienteSinUso_SePermite()
+    {
+        using var context = CrearContextoConOtraUnidad();
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
+
+        Assert.Null(await servicio.ValidarCambioDeUnidadAsync(Nuevo, Gramo));
+        Assert.True(await servicio.EditarAsync(Formulario(Nuevo, "Azafrán", Gramo)));
+
+        Assert.Equal(Gramo, (await context.Ingredientes.FindAsync(Nuevo))!.IdUnidad);
+    }
+
+    [Fact]
+    public async Task Editar_SinCambiarLaUnidad_FuncionaAunqueEsteEnUso()
+    {
+        using var context = CrearContextoConOtraUnidad();
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
+
+        Assert.Null(await servicio.ValidarCambioDeUnidadAsync(Lechuga, 1));
+        Assert.True(await servicio.EditarAsync(Formulario(Lechuga, "Lechuga criolla", 1)));
+
+        Assert.Equal("Lechuga criolla", (await context.Ingredientes.FindAsync(Lechuga))!.Descripcion);
+    }
+
+    [Fact]
+    public async Task Editar_NoCambiaLaUnidadDeUnIngredienteEnUsoAunqueSeSalteeLaValidacion()
+    {
+        using var context = CrearContextoConOtraUnidad();
+        var servicio = new IngredienteService(context, RelojDePrueba.Cualquiera());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => servicio.EditarAsync(Formulario(Lechuga, "Lechuga", Gramo)));
+
+        context.ChangeTracker.Clear();
+        var lechuga = await context.Ingredientes.FindAsync(Lechuga);
+        Assert.Equal(1, lechuga!.IdUnidad);
+        Assert.Equal("Lechuga", lechuga.Descripcion);
+    }
 }

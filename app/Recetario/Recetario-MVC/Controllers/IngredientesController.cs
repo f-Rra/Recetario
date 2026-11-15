@@ -58,6 +58,13 @@ public class IngredientesController : Controller
     public async Task<IActionResult> Editar(
         [Bind(Prefix = "Datos")] IngredienteFormViewModel modelo, string? busqueda, int pagina = 1)
     {
+        if (ModelState.IsValid)
+        {
+            var motivo = await _ingredientes.ValidarCambioDeUnidadAsync(modelo.IdIngrediente, modelo.IdUnidad!.Value);
+            if (motivo is not null)
+                ModelState.AddModelError("Datos.IdUnidad", motivo);
+        }
+
         if (!ModelState.IsValid)
         {
             var vista = await ArmarPaginaAsync(busqueda, modelo.IdIngrediente, pagina);

@@ -199,6 +199,12 @@ public class IngredienteService : IIngredienteService
         if (ingrediente is null)
             return false;
 
+        // La pantalla valida antes y muestra el motivo; esto es para que el cambio
+        // no pueda entrar por otro camino
+        var motivo = await ValidarCambioDeUnidadAsync(ingrediente.IdIngrediente, modelo.IdUnidad!.Value);
+        if (motivo is not null)
+            throw new InvalidOperationException(motivo);
+
         ingrediente.Descripcion = modelo.Descripcion.Trim();
         ingrediente.IdUnidad = modelo.IdUnidad!.Value;
         ingrediente.Deposito = modelo.Deposito!.Value;
@@ -206,6 +212,41 @@ public class IngredienteService : IIngredienteService
         ingrediente.StockMinimo = modelo.StockMinimo;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<string?> ValidarCambioDeUnidadAsync(int id, int idUnidadNueva)
+    {
+        var ingrediente = await _context.Ingredientes
+            .Where(i => i.IdIngrediente == id)
+            .Select(i => new { i.IdUnidad, i.StockActual, Unidad = i.Unidad.Abreviatura })
+            .FirstOrDefaultAsync();
+
+        if (ingrediente is null || ingrediente.IdUnidad == idUnidadNueva)
+            return null;
+
+        // Las cantidades ya cargadas no se convierten: 5 kg de stock pasarían a ser 5 g,
+        // y lo mismo con las recetas, los precios y el historial
+        string? uso = null;
+
+        var recetas = await _context.IngredientesReceta.CountAsync(x => x.IdIngrediente == id);
+        if (recetas > 0)
+            uso = $"está en {recetas} receta(s)";
+        else if (ingrediente.StockActual != 0)
+            uso = "tiene stock cargado";
+        else if (await _context.MovimientosStock.AnyAsync(m => m.IdIngrediente == id))
+            uso = "tiene movimientos de stock";
+        else if (await _context.PreciosIngrediente.AnyAsync(p => p.IdIngrediente == id))
+            uso = "tiene precios cargados";
+        else if (await _context.CostosDetalle.AnyAsync(d => d.IdIngrediente == id) ||
+                 await _context.IngredientesComanda.AnyAsync(c => c.IdIngrediente == id) ||
+                 await _context.Modificaciones.AnyAsync(m =>
+                     m.IdIngredienteOriginal == id || m.IdIngredienteReemplazo == id))
+            uso = "figura en comandas o costeos";
+
+        return uso is null
+            ? null
+            : $"No se puede cambiar la unidad: el ingrediente {uso} en {ingrediente.Unidad}. " +
+              "Si la unidad está mal, creá un ingrediente nuevo con la correcta.";
     }
 
     public async Task<string?> EliminarAsync(int id)

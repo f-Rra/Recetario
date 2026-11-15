@@ -21,6 +21,12 @@ public interface IIngredienteService
     /// <summary>Edita datos y stock mínimo. El stock actual solo se mueve por movimientos (guía 12).</summary>
     Task<bool> EditarAsync(IngredienteFormViewModel modelo);
 
+    /// <summary>
+    /// Motivo por el que no se puede cambiar la unidad de un ingrediente que ya está en
+    /// uso (recetas, stock, precios o historial), o null si el cambio es válido.
+    /// </summary>
+    Task<string?> ValidarCambioDeUnidadAsync(int id, int idUnidadNueva);
+
     /// <returns>null si se eliminó; mensaje de error si está referenciado o no existe.</returns>
     Task<string?> EliminarAsync(int id);
 }
