@@ -121,7 +121,7 @@ public class StockService : IStockService
         };
     }
 
-    public async Task<int> GuardarInventarioAsync(
+    public async Task<int?> GuardarInventarioAsync(
         Deposito deposito, List<InventarioItem> conteo, string usuarioId)
     {
         var contados = conteo
@@ -134,9 +134,22 @@ public class StockService : IStockService
         var ids = contados.Keys.ToList();
         var ajustados = 0;
 
+        try
+        {
+            await AplicarConteoAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Tres intentos seguidos chocaron con alguien que seguía moviendo el stock.
+            // La transacción se deshizo: no quedó ningún ajuste a medias
+            return null;
+        }
+
+        return ajustados;
+
         // Los ingredientes se leen adentro del reintento: si una comanda cambió el stock de alguno
         // mientras se guardaba el conteo, se vuelve a leer y se compara contra el valor nuevo
-        await ReintentoPorConcurrencia.EjecutarAsync(_context, async () =>
+        Task AplicarConteoAsync() => ReintentoPorConcurrencia.EjecutarAsync(_context, async () =>
         {
             var ingredientes = await _context.Ingredientes
                 .Where(i => i.Deposito == deposito && ids.Contains(i.IdIngrediente))
@@ -176,8 +189,6 @@ public class StockService : IStockService
                 await transaccion.CommitAsync();
             });
         });
-
-        return ajustados;
     }
 
     public Task<Paginado<MovimientoHistorialItem>> HistorialAsync(

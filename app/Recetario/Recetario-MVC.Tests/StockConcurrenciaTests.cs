@@ -157,4 +157,68 @@ public class StockConcurrenciaTests
         // 10 + 3 + 5. Sin el control quedaban 15 y la entrada de 3 se perdía.
         Assert.Equal(18m, await StockDeHarinaAsync(baseDeDatos));
     }
+
+    // ---------- Inventario por depósito ----------
+
+    // A diferencia del de arriba, este no para: cada vez que se intenta guardar, alguien
+    // ya movió el stock de nuevo
+    private sealed class OtraPersonaNoParaDeMoverElStock : SaveChangesInterceptor
+    {
+        private readonly Func<Task> _cambio;
+        public int Veces { get; private set; }
+
+        public OtraPersonaNoParaDeMoverElStock(Func<Task> cambio) => _cambio = cambio;
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            var contexto = eventData.Context!;
+            contexto.ChangeTracker.DetectChanges();
+
+            if (contexto.ChangeTracker.Entries<Ingrediente>().Any(e => e.State == EntityState.Modified))
+            {
+                Veces++;
+                await _cambio();
+            }
+
+            return result;
+        }
+    }
+
+    private static List<InventarioItem> ConteoDeHarina(decimal contado) =>
+        [new InventarioItem { IdIngrediente = Harina, Contado = contado }];
+
+    [Fact]
+    public async Task Inventario_SiOtraPersonaCambiaElStockEnElMedio_QuedaElValorContado()
+    {
+        var baseDeDatos = CrearBase();
+        // Mientras se guarda el conteo (7 kg), una comanda se lleva 2
+        var interceptor = new OtraPersonaCambiaElStock(() => CambiarStockAsync(baseDeDatos, -2m));
+        using var contexto = new ApplicationDbContext(Opciones(baseDeDatos).AddInterceptors(interceptor).Options);
+        var servicio = new StockService(contexto, RelojDePrueba.Cualquiera());
+
+        var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, ConteoDeHarina(7m), "u1");
+
+        Assert.Equal(1, ajustados);
+        Assert.Equal(7m, await StockDeHarinaAsync(baseDeDatos));
+    }
+
+    [Fact]
+    public async Task Inventario_SiElStockNoParaDeCambiar_AvisaSinGuardarNada()
+    {
+        var baseDeDatos = CrearBase();
+        var interceptor = new OtraPersonaNoParaDeMoverElStock(() => CambiarStockAsync(baseDeDatos, -1m));
+        using var contexto = new ApplicationDbContext(Opciones(baseDeDatos).AddInterceptors(interceptor).Options);
+        var servicio = new StockService(contexto, RelojDePrueba.Cualquiera());
+
+        // Se contaron 4 kg. Antes esto terminaba en una excepción sin atrapar (error 500)
+        var ajustados = await servicio.GuardarInventarioAsync(Deposito.Bodega, ConteoDeHarina(4m), "u1");
+
+        Assert.Null(ajustados);
+        Assert.Equal(3, interceptor.Veces);                          // los tres intentos chocaron
+        // 10 menos los 3 kg de la otra persona, y no los 4 contados: el conteo no pisó el stock. Que los
+        // movimientos a medio guardar se deshagan lo hace la transacción de SQL Server, y la
+        // base en memoria no tiene (ver la nota de arriba), así que acá no se comprueba
+        Assert.Equal(7m, await StockDeHarinaAsync(baseDeDatos));
+    }
 }

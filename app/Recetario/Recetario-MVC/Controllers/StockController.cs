@@ -80,6 +80,8 @@ public class StockController : Controller
 
         TempData[ajustados > 0 ? "Exito" : "Error"] = ajustados switch
         {
+            null => "El stock cambió mientras se guardaba el inventario y no se guardó ningún ajuste. " +
+                    "Revisá las cantidades y guardá de nuevo.",
             0 => "No se ajustó nada: las cantidades cargadas coinciden con el sistema.",
             1 => "Inventario guardado: se ajustó 1 ingrediente.",
             _ => $"Inventario guardado: se ajustaron {ajustados} ingredientes."

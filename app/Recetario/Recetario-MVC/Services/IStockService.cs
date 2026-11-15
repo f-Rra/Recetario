@@ -23,7 +23,10 @@ public interface IStockService
     /// Aplica el conteo: cada cantidad distinta a la del sistema genera un ajuste.
     /// Las que vienen en blanco no se tocan.
     /// </summary>
-    /// <returns>Cuántos ingredientes se ajustaron.</returns>
-    Task<int> GuardarInventarioAsync(
+    /// <returns>
+    /// Cuántos ingredientes se ajustaron, o null si no se guardó nada porque el stock
+    /// siguió cambiando mientras se intentaba guardar.
+    /// </returns>
+    Task<int?> GuardarInventarioAsync(
         Models.Deposito deposito, List<InventarioItem> conteo, string usuarioId);
 }
