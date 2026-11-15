@@ -729,10 +729,6 @@ namespace RecetarioMVC.Migrations
                     b.Property<int>("IdClasificacion")
                         .HasColumnType("int");
 
-                    b.Property<string>("Imagen")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)

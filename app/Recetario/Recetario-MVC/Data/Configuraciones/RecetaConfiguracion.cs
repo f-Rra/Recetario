@@ -15,7 +15,6 @@ public class RecetaConfiguracion : IEntityTypeConfiguration<Receta>
         builder.HasKey(r => r.IdReceta);
         builder.Property(r => r.Codigo).HasMaxLength(20).IsRequired();
         builder.Property(r => r.Nombre).HasMaxLength(100).IsRequired();
-        builder.Property(r => r.Imagen).HasMaxLength(255);
         builder.HasIndex(r => r.Codigo).IsUnique();
 
         builder.HasOne(r => r.Clasificacion)

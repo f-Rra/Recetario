@@ -86,16 +86,16 @@ GO
 
 -- ---------- Recetas ----------
 SET IDENTITY_INSERT Recetas ON;
-INSERT INTO Recetas (IdReceta, Codigo, Nombre, IdClasificacion, PorcionesBase, Activo, Imagen) VALUES
-(1, 'REC001', N'Ensalada César',           5,  10, 1, NULL),
+INSERT INTO Recetas (IdReceta, Codigo, Nombre, IdClasificacion, PorcionesBase, Activo) VALUES
+(1, 'REC001', N'Ensalada César',           5,  10, 1),
 -- Las cantidades de la sopa son de olla, no de plato: van para 10 porciones
-(2, 'REC002', N'Sopa de papas y puerros',  1,  10, 1, NULL),
-(3, 'REC003', N'Salsa blanca',             6,  10, 1, NULL),
-(4, 'REC004', N'Pollo al horno con arroz', 2,  10, 1, NULL),
-(5, 'REC005', N'Tarta de manzana',         3, 100, 1, NULL),
+(2, 'REC002', N'Sopa de papas y puerros',  1,  10, 1),
+(3, 'REC003', N'Salsa blanca',             6,  10, 1),
+(4, 'REC004', N'Pollo al horno con arroz', 2,  10, 1),
+(5, 'REC005', N'Tarta de manzana',         3, 100, 1),
 -- La mayonesa es una decoración: las cantidades del script viejo son para
 -- 100 porciones, no para 1 (con base 1 pedía 750 kg de zanahorias)
-(6, 'REC006', N'Mayonesa de zanahorias',   4, 100, 1, NULL);
+(6, 'REC006', N'Mayonesa de zanahorias',   4, 100, 1);
 SET IDENTITY_INSERT Recetas OFF;
 GO
 

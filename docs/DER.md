@@ -158,7 +158,6 @@ erDiagram
         bit Activo
         nvarchar(20) Codigo UK
         int IdClasificacion FK
-        nvarchar(255) Imagen "nulo"
         nvarchar(100) Nombre
         int PorcionesBase
     }

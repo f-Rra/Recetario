@@ -8,7 +8,6 @@ public class Receta
     public int IdClasificacion { get; set; }
     public int PorcionesBase { get; set; }
     public bool Activo { get; set; } = true;
-    public string? Imagen { get; set; }
 
     public Clasificacion Clasificacion { get; set; } = null!;
     public ICollection<IngredienteReceta> Ingredientes { get; set; } = new List<IngredienteReceta>();
