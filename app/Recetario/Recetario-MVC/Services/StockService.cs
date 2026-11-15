@@ -47,6 +47,19 @@ public class StockService : IStockService
                     return;
                 }
 
+                // Una salida no puede llevarse más de lo que hay: el stock quedaría en negativo.
+                // Si lo que está mal es el número del sistema, eso se corrige con un ajuste.
+                // Se revisa adentro del reintento para comparar contra el stock recién leído
+                if (tipo == TipoMovimiento.Salida && cantidad > ingrediente.StockActual)
+                {
+                    await _context.Entry(ingrediente).Reference(i => i.Unidad).LoadAsync();
+                    var unidad = ingrediente.Unidad.Abreviatura;
+
+                    error = $"No se puede sacar {cantidad:0.####} {unidad}: en stock hay {ingrediente.StockActual:0.####} {unidad}. " +
+                            "Si la cantidad del sistema está mal, cargá un ajuste con lo que contaste.";
+                    return;
+                }
+
                 var estrategia = _context.Database.CreateExecutionStrategy();
                 await estrategia.ExecuteAsync(async () =>
                 {

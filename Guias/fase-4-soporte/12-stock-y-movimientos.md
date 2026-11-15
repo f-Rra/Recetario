@@ -11,7 +11,7 @@ Cerrar la trazabilidad del stock: movimientos manuales (entrada/salida/ajuste) c
 | Regla | Viejo (`trg_ActualizarStockMovimiento`) | Nuevo (`StockService`) |
 |---|---|---|
 | Entrada | suma | Igual |
-| Salida | resta (permite negativo) | Igual (realidad de cocina; el estado crítico lo delata) |
+| Salida | resta (permite negativo) | Resta, pero **no puede superar el stock**: se rechaza y sugiere un ajuste. Al principio permitía el negativo; se cambió para que quede igual que las comandas, que tampoco lo dejan en negativo |
 | **Ajuste** | **setea** el stock al valor del movimiento | Igual (es inventario: "conté y hay X") |
 | Alta de ingrediente con stock inicial | sin auditar | **Mejora**: genera movimiento de entrada "Stock inicial" |
 | Edición de stock a mano | permitida (guía 07, temporal) | **Se elimina**: en edición el stock es solo lectura con link a movimientos (promesa de la guía 07) |
@@ -41,7 +41,7 @@ Cerrar la trazabilidad del stock: movimientos manuales (entrada/salida/ajuste) c
 ## Tests (`StockServiceTests`)
 
 1. Entrada suma y audita el movimiento con el usuario.
-2. Salida resta y permite quedar negativo.
+2. Salida resta; puede dejar el stock en cero, y si supera el stock se rechaza sin tocar nada.
 3. Ajuste **setea** el stock al valor indicado (semántica del trigger viejo).
 4. Cantidad inválida (≤ 0) o ingrediente inexistente → falla sin tocar nada.
 5. El historial filtra por ingrediente y por tipo.

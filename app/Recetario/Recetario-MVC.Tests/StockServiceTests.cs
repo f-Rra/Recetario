@@ -59,15 +59,43 @@ public class StockServiceTests
     }
 
     [Fact]
-    public async Task Salida_RestaYPermiteQuedarNegativo()
+    public async Task Salida_RestaDelStock()
     {
         using var context = CrearContexto();
         var servicio = new StockService(context, RelojDePrueba.Cualquiera());
 
-        var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Salida, 12m), "u1");
+        var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Salida, 4m), "u1");
 
         Assert.Null(error);
-        Assert.Equal(-2m, (await context.Ingredientes.SingleAsync()).StockActual);
+        Assert.Equal(6m, (await context.Ingredientes.SingleAsync()).StockActual);
+    }
+
+    [Fact]
+    public async Task Salida_PorTodoElStock_LoDejaEnCero()
+    {
+        using var context = CrearContexto();
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
+
+        var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Salida, 10m), "u1");
+
+        Assert.Null(error);
+        Assert.Equal(0m, (await context.Ingredientes.SingleAsync()).StockActual);
+    }
+
+    [Fact]
+    public async Task Salida_MayorAlStock_SeRechazaSinTocarNada()
+    {
+        using var context = CrearContexto();
+        var servicio = new StockService(context, RelojDePrueba.Cualquiera());
+
+        // Hay 10 y se quieren sacar 12: antes el stock quedaba en -2
+        var error = await servicio.RegistrarMovimientoAsync(Movimiento(TipoMovimiento.Salida, 12m), "u1");
+
+        Assert.NotNull(error);
+        Assert.Contains("12 kg", error);
+        Assert.Contains("10 kg", error);
+        Assert.Equal(10m, (await context.Ingredientes.SingleAsync()).StockActual);
+        Assert.Empty(context.MovimientosStock);
     }
 
     [Fact]
