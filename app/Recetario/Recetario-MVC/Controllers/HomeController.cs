@@ -30,6 +30,20 @@ public class HomeController : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View(ErrorViewModel.Para(
+            StatusCodes.Status500InternalServerError,
+            Activity.Current?.Id ?? HttpContext.TraceIdentifier));
+    }
+
+    /// <summary>
+    /// Página para las respuestas sin contenido (un 404 por una dirección que no existe o
+    /// por un registro que no está, un 400 por un formulario vencido). Sin esto el
+    /// navegador mostraba una hoja en blanco.
+    /// </summary>
+    [AllowAnonymous]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Estado(int id)
+    {
+        return View(nameof(Error), ErrorViewModel.Para(id));
     }
 }

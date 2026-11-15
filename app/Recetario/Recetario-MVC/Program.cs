@@ -76,6 +76,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Las respuestas de error sin contenido (404, 400…) se muestran con la página de la app
+// en vez de una hoja en blanco. Conserva el código de estado original.
+app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
+
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture(culturaArgentina),
