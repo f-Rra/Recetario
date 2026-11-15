@@ -21,6 +21,10 @@ public class MovimientoStockConfiguracion : IEntityTypeConfiguration<MovimientoS
         builder.Property(m => m.Observaciones).HasMaxLength(255);
         builder.Property(m => m.Fecha).HasDefaultValueSql("GETDATE()");
 
+        // El historial y la actividad del tablero piden los últimos movimientos por fecha.
+        // Es la tabla que más crece: cada comanda suma un movimiento por ingrediente
+        builder.HasIndex(m => m.Fecha);
+
         builder.HasOne(m => m.Ingrediente)
                .WithMany()
                .HasForeignKey(m => m.IdIngrediente)

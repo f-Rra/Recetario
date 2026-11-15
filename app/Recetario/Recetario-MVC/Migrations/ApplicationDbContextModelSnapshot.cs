@@ -278,6 +278,8 @@ namespace RecetarioMVC.Migrations
 
                     b.HasKey("IdComanda");
 
+                    b.HasIndex("Fecha");
+
                     b.HasIndex("IdPersona");
 
                     b.HasIndex("IdReceta");
@@ -561,6 +563,8 @@ namespace RecetarioMVC.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("IdMovimiento");
+
+                    b.HasIndex("Fecha");
 
                     b.HasIndex("IdIngrediente");
 

@@ -14,6 +14,10 @@ public class ComandaConfiguracion : IEntityTypeConfiguration<Comanda>
         });
         builder.HasKey(c => c.IdComanda);
 
+        // El listado de comandas y el tablero filtran por rango de fechas y ordenan de la
+        // más nueva a la más vieja: sin este índice, cada consulta recorre la tabla entera
+        builder.HasIndex(c => c.Fecha);
+
         builder.HasOne(c => c.Receta)
                .WithMany()
                .HasForeignKey(c => c.IdReceta)
