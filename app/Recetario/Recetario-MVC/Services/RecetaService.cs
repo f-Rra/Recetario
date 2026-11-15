@@ -283,23 +283,34 @@ public class RecetaService : IRecetaService
         if (paso is null || paso.IdReceta != idReceta)
             return false;
 
-        _context.Procedimientos.Remove(paso);
-        await _context.SaveChangesAsync();
+        // Borrar y renumerar son tres guardados. Van en una transacción: si alguno falla, se
+        // deshace todo. Sin ella la receta podía quedar con un hueco en la numeración o con
+        // los pasos en 100001, 100002…
+        var estrategia = _context.Database.CreateExecutionStrategy();
+        await estrategia.ExecuteAsync(async () =>
+        {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
 
-        // Renumerar para no dejar huecos. En dos fases (offset temporal) para no
-        // chocar con el índice único receta+paso durante los UPDATEs.
-        var restantes = await _context.Procedimientos
-            .Where(p => p.IdReceta == idReceta)
-            .OrderBy(p => p.NroPaso)
-            .ToListAsync();
+            _context.Procedimientos.Remove(paso);
+            await _context.SaveChangesAsync();
 
-        foreach (var p in restantes)
-            p.NroPaso += 100000;
-        await _context.SaveChangesAsync();
+            // Renumerar para no dejar huecos. En dos fases (offset temporal) para no
+            // chocar con el índice único receta+paso durante los UPDATEs.
+            var restantes = await _context.Procedimientos
+                .Where(p => p.IdReceta == idReceta)
+                .OrderBy(p => p.NroPaso)
+                .ToListAsync();
 
-        for (var i = 0; i < restantes.Count; i++)
-            restantes[i].NroPaso = i + 1;
-        await _context.SaveChangesAsync();
+            foreach (var p in restantes)
+                p.NroPaso += 100000;
+            await _context.SaveChangesAsync();
+
+            for (var i = 0; i < restantes.Count; i++)
+                restantes[i].NroPaso = i + 1;
+            await _context.SaveChangesAsync();
+
+            await transaccion.CommitAsync();
+        });
 
         return true;
     }
