@@ -22,6 +22,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Procedimiento> Procedimientos => Set<Procedimiento>();
     public DbSet<Comanda> Comandas => Set<Comanda>();
     public DbSet<Modificacion> Modificaciones => Set<Modificacion>();
+    public DbSet<IngredienteComanda> IngredientesComanda => Set<IngredienteComanda>();
     public DbSet<Costo> Costos => Set<Costo>();
     public DbSet<CostoDetalle> CostosDetalle => Set<CostoDetalle>();
     public DbSet<MovimientoStock> MovimientosStock => Set<MovimientoStock>();

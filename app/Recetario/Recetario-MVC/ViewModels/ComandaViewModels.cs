@@ -30,7 +30,7 @@ public class ComandaDetalleViewModel
     public string Responsable { get; set; } = string.Empty;
     public string Usuario { get; set; } = string.Empty;
 
-    /// <summary>Ingredientes de la receta escalados a las porciones de la comanda.</summary>
+    /// <summary>Lo que se cocinó: los ingredientes guardados al generar la comanda, con las modificaciones aplicadas.</summary>
     public List<IngredienteEscaladoItem> Ingredientes { get; set; } = new();
 
     public List<PasoItem> Pasos { get; set; } = new();

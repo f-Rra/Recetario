@@ -414,6 +414,38 @@ namespace RecetarioMVC.Migrations
                         });
                 });
 
+            modelBuilder.Entity("RecetarioMVC.Models.IngredienteComanda", b =>
+                {
+                    b.Property<int>("IdIngredienteComanda")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdIngredienteComanda"));
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<int>("IdComanda")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdIngrediente")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdUnidad")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdIngredienteComanda");
+
+                    b.HasIndex("IdComanda");
+
+                    b.HasIndex("IdIngrediente");
+
+                    b.HasIndex("IdUnidad");
+
+                    b.ToTable("IngredientesComanda", (string)null);
+                });
+
             modelBuilder.Entity("RecetarioMVC.Models.IngredienteReceta", b =>
                 {
                     b.Property<int>("IdReceta")
@@ -874,6 +906,33 @@ namespace RecetarioMVC.Migrations
                     b.Navigation("Unidad");
                 });
 
+            modelBuilder.Entity("RecetarioMVC.Models.IngredienteComanda", b =>
+                {
+                    b.HasOne("RecetarioMVC.Models.Comanda", "Comanda")
+                        .WithMany("Ingredientes")
+                        .HasForeignKey("IdComanda")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RecetarioMVC.Models.Ingrediente", "Ingrediente")
+                        .WithMany()
+                        .HasForeignKey("IdIngrediente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RecetarioMVC.Models.Unidad", "Unidad")
+                        .WithMany()
+                        .HasForeignKey("IdUnidad")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comanda");
+
+                    b.Navigation("Ingrediente");
+
+                    b.Navigation("Unidad");
+                });
+
             modelBuilder.Entity("RecetarioMVC.Models.IngredienteReceta", b =>
                 {
                     b.HasOne("RecetarioMVC.Models.Ingrediente", "Ingrediente")
@@ -1021,6 +1080,8 @@ namespace RecetarioMVC.Migrations
 
             modelBuilder.Entity("RecetarioMVC.Models.Comanda", b =>
                 {
+                    b.Navigation("Ingredientes");
+
                     b.Navigation("Modificaciones");
                 });
 

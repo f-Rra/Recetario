@@ -13,4 +13,7 @@ public class Comanda
     public ApplicationUser Usuario { get; set; } = null!;
     public Persona Persona { get; set; } = null!;
     public ICollection<Modificacion> Modificaciones { get; set; } = new List<Modificacion>();
+
+    /// <summary>Lo que se cocinó: los ingredientes con las modificaciones ya aplicadas.</summary>
+    public ICollection<IngredienteComanda> Ingredientes { get; set; } = new List<IngredienteComanda>();
 }

@@ -427,4 +427,87 @@ public class ComandaServiceTests
         Assert.Single(porTexto);
         Assert.Empty(sinResultados);
     }
+
+    // ---------- Detalle de una comanda ya generada ----------
+    // El detalle y la reimpresión muestran lo que se cocinó, guardado al generar la comanda.
+    // Antes se recalculaban desde la receta: ignoraban las modificaciones y cambiaban si
+    // después se editaba la receta.
+
+    [Fact]
+    public async Task Detalle_MuestraElReemplazoYNoElIngredienteSustituido()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
+        var resultado = await servicio.GenerarAsync(
+            Carrito(6, ItemNoquis(new ModificacionCarrito
+            {
+                Tipo = TipoModificacion.Sustitucion,
+                IdIngredienteOriginal = Harina,
+                IdIngredienteReemplazo = Integral
+            })), "u1");
+
+        var detalle = await servicio.ObtenerDetalleAsync(resultado.IdsComandas.Single());
+
+        var ingrediente = Assert.Single(detalle!.Ingredientes);
+        Assert.Equal("Harina integral", ingrediente.Ingrediente);
+        Assert.Equal(0.625m, ingrediente.Cantidad);
+        Assert.Equal("kg", ingrediente.Unidad);
+    }
+
+    [Fact]
+    public async Task Detalle_IncluyeLoAgregadoYOmiteLoQuitado()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
+        var resultado = await servicio.GenerarAsync(
+            Carrito(6, ItemNoquis(
+                new ModificacionCarrito { Tipo = TipoModificacion.Eliminacion, IdIngredienteOriginal = Harina },
+                new ModificacionCarrito { Tipo = TipoModificacion.Adicion, IdIngredienteReemplazo = Perejil, Cantidad = 1.5m })),
+            "u1");
+
+        var detalle = await servicio.ObtenerDetalleAsync(resultado.IdsComandas.Single());
+
+        var ingrediente = Assert.Single(detalle!.Ingredientes);
+        Assert.Equal("Perejil", ingrediente.Ingrediente);
+        Assert.Equal(1.5m, ingrediente.Cantidad);
+    }
+
+    [Fact]
+    public async Task Detalle_NoCambiaAunqueDespuesSeEditeLaReceta()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
+        // 12 comensales: 1,25 kg de Harina, que redondea a 1,5
+        var resultado = await servicio.GenerarAsync(Carrito(12, ItemNoquis()), "u1");
+
+        // Después se edita la receta: más harina y un ingrediente nuevo
+        var harinaDeLaReceta = await context.IngredientesReceta
+            .SingleAsync(ir => ir.IdReceta == Noquis && ir.IdIngrediente == Harina);
+        harinaDeLaReceta.CantBruta = 3m;
+        context.IngredientesReceta.Add(new IngredienteReceta
+        {
+            IdReceta = Noquis, IdIngrediente = Perejil, CantNeta = 0.1m, Rendimiento = 100m, CantBruta = 0.1m, IdUnidad = 1
+        });
+        await context.SaveChangesAsync();
+
+        var detalle = await servicio.ObtenerDetalleAsync(resultado.IdsComandas.Single());
+
+        var ingrediente = Assert.Single(detalle!.Ingredientes);
+        Assert.Equal("Harina 000", ingrediente.Ingrediente);
+        Assert.Equal(1.5m, ingrediente.Cantidad);
+    }
+
+    [Fact]
+    public async Task Generar_GuardaLosIngredientesDeCadaComandaPorSeparado()
+    {
+        using var context = CrearContexto();
+        var servicio = new ComandaService(context, RelojDePrueba.Cualquiera());
+
+        var resultado = await servicio.GenerarAsync(Carrito(6, ItemNoquis(), ItemDecoracion()), "u1");
+
+        var guardados = await context.IngredientesComanda.OrderBy(i => i.IdComanda).ToListAsync();
+        Assert.Equal(2, guardados.Count);
+        Assert.Equal(resultado.IdsComandas, guardados.Select(g => g.IdComanda));
+        Assert.Equal(new[] { Harina, Perejil }, guardados.Select(g => g.IdIngrediente));
+    }
 }

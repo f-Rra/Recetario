@@ -323,6 +323,16 @@ public class ComandaService : IComandaService
                 // la lista efectiva ya tiene aplicadas las modificaciones
                 foreach (var ing in efectivos)
                 {
+                    // Se guarda lo que se cocinó: el detalle y la reimpresión leen de acá,
+                    // no de la receta, que puede cambiar después
+                    _context.IngredientesComanda.Add(new IngredienteComanda
+                    {
+                        IdComanda = comanda.IdComanda,
+                        IdIngrediente = ing.IdIngrediente,
+                        Cantidad = ing.Cantidad,
+                        IdUnidad = ing.IdUnidad
+                    });
+
                     _context.MovimientosStock.Add(new MovimientoStock
                     {
                         IdIngrediente = ing.IdIngrediente,
@@ -730,28 +740,18 @@ public class ComandaService : IComandaService
         if (comanda is null)
             return null;
 
-        var factor = comanda.Porciones / (decimal)comanda.PorcionesBase;
-        comanda.Ingredientes = (await _context.IngredientesReceta
-                .Where(ir => ir.IdReceta == comanda.IdReceta)
-                .OrderBy(ir => ir.Ingrediente.Descripcion)
-                .Select(ir => new
-                {
-                    ir.IdIngrediente,
-                    ir.Ingrediente.Descripcion,
-                    ir.CantBruta,
-                    Unidad = ir.Unidad.Abreviatura
-                })
-                .ToListAsync())
-            .Select(x => new IngredienteEscaladoItem
+        // Lo que se guardó al generarla, en el mismo orden en que salió impreso
+        comanda.Ingredientes = await _context.IngredientesComanda
+            .Where(ic => ic.IdComanda == idComanda)
+            .OrderBy(ic => ic.IdIngredienteComanda)
+            .Select(ic => new IngredienteEscaladoItem
             {
-                IdIngrediente = x.IdIngrediente,
-                Ingrediente = x.Descripcion,
-                // Se reescala desde la receta: hay que redondear igual que al
-                // generar, o el detalle mostraría otros números que el PDF
-                Cantidad = RedondeoCocina.Redondear(x.CantBruta * factor, x.Unidad),
-                Unidad = x.Unidad
+                IdIngrediente = ic.IdIngrediente,
+                Ingrediente = ic.Ingrediente.Descripcion,
+                Cantidad = ic.Cantidad,
+                Unidad = ic.Unidad.Abreviatura
             })
-            .ToList();
+            .ToListAsync();
 
         comanda.Pasos = await _context.Procedimientos
             .Where(p => p.IdReceta == comanda.IdReceta)
