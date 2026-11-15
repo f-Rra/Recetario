@@ -58,6 +58,24 @@ public class DashboardServiceTests
     }
 
     [Fact]
+    public async Task Resumen_NoValorizaConUnPrecioDeFechaFutura()
+    {
+        using var context = CrearContexto();
+        // Un aumento de la Harina que rige desde mañana, y el primer precio de la Sal, también a futuro
+        context.PreciosIngrediente.AddRange(
+            new PrecioIngrediente { IdPrecio = 4, IdIngrediente = 1, IdProveedor = 1, Precio = 900m, FechaVigencia = Hoy.AddDays(1) },
+            new PrecioIngrediente { IdPrecio = 5, IdIngrediente = 3, IdProveedor = 1, Precio = 30m, FechaVigencia = Hoy.AddDays(1) });
+        context.SaveChanges();
+        var servicio = new DashboardService(context, RelojDePrueba.Cualquiera());
+
+        var resumen = await servicio.ObtenerResumenAsync();
+
+        // Igual que sin esos precios: la Harina sigue a $100 y la Sal sigue sin valorizar
+        Assert.Equal(1100m, resumen.ValorInventario);
+        Assert.Equal(2, resumen.IngredientesValorizados);
+    }
+
+    [Fact]
     public async Task Resumen_CuentaLosIngredientesPorDeposito()
     {
         using var context = CrearContexto();

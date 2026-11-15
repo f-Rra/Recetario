@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RecetarioMVC.Data;
+using RecetarioMVC.Helpers;
 using RecetarioMVC.Models;
 using RecetarioMVC.ViewModels;
 
@@ -8,10 +9,12 @@ namespace RecetarioMVC.Services;
 public class PrecioIngredienteService : IPrecioIngredienteService
 {
     private readonly ApplicationDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public PrecioIngredienteService(ApplicationDbContext context)
+    public PrecioIngredienteService(ApplicationDbContext context, TimeProvider reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     public async Task<IngredientePreciosViewModel?> ObtenerHistorialAsync(int idIngrediente)
@@ -30,8 +33,9 @@ public class PrecioIngredienteService : IPrecioIngredienteService
         if (modelo is null)
             return null;
 
-        // Vigente = fecha más reciente (desempate por id más alto),
-        // misma semántica que el ROW_NUMBER de sp_CalcularCostoReceta.
+        // Vigente = fecha más reciente que ya haya llegado (desempate por id más alto),
+        // misma semántica que el costeo. Los de fecha futura se listan, pero todavía no rigen.
+        var hoy = _reloj.Hoy();
         modelo.Historial = await _context.PreciosIngrediente
             .Where(p => p.IdIngrediente == idIngrediente)
             .OrderByDescending(p => p.FechaVigencia)
@@ -41,12 +45,14 @@ public class PrecioIngredienteService : IPrecioIngredienteService
                 IdPrecio = p.IdPrecio,
                 Proveedor = p.Proveedor.Nombre,
                 Precio = p.Precio,
-                FechaVigencia = p.FechaVigencia
+                FechaVigencia = p.FechaVigencia,
+                EsFuturo = p.FechaVigencia > hoy
             })
             .ToListAsync();
 
-        if (modelo.Historial.Count > 0)
-            modelo.Historial[0].EsVigente = true;
+        var vigente = modelo.Historial.FirstOrDefault(p => !p.EsFuturo);
+        if (vigente is not null)
+            vigente.EsVigente = true;
 
         modelo.NuevoPrecio.IdIngrediente = idIngrediente;
         return modelo;

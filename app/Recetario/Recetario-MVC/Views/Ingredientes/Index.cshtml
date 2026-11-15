@@ -119,6 +119,10 @@ else
                                             {
                                                 <span class="badge rounded-pill badge-estado-ok">Vigente</span>
                                             }
+                                            else if (precio.EsFuturo)
+                                            {
+                                                <span class="badge rounded-pill badge-estado-bajo">Todavía no rige</span>
+                                            }
                                             <form asp-action="EliminarPrecio" method="post" class="d-inline"
                                                   onsubmit="return confirm('¿Eliminar este precio del historial?');">
                                                 <input type="hidden" name="idPrecio" value="@precio.IdPrecio" />

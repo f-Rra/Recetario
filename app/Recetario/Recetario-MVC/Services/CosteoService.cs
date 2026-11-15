@@ -81,11 +81,13 @@ public class CosteoService : ICosteoService
         if (ingredientes.Count == 0)
             return resultado; // sin ingredientes: Ok = false, la vista lo explica
 
-        // Precio vigente por ingrediente: fecha más reciente y, ante empate,
-        // el último cargado (IdPrecio más alto). Reemplaza al ROW_NUMBER del SP.
+        // Precio vigente por ingrediente: fecha más reciente que ya haya llegado y, ante
+        // empate, el último cargado (IdPrecio más alto). Reemplaza al ROW_NUMBER del SP.
+        // Un precio con fecha futura (un aumento ya avisado) todavía no rige.
+        var hoy = _reloj.Hoy();
         var idsIngredientes = ingredientes.Select(i => i.IdIngrediente).ToList();
         var preciosVigentes = await _context.PreciosIngrediente
-            .Where(p => idsIngredientes.Contains(p.IdIngrediente))
+            .Where(p => idsIngredientes.Contains(p.IdIngrediente) && p.FechaVigencia <= hoy)
             .GroupBy(p => p.IdIngrediente)
             .Select(g => g
                 .OrderByDescending(p => p.FechaVigencia)

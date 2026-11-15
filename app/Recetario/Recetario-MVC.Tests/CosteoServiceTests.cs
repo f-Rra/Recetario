@@ -7,6 +7,13 @@ namespace RecetarioMVC.Tests;
 
 public class CosteoServiceTests
 {
+    // Los precios del escenario son de julio de 2026: el reloj va después, porque un
+    // precio con fecha futura todavía no rige
+    private static readonly DateOnly Hoy = new(2026, 8, 1);
+
+    private static Microsoft.Extensions.Time.Testing.FakeTimeProvider Reloj() =>
+        RelojDePrueba.EnArgentina(Hoy.Year, Hoy.Month, Hoy.Day, 12, 0);
+
     /// <summary>
     /// Contexto InMemory aislado por test, con el escenario base:
     /// receta "Ñoquis" (6 porciones) con 0,625 kg brutos de Harina a $1.200,50.
@@ -68,7 +75,7 @@ public class CosteoServiceTests
     public async Task Calcular_CasoBase_CoincideConValorCalculadoAMano()
     {
         using var context = CrearContexto();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var resultado = await servicio.CalcularAsync(idReceta: 1, porciones: 6);
 
@@ -94,7 +101,7 @@ public class CosteoServiceTests
             FechaVigencia = new DateOnly(2026, 7, 10)
         });
         context.SaveChanges();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var resultado = await servicio.CalcularAsync(1, 6);
 
@@ -115,7 +122,7 @@ public class CosteoServiceTests
             FechaVigencia = new DateOnly(2026, 7, 1) // misma fecha que el precio 1
         });
         context.SaveChanges();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var resultado = await servicio.CalcularAsync(1, 6);
 
@@ -127,7 +134,7 @@ public class CosteoServiceTests
     public async Task Calcular_ElDobleDePorciones_DuplicaElTotalYMantieneElUnitario()
     {
         using var context = CrearContexto();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var basePorciones = await servicio.CalcularAsync(1, 6);
         var doble = await servicio.CalcularAsync(1, 12);
@@ -160,7 +167,7 @@ public class CosteoServiceTests
             IdUnidad = 1
         });
         context.SaveChanges();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var resultado = await servicio.CalcularAsync(1, 6);
 
@@ -174,7 +181,7 @@ public class CosteoServiceTests
     public async Task Calcular_RecetaInexistenteOPorcionesInvalidas_DevuelveNull()
     {
         using var context = CrearContexto();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         Assert.Null(await servicio.CalcularAsync(idReceta: 99, porciones: 6));
         Assert.Null(await servicio.CalcularAsync(idReceta: 1, porciones: 0));
@@ -187,7 +194,7 @@ public class CosteoServiceTests
         using var context = CrearContexto();
         context.Users.Add(new ApplicationUser { Id = "u1", Nombre = "Admin", Apellido = "Test" });
         context.SaveChanges();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var idCosto = await servicio.RegistrarAsync(1, 6, "u1");
 
@@ -208,11 +215,79 @@ public class CosteoServiceTests
         using var context = CrearContexto();
         context.PreciosIngrediente.RemoveRange(context.PreciosIngrediente);
         context.SaveChanges();
-        var servicio = new CosteoService(context, RelojDePrueba.Cualquiera());
+        var servicio = new CosteoService(context, Reloj());
 
         var idCosto = await servicio.RegistrarAsync(1, 6, "u1");
 
         Assert.Null(idCosto);
         Assert.Empty(context.Costos);
+    }
+
+    // ---------- Precios con fecha futura ----------
+    // Un aumento avisado se puede cargar antes de que rija, pero no se usa para costear
+    // hasta que llega su fecha.
+
+    private static void AgregarPrecio(ApplicationDbContext context, int id, decimal precio, DateOnly vigencia)
+    {
+        context.PreciosIngrediente.Add(new PrecioIngrediente
+        {
+            IdPrecio = id, IdIngrediente = 1, IdProveedor = 1, Precio = precio, FechaVigencia = vigencia
+        });
+        context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task Calcular_IgnoraElPrecioConFechaFutura()
+    {
+        using var context = CrearContexto();
+        AgregarPrecio(context, 2, 5000m, Hoy.AddDays(1));
+        var servicio = new CosteoService(context, Reloj());
+
+        var resultado = await servicio.CalcularAsync(1, 6);
+
+        Assert.Equal(1200.50m, resultado!.Detalles.Single().PrecioUnitario);
+    }
+
+    [Fact]
+    public async Task Calcular_ElPrecioConFechaDeHoyYaRige()
+    {
+        using var context = CrearContexto();
+        AgregarPrecio(context, 2, 5000m, Hoy);
+        var servicio = new CosteoService(context, Reloj());
+
+        var resultado = await servicio.CalcularAsync(1, 6);
+
+        Assert.Equal(5000m, resultado!.Detalles.Single().PrecioUnitario);
+    }
+
+    [Fact]
+    public async Task Calcular_ConSoloPreciosFuturos_ElIngredienteCuentaComoSinPrecio()
+    {
+        using var context = CrearContexto();
+        context.PreciosIngrediente.RemoveRange(context.PreciosIngrediente);
+        AgregarPrecio(context, 2, 5000m, Hoy.AddMonths(1));
+        var servicio = new CosteoService(context, Reloj());
+
+        var resultado = await servicio.CalcularAsync(1, 6);
+
+        Assert.False(resultado!.Ok);
+        Assert.Equal("Harina 000", Assert.Single(resultado.IngredientesSinPrecio));
+    }
+
+    [Fact]
+    public async Task HistorialDePrecios_MarcaComoVigenteElUltimoQueYaRige()
+    {
+        using var context = CrearContexto();
+        AgregarPrecio(context, 2, 5000m, Hoy.AddDays(10));
+        var servicio = new PrecioIngredienteService(context, Reloj());
+
+        var historial = (await servicio.ObtenerHistorialAsync(1))!.Historial;
+
+        // El futuro va primero en la lista, pero el vigente es el de julio
+        Assert.Equal(new[] { 5000m, 1200.50m }, historial.Select(p => p.Precio));
+        Assert.True(historial[0].EsFuturo);
+        Assert.False(historial[0].EsVigente);
+        Assert.True(historial[1].EsVigente);
+        Assert.False(historial[1].EsFuturo);
     }
 }

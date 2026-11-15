@@ -70,9 +70,11 @@ public class DashboardService : IDashboardService
             .Select(i => new { i.IdIngrediente, i.StockActual })
             .ToListAsync();
 
-        // Vigente = fecha más reciente, desempate por id: la misma semántica
-        // que usa el costeo (guía 10)
+        // Vigente = fecha más reciente que ya haya llegado, desempate por id: la misma
+        // semántica que usa el costeo (guía 10)
+        var hoy = _reloj.Hoy();
         var precios = await _context.PreciosIngrediente
+            .Where(p => p.FechaVigencia <= hoy)
             .GroupBy(p => p.IdIngrediente)
             .Select(g => new
             {

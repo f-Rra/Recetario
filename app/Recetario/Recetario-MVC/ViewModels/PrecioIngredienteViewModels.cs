@@ -19,6 +19,9 @@ public class PrecioListaItem
     public decimal Precio { get; set; }
     public DateOnly FechaVigencia { get; set; }
     public bool EsVigente { get; set; }
+
+    /// <summary>Cargado con una fecha que todavía no llegó: no se usa para costear.</summary>
+    public bool EsFuturo { get; set; }
 }
 
 public class PrecioFormViewModel
